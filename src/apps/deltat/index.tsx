@@ -1,19 +1,34 @@
 'use client'
 
-// TODO M4: Migration aus github.com/cryptoclemens/vencly-delta-t
-// - calculateSystem() → src/apps/deltat/calc/system.ts
-// - Unit-Tests: mindestens 20 Testfälle (PLAUSI_CHECK.md)
-// - ParamSlider → src/core/ui/ (shared)
-// - State via useDeltaTStore (Zustand)
-// - Tailwind statt inline CSS-Variablen
+import { InputColumn } from './components/InputColumn'
+import { ResultColumn } from './components/ResultColumn'
+import { FeedbackModal } from '@/core/ui/FeedbackModal'
 
 export default function DeltaTApp() {
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-2">DeltaT – Dubletten-Auslegungsrechner</h1>
-        <p className="text-muted-foreground">Migration aus vencly-delta-t startet in Milestone 4.</p>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+      <header className="shrink-0 px-4 py-2 border-b bg-muted/40">
+        <h1 className="text-base font-semibold">
+          DeltaT – Geothermische Dubletten-Auslegung
+        </h1>
+        <p className="text-xs text-muted-foreground">
+          Auf Basis VDI 4640 · DVGW W 115 · Drost 1978 · Arpagaus 2018
+        </p>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden gap-4 p-4">
+        {/* Left: Input parameters */}
+        <div className="w-72 shrink-0 overflow-y-auto">
+          <InputColumn />
+        </div>
+
+        {/* Right: Results */}
+        <div className="flex-1 overflow-y-auto">
+          <ResultColumn />
+        </div>
       </div>
+
+      <FeedbackModal defaultInApp="deltat" />
     </div>
   )
 }
