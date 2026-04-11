@@ -63,6 +63,14 @@ export default function DeltaTApp() {
         </div>
       </div>
 
+      {/* Wissenschaftlicher Disclaimer — BRIEF.md § 7.3 */}
+      <div className="mx-4 mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-200/70 leading-relaxed">
+        <strong className="text-amber-300/90 font-medium">Vorauslegung · Machbarkeitsebene:</strong>{' '}
+        Für Investitions- und Genehmigungsentscheidungen sind zusätzlich erforderlich:
+        hydrogeologisches Gutachten, 3D-Simulation (FEFLOW/TOUGH2/COMSOL),
+        standortspezifische Aquifer-Untersuchung und detaillierte Wirtschaftlichkeitsrechnung.
+      </div>
+
       <DeltaTTour />
       <FeedbackModal defaultInApp="deltat" />
     </div>

@@ -74,11 +74,11 @@ describe('Tauchpumpenleistung', () => {
 })
 
 // ─── Durchbruchszeit ─────────────────────────────────────────────────────────
-describe('Durchbruchszeit (Drost 1978)', () => {
-  it('t = π·n·b·d² / (4·Q) in Jahren', () => {
-    // n=0.25, maechtig=40, abstand=500, Q=15 l/s=0.015 m³/s
+describe('Durchbruchszeit (Gringarten & Sauty 1975)', () => {
+  it('t = π·n·b·d²/(3·Q) × HC-Ratio 0.7 in Jahren (Gringarten & Sauty 1975)', () => {
+    // n=0.25, maechtig=40, abstand=500, Q=15 l/s=0.015 m³/s, hcRatio=0.7
     const r = calculateSystem(inp())
-    const expected = (Math.PI * 0.25 * 40 * 500 * 500) / (4 * 0.015) / (365 * 24 * 3600)
+    const expected = (Math.PI * 0.25 * 40 * 500 * 500) / (3 * 0.015) * 0.7 / (365 * 24 * 3600)
     expect(r.tBreak).toBeCloseTo(expected, 2)
   })
   it('Ampel grün wenn t_break > 25 Jahre', () => {
@@ -98,20 +98,21 @@ describe('Durchbruchszeit (Drost 1978)', () => {
 
 // ─── COP ────────────────────────────────────────────────────────────────────
 describe('COP — IEA HPP Annex 35 / Arpagaus 2018', () => {
-  it('COP = (T_VL_K / ΔT_K) × 0.5', () => {
-    // tVL=90, tGW=25 → T_VL=363.15, ΔT=65 → COP=363.15/65×0.5≈2.793
-    const r = calculateSystem(inp({ tVL: 90, tGW: 25 }))
-    expect(r.cop).toBeCloseTo((363.15 / 65) * 0.5, 2)
+  it('COP = (T_VL_K / (T_VL_K − T_R_K)) × 0.5 (Arpagaus 2018)', () => {
+    // tVL=90, tR=12 (Default) → T_VL=363.15, T_R=285.15, ΔT=78 → COP≈2.33
+    const r = calculateSystem(inp({ tVL: 90, tR: 12 }))
+    expect(r.cop).toBeCloseTo((363.15 / 78) * 0.5, 2)
   })
-  it('COP = 99 wenn tVL ≤ tGW (kein Hub)', () => {
-    const r = calculateSystem(inp({ tVL: 20, tGW: 25 }))
+  it('COP = 99 wenn T_VL − T_R ≤ 0.5 K', () => {
+    // tVL=12, tR=12 → tDiff_K = 0 → COP = 99
+    const r = calculateSystem(inp({ tVL: 12, tR: 12 }))
     expect(r.cop).toBe(99)
   })
   it('Ampel grün bei COP > 3', () => {
     const r = calculateSystem(inp({ tVL: 50, tGW: 25 }))
     expect(r.sCOP).toBe('green')
   })
-  it('elLeistungWP = 0 bei COP ≥ 90', () => {
+  it('elLeistungWP = 0 wenn WP nicht aktiv (tVL ≤ tGW)', () => {
     const r = calculateSystem(inp({ tVL: 20, tGW: 25 }))
     expect(r.elLeistungWP).toBe(0)
   })

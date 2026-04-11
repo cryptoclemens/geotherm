@@ -4,9 +4,9 @@
  * Quellen:
  *   - Wärmeinhalt:   Q_th = Q × ΔT × c_p  (c_p Wasser = 4.18 kJ/kg·K)
  *   - Tauchpumpe:    P = Q × ρ × g × H / η  (ρ=1000, g=9.81, η=0.6, H=foerderhoehe) — VDI 4640, Stober & Bucher (2012) Kap. 7.4
- *   - Durchbruch:    t = π·n·b·d² / (4·Q)   (Gringarten & Sauty 1975)
- *   - COP:           COP_real = COP_Carnot × 0.5 = (T_VL / (T_VL − T_GW)) × 0.5
- *                    (IEA HPP Annex 35, Arpagaus et al. 2018)
+ *   - Durchbruch:    t = π·n·b·d² / (3·Q) × (ρc_Aquifer/ρc_Wasser)   (Gringarten & Sauty 1975)
+ *   - COP:           COP_real = COP_Carnot × 0.5 = (T_VL / (T_VL − T_R)) × 0.5
+ *                    (IEA HPP Annex 35, Arpagaus et al. 2018, Energy 152, Gl. 7)
  *   - WP-Elektrik:   W_el = Q_geo / (COP − 1)
  *   - LMTD:          (ΔT₁ − ΔT₂) / ln(ΔT₁/ΔT₂)  — VDI Wärmeatlas 2019
  *   - WP-Typen:      Zühlsdorf et al. 2019, Arpagaus et al. 2018, VDI 4640 Bl. 4
@@ -132,10 +132,11 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // Q_th = Q[l/s = kg/s] × c_p[kJ/kg·K] × ΔT[K] — kW
   const qThPerDoublet = Math.max(0.01, Q * deltaT * 4.18)
 
-  // Vorab-COP für WP-Beitragsrechnung
+  // Vorab-COP für WP-Beitragsrechnung — T_R (Reinjektionstemperatur) als Quellen-Temp
+  // Arpagaus et al. 2018, Energy 152, Gl. 7
   const _tVL_K = tVL + 273.15
-  const _tGW_K = tGW + 273.15
-  const _tDiff = _tVL_K - _tGW_K
+  const _tR_K = tR + 273.15
+  const _tDiff = _tVL_K - _tR_K
   const _copEst = _tDiff > 0.5 ? (_tVL_K / _tDiff) * 0.5 : 99
 
   const wpAktiv = tVL > tGW
@@ -154,23 +155,26 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // H = foerderhoehe (dynamischer Spiegel + Rohrreibung), NICHT Bohrtiefe — Faktor 2-5 Unterschied!
   const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * foerderhoehe / (0.6 * 1000)
 
-  // Durchbruchszeit [Jahre]  n=0.25 (Porosität) — Gringarten & Sauty 1975
+  // Durchbruchszeit [Jahre] — Gringarten & Sauty 1975, Water Resources Research
+  // t = (π·n·b·D²) / (3·Q) × (ρc_Aquifer / ρc_Wasser) / (365·24·3600)
   const n = 0.25
-  const tBreak = (Math.PI * n * maechtig * abstand * abstand) / (4 * (Q / 1000)) / (365 * 24 * 3600)
+  const hcRatio = 0.7  // ρc_Aquifer/ρc_Wasser = 2.3e6/4.18e6 ≈ 0.55 (Sandstein); Default 0.7 (konservativ)
+  const tBreak = (Math.PI * n * maechtig * abstand * abstand) / (3 * (Q / 1000)) * hcRatio / (365 * 24 * 3600)
 
   const spezLeistung = tiefe > 0 ? (qThPerDoublet * 1000) / tiefe : 0
 
   // Optimaler Abstand für t_break = 25 Jahre
-  const abstandOpt = Math.sqrt((4 * (Q / 1000) * 25 * 365 * 86400) / (Math.PI * 0.25 * maechtig))
+  const abstandOpt = Math.sqrt((3 * (Q / 1000) * 25 * 365 * 86400) / (Math.PI * 0.25 * maechtig * hcRatio))
 
-  // COP real = COP_Carnot × 0.5 — IEA HPP Annex 35, Arpagaus et al. 2018
+  // COP real = COP_Carnot × 0.5, Quellen-Temp = T_R (Reinjektionstemperatur)
+  // Arpagaus et al. 2018, Energy 152, Gl. 7 — T_R ist Verdampfer-Austrittstemperatur
   const tVL_K = tVL + 273.15
-  const tGW_K = tGW + 273.15
-  const tDiff_K = tVL_K - tGW_K
+  const tR_K = tR + 273.15
+  const tDiff_K = tVL_K - tR_K
   const cop = tDiff_K > 0.5 ? (tVL_K / tDiff_K) * 0.5 : 99
 
-  // W_el = Q_geo / (COP − 1)
-  const elLeistungWP = cop < 90 ? qThGesamt / (cop - 1) : 0
+  // W_el = Q_geo / (COP − 1) — nur wenn WP aktiv
+  const elLeistungWP = wpAktiv && cop < 90 ? qThGesamt / (cop - 1) : 0
 
   // LMTD Gegenstrom: heiß (T_GW→T_R), kalt (T_RL→T_VL) — VDI Wärmeatlas 2019
   const dT1 = tGW - tVL
