@@ -1,29 +1,16 @@
--- Migration: Auth Site-URL und Redirect-Allowlist konfigurieren
+-- Migration: Supabase Auth Site-URL Konfiguration (Dokumentation)
 -- Erstellt: 2026-04-11
 --
--- HINWEIS: Supabase Cloud speichert Auth-Einstellungen (site_url, redirect_urls)
--- NICHT in einer SQL-Tabelle, sondern im Auth-Service selbst.
--- Diese Einstellungen müssen daher über die Supabase Management API oder
--- das Supabase Dashboard gesetzt werden:
+-- HINWEIS: Die Site-URL kann NICHT via SQL gesetzt werden.
+-- Muss im Supabase Dashboard konfiguriert werden:
 --
---   Dashboard → Authentication → URL Configuration:
---     Site URL:           https://geotherm.vencly.com
---     Redirect URLs:      https://geotherm.vencly.com/**
---                         http://localhost:3000/**
+--   Authentication > URL Configuration
+--   Site URL:      https://geotherm.vencly.com
+--   Redirect URLs: https://geotherm.vencly.com/**
+--                  http://localhost:3000/**
 --
--- Alternativ via Management API (einmalig auszuführen, z.B. im CI/CD):
---   curl -X PATCH \
---     'https://api.supabase.com/v1/projects/rahxoqodbaerkvbckxnu/config/auth' \
---     -H 'Authorization: Bearer <SUPABASE_ACCESS_TOKEN>' \
---     -H 'Content-Type: application/json' \
---     -d '{
---       "site_url": "https://geotherm.vencly.com",
---       "additional_redirect_urls": "https://geotherm.vencly.com/**\nhttp://localhost:3000/**"
---     }'
---
--- Die emailRedirectTo-URL wird außerdem client-seitig in useAuth.ts
--- über NEXT_PUBLIC_APP_URL gesetzt (für lokale Entwicklung: http://localhost:3000,
--- für Produktion: https://geotherm.vencly.com).
---
--- Diese Migration ist eine reine Dokumentations-Migration ohne SQL-Statements.
-SELECT 'auth-site-url-migration-dokumentiert' AS status;
+-- Workaround (Beta): User manuell bestätigen:
+--   UPDATE auth.users SET email_confirmed_at = NOW(), updated_at = NOW()
+--   WHERE email = 'user@example.com';
+
+SELECT 'Auth Site-URL muss im Supabase Dashboard gesetzt werden' AS hinweis;
