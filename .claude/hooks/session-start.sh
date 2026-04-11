@@ -1,11 +1,14 @@
 #!/bin/bash
-# SessionStart-Hook: Prüft feedback.md auf offene Items bei jedem Session-Start
-# Installiert via CLAUDE.md-Anleitung
+# SessionStart-Hook – Geotherm
+# Wird bei jedem claude-Session-Start automatisch ausgefuehrt.
+# Zaehlt offene Feedback-Items und gibt Claude den Triage-Auftrag.
 
-[ ! -f feedback.md ] && exit 0
+FEEDBACK_FILE="$(git rev-parse --show-toplevel 2>/dev/null)/feedback.md"
 
-OFFEN=$(grep -c '^## .*\[offen\]' feedback.md 2>/dev/null || echo 0)
-TRIAGE=$(grep -c '^## .*\[triage\]' feedback.md 2>/dev/null || echo 0)
+[ ! -f "$FEEDBACK_FILE" ] && exit 0
+
+OFFEN=$(grep -c '^## .*\[offen\]' "$FEEDBACK_FILE" 2>/dev/null || echo 0)
+TRIAGE=$(grep -c '^## .*\[triage\]' "$FEEDBACK_FILE" 2>/dev/null || echo 0)
 
 [ "$OFFEN" -eq 0 ] && [ "$TRIAGE" -eq 0 ] && exit 0
 
