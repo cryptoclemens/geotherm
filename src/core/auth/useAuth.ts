@@ -3,8 +3,9 @@
 // Einziger Zugriffspunkt auf Auth — niemals supabase.auth.* direkt importieren.
 // Intern nutzt dieser Hook @supabase/ssr; austauschbar gegen Keycloak ohne Component-Änderungen.
 
-import { useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 interface AuthState {
   user: User | null
@@ -15,17 +16,49 @@ interface AuthState {
   resetPassword: (email: string) => Promise<{ error: Error | null }>
 }
 
-// TODO M2: Implementierung mit @supabase/ssr
 export function useAuth(): AuthState {
-  const [user] = useState<User | null>(null)
-  const [loading] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  return {
-    user,
-    loading,
-    signIn: async () => ({ error: new Error('Auth nicht konfiguriert') }),
-    signUp: async () => ({ error: new Error('Auth nicht konfiguriert') }),
-    signOut: async () => {},
-    resetPassword: async () => ({ error: new Error('Auth nicht konfiguriert') }),
-  }
+  useEffect(() => {
+    const supabase = createClient()
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    return { error }
+  }, [])
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    const supabase = createClient()
+    const { error } = await supabase.auth.signUp({ email, password })
+    return { error }
+  }, [])
+
+  const signOut = useCallback(async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+  }, [])
+
+  const resetPassword = useCallback(async (email: string) => {
+    const supabase = createClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/forgot-password`,
+    })
+    return { error }
+  }, [])
+
+  return { user, loading, signIn, signUp, signOut, resetPassword }
 }
