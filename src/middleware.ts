@@ -40,11 +40,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Eingeloggte Nutzer von Auth-Seiten weglenken
+  // Eingeloggte Nutzer von Auth-Seiten weglenken → DeltaT als Standard-Einstieg
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup')
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/atlas'
+    url.pathname = '/deltat'
     return NextResponse.redirect(url)
   }
 
