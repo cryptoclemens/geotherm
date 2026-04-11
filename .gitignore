@@ -1,88 +1,41 @@
-# =============================================================================
-# Geotherm – .gitignore (Next.js 15 + TypeScript + Supabase)
-# =============================================================================
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# -----------------------------------------------------------------------------
-# Node / Next.js – Build-Artefakte und Abhaengigkeiten
-# -----------------------------------------------------------------------------
-node_modules/
-.next/
-out/
-build/
-dist/
-*.tsbuildinfo
-next-env.d.ts
-tsconfig.tsbuildinfo
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# -----------------------------------------------------------------------------
-# Env-Files – niemals Secrets committen, aber Beispiel-Datei behalten
-# -----------------------------------------------------------------------------
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
-!.env.example
+# testing
+/coverage
 
-# -----------------------------------------------------------------------------
-# Logs – alle Varianten von npm/yarn/pnpm und generische Log-Files
-# -----------------------------------------------------------------------------
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-logs/
-*.log
 
-# -----------------------------------------------------------------------------
-# Testing – Coverage, Playwright, Jest
-# -----------------------------------------------------------------------------
-coverage/
-.nyc_output/
-/test-results/
-/playwright-report/
-/playwright/.cache/
+# env files (can opt-in for committing if needed)
+.env*
 
-# -----------------------------------------------------------------------------
-# IDE & Editor – VSCode/JetBrains/Vim, aber geteilte Settings behalten
-# -----------------------------------------------------------------------------
-.vscode/*
-!.vscode/settings.json
-.idea/
-*.swp
-*.swo
-
-# -----------------------------------------------------------------------------
-# Betriebssystem – macOS/Windows-Muell
-# -----------------------------------------------------------------------------
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# -----------------------------------------------------------------------------
-# Deployment – Vercel, Turbo-Cache
-# -----------------------------------------------------------------------------
+# vercel
 .vercel
-.turbo
 
-# -----------------------------------------------------------------------------
-# Claude Code – Session-/Projekt-State ignorieren, aber hooks/ committen
-# -----------------------------------------------------------------------------
-.claude/projects/
-.claude/shell-snapshots/
-.claude/todos/
-.claude/backups/
-.claude/session-env/
-.claude/settings.local.json
-
-# -----------------------------------------------------------------------------
-# Supabase – temporaere Dateien der CLI
-# -----------------------------------------------------------------------------
-supabase/.temp/
-supabase/.branches/
-
-# -----------------------------------------------------------------------------
-# Sonstiges – Zertifikate, Keys
-# -----------------------------------------------------------------------------
-*.pem
+# typescript
+*.tsbuildinfo
+next-env.d.ts
