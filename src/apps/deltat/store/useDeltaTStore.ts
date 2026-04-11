@@ -11,6 +11,8 @@ interface DeltaTState {
   resetInputs: () => void
   /** Übernimmt Aquifer-Daten aus einem GPA-LocationPreset */
   applyPreset: (preset: LocationPreset) => void
+  /** Lädt vollständige Eingaben aus einem gespeicherten Projekt */
+  applyFullProject: (inputs: DeltaTInputs) => void
 }
 
 export const useDeltaTStore = create<DeltaTState>()(
@@ -37,6 +39,8 @@ export const useDeltaTStore = create<DeltaTState>()(
           }
           return { inputs: next, outputs: calculateSystem(next) }
         }),
+      applyFullProject: (inputs) =>
+        set({ inputs, outputs: calculateSystem(inputs) }),
     }),
     { name: 'deltat-inputs' },
   ),

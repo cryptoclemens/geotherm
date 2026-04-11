@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 // Leaflet braucht ssr: false (window is not defined)
