@@ -1,10 +1,25 @@
 'use client'
 
+import { useEffect } from 'react'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
+import { useDeltaTStore } from './store/useDeltaTStore'
+import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
 
 export default function DeltaTApp() {
+  const applyPreset    = useDeltaTStore(s => s.applyPreset)
+  const locationPreset = useWorkspaceStore(s => s.locationPreset)
+  const clearPreset    = useWorkspaceStore(s => s.clearLocationPreset)
+
+  // Einmalig Preset aus GPA anwenden, danach löschen
+  useEffect(() => {
+    if (locationPreset) {
+      applyPreset(locationPreset)
+      clearPreset()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
       <header className="shrink-0 px-4 py-2 border-b bg-muted/40">
