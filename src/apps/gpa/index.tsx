@@ -1,18 +1,111 @@
 'use client'
 
-// TODO M3: Migration aus github.com/cryptoclemens/geopotatlas
-// - Leaflet/react-leaflet (Dynamic Import, ssr: false ist bereits in der Route)
-// - WMS-Layer, FW-Städte-Marker, OSM-Heat-Sources
-// - Passwort-Gate entfernen — RequireAuth ersetzt es
-// - FeedbackModal, BootLog → Core-Versionen nutzen
+import './gpa.css'
+import MapView from './components/map/MapView'
+import Sidebar from './components/sidebar/Sidebar'
+import Legend from './components/ui/Legend'
+import InfoPanel from './components/ui/InfoPanel'
+import Loader from './components/ui/Loader'
+import OsmSpinner from './components/ui/OsmSpinner'
+import BootLog from './components/ui/BootLog'
+import StatListPanel from './components/ui/StatListPanel'
+import PrintDialog from './components/ui/PrintDialog'
+import WelcomeOverlay from './components/ui/WelcomeOverlay'
+import GuidedTour from './components/ui/GuidedTour'
+import { FeedbackModal } from '@/core/ui/FeedbackModal'
+import { useGpaStore } from './store/useGpaStore'
+import { FW_CITIES } from './data/fwCities'
+
+// Vite's __APP_VERSION__ → Next.js env var
+const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'
+
+type StatKey = 'dc' | 'pp' | 'abw' | 'fw'
+
+interface StatTileProps {
+  statKey: StatKey
+  label: string
+  title: string
+}
+
+function StatTile({ statKey, label, title }: StatTileProps) {
+  const statCounts = useGpaStore(s => s.statCounts)
+  const heatMarkers = useGpaStore(s => s.heatMarkers)
+  const showStatList = useGpaStore(s => s.showStatList)
+  const val = statCounts[statKey]
+
+  function handleClick() {
+    if (statKey === 'fw') {
+      const bounds = (window as unknown as { _map?: { getBounds: () => { contains: (p: [number, number]) => boolean } } })._map?.getBounds()
+      const cities = bounds
+        ? FW_CITIES.filter((c: { dh: number; lat: number; lng: number }) => c.dh >= 20 && bounds.contains([c.lat, c.lng]))
+        : FW_CITIES.filter((c: { dh: number }) => c.dh >= 20)
+      const items = cities.map((c: { n: string; lat: number; lng: number; op: string }) => ({
+        name: c.n, lat: c.lat, lng: c.lng, tags: { operator: c.op },
+      }))
+      showStatList('fw', items)
+      return
+    }
+    const layerMap: Record<string, string> = { dc: 'heat-dc', pp: 'heat-pp', abw: 'heat-abw' }
+    const layerKey = layerMap[statKey]
+    const items = layerKey ? (heatMarkers[layerKey] ?? []) : []
+    showStatList(statKey, items)
+  }
+
+  return (
+    <div className="stat stat-clickable" title={title} onClick={handleClick}>
+      <div className="stat-v">{val !== null && val !== undefined ? val : '—'}</div>
+      <div className="stat-l">im Ausschnitt<br /><small style={{ opacity: 0.7 }}>{label}</small></div>
+    </div>
+  )
+}
 
 export default function GpaApp() {
+  const showPrintDialog = useGpaStore(s => s.showPrintDialog)
+
+  // PwScreen entfernt — Authentifizierung erfolgt über RequireAuth + Middleware
+
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-2">GPA – Geothermie-Potenzial-Atlas</h1>
-        <p className="text-muted-foreground">Migration aus geopotatlas startet in Milestone 3.</p>
+    <>
+      <Loader />
+      <WelcomeOverlay />
+      <GuidedTour />
+
+      <header>
+        <div className="hdr-left">
+          <div className="hdr-title">
+            <h1>Geothermie-Potenzial-Atlas {VERSION}</h1>
+            <p>Live-Daten · Nordeuropäisches Tiefland · Fernwärme · Wärmeproduzenten</p>
+          </div>
+        </div>
+        <div className="hdr-stats">
+          <span className="potentiale-label">Potentiale</span>
+          <StatTile statKey="dc"  label="Rechenzentren"    title="Rechenzentren im Ausschnitt" />
+          <StatTile statKey="pp"  label="Kraftwerke/Ind."  title="Kraftwerke/Industrie im Ausschnitt" />
+          <StatTile statKey="abw" label="Abwärme (BfEE)"   title="BfEE-Abwärmestandorte im Ausschnitt" />
+          <StatTile statKey="fw"  label="FW-Städte >20%"   title="Fernwärme-Städte >20% im Ausschnitt" />
+          <button
+            className="print-btn-hdr"
+            title="Drucken / Exportieren"
+            onClick={showPrintDialog}
+          >🖨</button>
+        </div>
+      </header>
+
+      <div id="map-wrap">
+        <MapView />
+        <Sidebar />
+        <InfoPanel />
+        <Legend />
+        <OsmSpinner />
+        <BootLog />
+        <div className="powered-by">
+          powered by <a href="https://www.vencly.com" target="_blank" rel="noopener">Venclÿ</a>
+        </div>
       </div>
-    </div>
+
+      <FeedbackModal defaultInApp="gpa" />
+      <StatListPanel />
+      <PrintDialog />
+    </>
   )
 }

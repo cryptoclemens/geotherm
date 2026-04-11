@@ -8,7 +8,7 @@
 
 - [x] ⭐ Neues Repo `github.com/cryptoclemens/geotherm` (privat)
 - [x] ⭐ BRIEF.md, Tasks.md, README.md, CLAUDE.md, feedback.md, .gitignore
-- [ ] ⭐ Initial-Commit nach `main` pushen
+- [x] ⭐ Initial-Commit nach `main` pushen
 
 **DoD:** Sechs Dateien auf `main`. Neue Claude-Session kann darauf aufbauen.
 

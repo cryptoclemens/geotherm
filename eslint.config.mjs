@@ -8,10 +8,12 @@ const eslintConfig = defineConfig([
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    // GPA-Migration: JSX→TSX Konvertierungen, werden in M3 schrittweise getypt
+    'src/apps/gpa/components/**',
   ]),
 ]);
 
