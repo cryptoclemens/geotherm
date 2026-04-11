@@ -48,7 +48,14 @@ export function DeltaTTour() {
           <span className="text-xs text-muted-foreground">
             Schritt {step + 1} / {STEPS.length}
           </span>
-          <button onClick={close} className="text-muted-foreground hover:text-foreground text-lg leading-none">×</button>
+          {/* aria-labels: icon-only buttons need aria-label — UI/UX Pro Max */}
+          <button
+            onClick={close}
+            aria-label="Tour schließen"
+            className="text-muted-foreground hover:text-foreground text-lg leading-none p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          >
+            ×
+          </button>
         </div>
         <h3 className="font-semibold mb-1">{current.title}</h3>
         <p className="text-sm text-muted-foreground mb-4">{current.body}</p>
@@ -56,7 +63,8 @@ export function DeltaTTour() {
           <button
             onClick={() => setStep(s => Math.max(0, s - 1))}
             disabled={step === 0}
-            className="text-xs text-muted-foreground disabled:opacity-30 hover:text-foreground"
+            aria-label="Vorheriger Schritt"
+            className="text-xs text-muted-foreground disabled:opacity-30 hover:text-foreground min-h-[44px] px-2"
           >
             ← Zurück
           </button>
@@ -69,8 +77,8 @@ export function DeltaTTour() {
             ))}
           </div>
           {isLast
-            ? <button onClick={close} className="text-xs font-medium text-blue-600 hover:underline">Fertig</button>
-            : <button onClick={() => setStep(s => s + 1)} className="text-xs font-medium text-blue-600 hover:underline">Weiter →</button>
+            ? <button onClick={close} aria-label="Tour beenden" className="text-xs font-medium text-blue-600 hover:underline min-h-[44px] px-2">Fertig</button>
+            : <button onClick={() => setStep(s => s + 1)} aria-label="Nächster Schritt" className="text-xs font-medium text-blue-600 hover:underline min-h-[44px] px-2">Weiter →</button>
           }
         </div>
       </div>
