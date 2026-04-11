@@ -1,5 +1,7 @@
 'use client'
 
+// UI/UX Pro Max: form-labels (label+for), touch-target-size (≥44px via py-2), focus-states
+
 interface ParamSliderProps {
   label: string
   value: number
@@ -18,6 +20,8 @@ export function ParamSlider({
   label, value, min, max, step, unit, onChange, format, log = false,
 }: ParamSliderProps) {
   const display = format ? format(value) : value.toLocaleString('de-DE')
+  // Stable ID from label — letters + numbers only
+  const id = `slider-${label.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = parseFloat(e.target.value)
@@ -38,19 +42,30 @@ export function ParamSlider({
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex justify-between items-baseline text-xs">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-mono font-semibold text-foreground tabular-nums">
+        {/* form-labels: <label for="…"> verknüpft visuelles Label mit Input */}
+        <label htmlFor={id} className="text-muted-foreground cursor-pointer select-none">
+          {label}
+        </label>
+        <span
+          className="font-mono font-semibold text-foreground tabular-nums"
+          aria-live="polite"
+          aria-label={`${label}: ${display} ${unit}`}
+        >
           {display} <span className="text-muted-foreground font-normal">{unit}</span>
         </span>
       </div>
+      {/* touch-target-size: py-2 erhöht den klickbaren Bereich auf ≥ 44px */}
       <input
+        id={id}
         type="range"
         min={log ? 0 : min}
         max={log ? 100 : max}
         step={log ? 0.5 : step}
         value={sliderVal}
         onChange={handleChange}
-        className="w-full h-1.5 accent-blue-600 cursor-pointer"
+        aria-label={label}
+        aria-valuetext={`${display} ${unit}`}
+        className="w-full h-1.5 py-2 accent-blue-600 cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 rounded"
       />
     </div>
   )
