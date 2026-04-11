@@ -4,19 +4,33 @@ import { cn } from '@/core/ui/utils'
 
 export function Header() {
   return (
-    <header className="border-b bg-background sticky top-0 z-50">
+    <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/10">
+      {/* Skip-to-content für Tastatur- und Screen-Reader-Nutzer */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-primary focus:px-3 focus:py-1.5 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Zum Hauptinhalt springen
+      </a>
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <Link href="/" className="font-semibold text-lg">
-          Geotherm <span className="text-muted-foreground font-normal text-sm">by Vencly</span>
+        <Link href="/" className="font-semibold text-lg tracking-tight">
+          Geotherm{' '}
+          <span className="text-muted-foreground font-normal text-sm">by Vencly</span>
         </Link>
-        <nav className="flex items-center gap-2">
+        <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
           <Link href="/atlas" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
             Atlas
           </Link>
           <Link href="/deltat" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
             DeltaT
           </Link>
-          <Link href="/login" className={cn(buttonVariants({ size: 'sm' }))}>
+          <Link
+            href="/login"
+            className={cn(
+              buttonVariants({ size: 'sm' }),
+              'bg-primary hover:bg-primary/90 text-primary-foreground',
+            )}
+          >
             Anmelden
           </Link>
         </nav>
