@@ -55,16 +55,21 @@ describe('Wärmeleistung Q_th', () => {
 
 // ─── Tauchpumpe ─────────────────────────────────────────────────────────────
 describe('Tauchpumpenleistung', () => {
-  it('P = Q[m³/s] × ρ × g × H / η — VDI 4640', () => {
-    // Q=1 l/s = 0.001 m³/s, tiefe=100 m, η=0.6
+  it('P = Q[m³/s] × ρ × g × H / η — VDI 4640, H=foerderhoehe', () => {
+    // Q=1 l/s = 0.001 m³/s, foerderhoehe=100 m, η=0.6
     // P = 0.001 × 1000 × 9.81 × 100 / (0.6 × 1000) = 1.635 kW
-    const r = calculateSystem(inp({ Q: 1, tiefe: 100 }))
+    const r = calculateSystem(inp({ Q: 1, foerderhoehe: 100 }))
     expect(r.tauchpumpenLeistung).toBeCloseTo(1.635, 2)
   })
-  it('größere Tiefe → mehr Pumpenleistung', () => {
-    const r200 = calculateSystem(inp({ tiefe: 200 }))
-    const r100 = calculateSystem(inp({ tiefe: 100 }))
+  it('größere Förderhöhe → mehr Pumpenleistung', () => {
+    const r200 = calculateSystem(inp({ foerderhoehe: 200 }))
+    const r100 = calculateSystem(inp({ foerderhoehe: 100 }))
     expect(r200.tauchpumpenLeistung).toBeGreaterThan(r100.tauchpumpenLeistung)
+  })
+  it('Bohrtiefe hat keinen Einfluss auf Pumpenleistung', () => {
+    const rTief = calculateSystem(inp({ tiefe: 3000, foerderhoehe: 150 }))
+    const rFlach = calculateSystem(inp({ tiefe: 100, foerderhoehe: 150 }))
+    expect(rTief.tauchpumpenLeistung).toBeCloseTo(rFlach.tauchpumpenLeistung, 5)
   })
 })
 
@@ -202,9 +207,14 @@ describe('Scaling-Risiko', () => {
 
 // ─── Jahreswärmemenge ────────────────────────────────────────────────────────
 describe('Jahreswärmemenge', () => {
-  it('= qThGesamt × laufstunden / 1000 [MWh/a]', () => {
+  it('= qDelivered × laufstunden / 1000 [MWh/a] — gesamte ans Netz gelieferte Wärme', () => {
     const r = calculateSystem(inp({ laufstunden: 2000 }))
-    expect(r.jahreswaerme).toBeCloseTo(r.qThGesamt * 2000 / 1000, 3)
+    expect(r.jahreswaerme).toBeCloseTo(r.qDelivered * 2000 / 1000, 3)
+  })
+  it('ohne WP: jahreswaerme = qThGesamt × laufstunden / 1000', () => {
+    // tVL ≤ tGW → kein WP → qDelivered = qThGesamt
+    const r = calculateSystem(inp({ tVL: 20, tGW: 25, laufstunden: 3000 }))
+    expect(r.jahreswaerme).toBeCloseTo(r.qThGesamt * 3000 / 1000, 3)
   })
 })
 

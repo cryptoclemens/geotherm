@@ -17,6 +17,7 @@ const INPUT_LABELS: Record<string, string> = {
   tVL: 'Vorlauftemperatur [°C]',
   tRL: 'Rücklauftemperatur [°C]',
   laufstunden: 'Laufstunden [h/a]',
+  foerderhoehe: 'Förderhöhe Tauchpumpe [m]',
 }
 
 const RESULT_LABELS: Record<string, string> = {
