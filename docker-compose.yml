@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_VERSION: "${NEXT_PUBLIC_APP_VERSION:-dev}"
+    image: geotherm:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Supabase / Auth
+      NEXT_PUBLIC_SUPABASE_URL: "${NEXT_PUBLIC_SUPABASE_URL}"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+      SUPABASE_SERVICE_ROLE_KEY: "${SUPABASE_SERVICE_ROLE_KEY}"
+      # GitHub Feedback-Sync (server-only, KEIN NEXT_PUBLIC_!)
+      GITHUB_FEEDBACK_TOKEN: "${GITHUB_FEEDBACK_TOKEN}"
+      GITHUB_FEEDBACK_REPO: "${GITHUB_FEEDBACK_REPO:-cryptoclemens/geotherm}"
+      # App
+      NEXT_PUBLIC_APP_VERSION: "${NEXT_PUBLIC_APP_VERSION:-dev}"
+    networks:
+      - geotherm_net
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    networks:
+      - geotherm_net
+
+networks:
+  geotherm_net:
+    driver: bridge
