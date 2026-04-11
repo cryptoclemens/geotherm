@@ -4,7 +4,11 @@ import withSerwistInit from '@serwist/next'
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
-  disable: process.env.NODE_ENV === 'development',
+  // Serwist deaktiviert: @serwist/next unterstützt kein Turbopack (Next.js 16 Default).
+  // Der Webpack-Plugin läuft nicht → kein sw.js wird generiert → alte gecachte SWs
+  // servieren falsche Assets nach Redeployments → "This page couldn't load".
+  // Reaktivieren wenn @serwist/turbopack stabil ist: https://serwist.pages.dev/docs/next/turbo
+  disable: true,
 })
 
 const nextConfig: NextConfig = {
