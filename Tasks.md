@@ -8,13 +8,13 @@
 
 - [x] ⭐ Neues Repo `github.com/cryptoclemens/geotherm` (privat)
 - [x] ⭐ BRIEF.md, Tasks.md, README.md, CLAUDE.md, feedback.md, .gitignore
-- [ ] ⭐ Initial-Commit nach `main` pushen
+- [x] ⭐ Initial-Commit nach `main` pushen
 
 **DoD:** Sechs Dateien auf `main`. Neue Claude-Session kann darauf aufbauen.
 
 ---
 
-## Milestone 1 – Projekt-Setup & Shell *(Woche 1)*
+## Milestone 1 – Projekt-Setup & Shell *(Woche 1)* ✅ ERLEDIGT
 
 ### 1.1 Next.js 15 initialisieren 🔥
 ```bash
@@ -57,7 +57,7 @@ Siehe README.md → Projektstruktur. Wichtig: `app/` für Routes, `src/apps/` f�
 
 ---
 
-## Milestone 2 – Auth & Nutzer-Konto *(Woche 2)*
+## Milestone 2 – Auth & Nutzer-Konto *(Woche 2)* ✅ ERLEDIGT (Code-seitig — Supabase-Instanz manuell anlegen)
 
 ### 2.1 Supabase-Projekt ⭐
 - `geotherm-production` in EU-Frankfurt
@@ -108,7 +108,7 @@ MDX-Content ausschreiben, aus DeltaT-Impressum übernehmen und für Multi-App-Ko
 
 ---
 
-## Milestone 2.5 – Feedback-System *(Woche 2/3)* 💎 NEU
+## Milestone 2.5 – Feedback-System *(Woche 2/3)* 💎 NEU ✅ ERLEDIGT
 
 ### 2.5.1 Supabase-Tabelle `feedback` ⭐
 ```sql
@@ -189,7 +189,7 @@ Nur für `role = 'admin'`:
 
 ---
 
-## Milestone 3 – GPA-Migration *(Woche 3)*
+## Milestone 3 – GPA-Migration *(Woche 3)* ✅ ERLEDIGT
 
 ### 3.1 Code übernehmen 🔥
 - `github.com/cryptoclemens/geopotatlas/src/*` → `src/apps/gpa/*`
@@ -212,7 +212,7 @@ Nur für `role = 'admin'`:
 
 ---
 
-## Milestone 4 – DeltaT-Migration *(Woche 4)*
+## Milestone 4 – DeltaT-Migration *(Woche 4)* ✅ ERLEDIGT
 
 ### 4.1 `calculateSystem()` extrahieren 🔥
 Aus `delta-t.html` → `src/apps/deltat/calc/system.ts` mit TypeScript-Types.
@@ -256,7 +256,7 @@ Aus `delta-t.html` → `src/apps/deltat/calc/system.ts` mit TypeScript-Types.
 
 ---
 
-## Milestone 5 – Daten-Austausch zwischen Apps *(Woche 5)*
+## Milestone 5 – Daten-Austausch zwischen Apps *(Woche 5)* ✅ ERLEDIGT (WorkspaceStore + OpenInDeltaT)
 
 ### 5.1 Workspace-Store 🔥
 `src/store/useWorkspaceStore.ts` mit `LocationPreset`-Typ:
@@ -307,7 +307,7 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
-## Milestone 6 – Deployment & Domain *(Woche 6)*
+## Milestone 6 – Deployment & Domain *(Woche 6)* ✅ ERLEDIGT (Dockerfile + docker-compose + nginx — Domain/Vercel manuell)
 
 ### 6.1 Vercel ⭐
 - Projekt verknüpft mit Repo
@@ -334,10 +334,11 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
-## Milestone 7 – Polish & Launch *(Woche 7)*
+## Milestone 7 – Polish & Launch *(Woche 7)* 🔄 TEILWEISE ERLEDIGT
 
-- [ ] 📦 PWA mit `@serwist/next` (Offline-First für DeltaT, Manifest, Icons)
-- [ ] 📦 Onboarding-Tour bei erstem Login
+- [x] 📦 PWA-Manifest + Icons (manifest.ts, /public/icons/icon.svg)
+- [x] 📦 Onboarding-Tour DeltaT (DeltaTTour, 4 Schritte, localStorage)
+- [ ] 📦 @serwist/next Service Worker (Offline-First)
 - [ ] 📦 CSV- und PDF-Export für Projekte
 - [ ] 📦 Accessibility-Audit (WCAG 2.1 AA)
 - [ ] 📦 Performance-Audit (Lighthouse ≥ 95)
