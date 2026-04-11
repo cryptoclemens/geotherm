@@ -352,8 +352,10 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [ ] 📦 Mobile-Testing (iOS Safari, Android Chrome — v.a. GPA/Atlas)
 - [ ] 📦 Cross-Browser (Firefox, Safari, Edge)
 - [ ] 📦 Supabase Site URL im Dashboard auf `https://geotherm.vencly.com` setzen (E-Mail-Bestätigung)
-- [ ] 📦 Plausi-Fixes C+D: Durchbruch /4→/3 + HC-Ratio; COP T_GW→T_R
-- [ ] 📦 Wissenschaftlicher Disclaimer auf /deltat prominent sichtbar (BRIEF.md § 7.3)
+- [x] 📦 Plausi-Fixes C+D: Durchbruch /4→/3 + HC-Ratio 0.7; COP T_GW→T_R (Gringarten & Sauty 1975, Arpagaus 2018)
+- [x] 📦 Wissenschaftlicher Disclaimer auf /deltat prominent sichtbar (BRIEF.md § 7.3)
+- [x] 📦 Service-Worker-Crash behoben: @serwist disabled + Cache-clearing SW (public/sw.js)
+- [x] 📦 Middleware-Härtung: Env-Guard + try/catch + Auth-Redirect → /deltat
 - [ ] 📦 Public Beta Announcement
 - [ ] 💡 Erste Feedback-Items aus `feedback.md` einarbeiten
 
