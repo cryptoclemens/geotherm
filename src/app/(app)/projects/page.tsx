@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { FolderOpenIcon, PlusIcon, Trash2Icon, ArrowRightIcon, SaveIcon } from 'lucide-react'
+import { FolderOpenIcon, PlusIcon, Trash2Icon, ArrowRightIcon, SaveIcon, DownloadIcon } from 'lucide-react'
+import { exportProjectsToCsv } from '@/core/lib/exportCsv'
 import { useAuth } from '@/core/auth/useAuth'
 import {
   listProjects,
@@ -306,7 +307,19 @@ export default function ProjectsPage() {
             Gespeicherte DeltaT-Berechnungen
           </p>
         </div>
-        <SaveProjectDialog onSave={handleSave} saving={saving} />
+        <div className="flex items-center gap-2">
+          {projects.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => exportProjectsToCsv(projects)}
+              aria-label="Alle Projekte als CSV herunterladen"
+            >
+              <DownloadIcon />
+              CSV
+            </Button>
+          )}
+          <SaveProjectDialog onSave={handleSave} saving={saving} />
+        </div>
       </div>
 
       {error && (
