@@ -110,7 +110,8 @@ Alle Public-Vars haben `NEXT_PUBLIC_`-Präfix (im Browser lesbar). Server-Secret
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | **Server-only** | Für Admin-Ops (Feedback-Sync, Admin-Dashboard) |
 | `GITHUB_FEEDBACK_TOKEN` | ✅ | **Server-only** | Fine-grained PAT mit `Contents: Read/Write` für dieses Repo |
 | `GITHUB_FEEDBACK_REPO` | ✅ | Server-only | z.B. `cryptoclemens/geotherm` |
-| `NEXT_PUBLIC_APP_URL` | ❌ | Public | Basis-URL für OAuth-Redirects |
+| `NEXT_PUBLIC_APP_URL` | ✅ | Public | Basis-URL für OAuth-Redirects (z.B. `https://geotherm.vencly.com`) |
+| `NEXT_PUBLIC_GIT_SHA` | auto | Public | 7-stelliger Git-SHA, von Vercel automatisch injiziert (`VERCEL_GIT_COMMIT_SHA`) |
 | `NEXT_PUBLIC_SENTRY_DSN` | ❌ | Public | Sentry Error-Tracking |
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | ❌ | Public | Plausible Analytics Domain |
 
@@ -340,7 +341,7 @@ npm run test:e2e              # Playwright E2E (ab M7)
 ```
 
 **Wichtige Suites:**
-- `src/apps/deltat/calc/system.test.ts` — 41 Testfälle aus PLAUSI_CHECK.md
+- `src/apps/deltat/calc/system.test.ts` — 46 Testfälle, Scientist-Agent validiert (PLAUSI_CHECK.md)
 - `src/core/auth/useAuth.test.ts` — Auth-Flows
 - `src/lib/feedback/parser.test.ts` — Feedback.md Parsing
 
@@ -384,7 +385,7 @@ chore: Tailwind auf 4.2 aktualisiert
 |---|---|
 | **VDI 4640** Blatt 1–4 | Thermische Nutzung des Untergrundes |
 | **EN 14511** | Leistungsdefinition Wärmepumpen |
-| **Drost (1978)** | Durchbruchszeit für Dubletten |
+| **Gringarten & Sauty (1975)** | Durchbruchszeit für Dubletten (J. Geophys. Res.) |
 | **Arpagaus et al. (2018)** | Hochtemperatur-WP Klassifikation |
 | **Zühlsdorf et al. (2019)** | Ultra-HT-WP / ORC |
 | **DVGW W 115** | Werkstoffauswahl Thermalwasser |
