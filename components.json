@@ -13,9 +13,9 @@
   "iconLibrary": "lucide",
   "rtl": false,
   "aliases": {
-    "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "components": "@/core",
+    "utils": "@/core/ui/utils",
+    "ui": "@/core/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
