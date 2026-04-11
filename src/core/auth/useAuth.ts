@@ -43,7 +43,13 @@ export function useAuth(): AuthState {
 
   const signUp = useCallback(async (email: string, password: string) => {
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      },
+    })
     return { error }
   }, [])
 
