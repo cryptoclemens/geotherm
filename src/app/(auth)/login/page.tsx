@@ -43,7 +43,7 @@ export default function LoginPage() {
       }
       // Session-Cookies sind jetzt gesetzt – Router-Cache leeren bevor Weiterleitung
       router.refresh()
-      router.push('/atlas')
+      router.push('/deltat')
     } catch {
       setServerError('Verbindungsfehler. Bitte Seite neu laden.')
     }
