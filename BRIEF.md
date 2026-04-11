@@ -3,7 +3,7 @@
 **Stand:** April 2026
 **Repository:** [github.com/cryptoclemens/geotherm](https://github.com/cryptoclemens/geotherm) *(privat)*
 **Zieldomain:** [geotherm.vencly.com](https://geotherm.vencly.com)
-**Tech-Stack:** Next.js 15 (App Router) · shadcn/ui · Tailwind 4 · MDX · Supabase · PWA
+**Tech-Stack:** Next.js 16 (App Router) · shadcn/ui · Tailwind 4 · MDX · Supabase · PWA
 
 ---
 
@@ -166,7 +166,7 @@ Da das Repo `cryptoclemens/geotherm` **privat** ist, darf die E-Mail direkt in `
 
 | Layer | Wahl | Begründung |
 |---|---|---|
-| **Framework** | **Next.js 15** (App Router) | SSR/SSG für SEO, Route Groups für modulare In-Apps, Server Actions für Auth & Feedback |
+| **Framework** | **Next.js 16** (App Router) | SSR/SSG für SEO, Route Groups für modulare In-Apps, Server Actions für Auth & Feedback |
 | **Styling** | Tailwind CSS 4 | Standard, schnell, Design-Tokens |
 | **UI-Kit** | **shadcn/ui** | Copy-Paste Komponenten auf Radix-UI — kein npm-Dependency, volle Kontrolle, ideal für Whitelabel |
 | **Icons** | lucide-react | Standard-Icons, Tree-Shakeable |
@@ -192,7 +192,7 @@ Ab Tag 1 so gebaut, dass Migration ohne Code-Änderung funktioniert:
 2. **Eigener Auth-Adapter**: `useAuth()`-Hook als einziger Zugriffspunkt, nutzt intern Supabase — später austauschbar gegen Keycloak.
 3. **REST-only**: Keine Supabase-spezifischen Features (Realtime, Storage-Buckets).
 4. **DB-Schema portabel**: Reines Postgres, keine Extensions.
-5. **Next.js Standalone-Build**: `output: 'standalone'` in `next.config.js` → Minimum-Node-Bundle für Docker.
+5. **Next.js Standalone-Build**: `output: 'standalone'` in `next.config.ts` → Minimum-Node-Bundle für Docker.
 6. **Dockerfile + docker-compose.yml** von Anfang an vorhanden.
 7. **nginx.conf** für Reverse-Proxy auf Hetzner mit Let's Encrypt.
 
@@ -273,6 +273,6 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 | März 2026 | DeltaT Alpha live auf GitHub Pages (Single-File React) |
 | März 2026 | Geopotatlas internes Tool live (Vite + React + Passwort-Gate) |
 | April 2026 | **Dieser Brief** — Entscheidung zur Verschmelzung in Geotherm-Suite mit Next.js + Feedback-Loop |
-| *geplant Q2 2026* | Geotherm Beta mit GPA + DeltaT + Auth + Feedback |
+| April 2026 | Geotherm Beta live: GPA + DeltaT + Auth + Feedback + PWA |
 | *geplant Q3 2026* | Geotherm Public Launch mit Pro-Tier |
 | *geplant Q4 2026* | 3. In-App live, erste Enterprise-Kunden |

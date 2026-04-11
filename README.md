@@ -1,10 +1,10 @@
 # Geotherm by Vencly
 
-![Status](https://img.shields.io/badge/status-Bootstrap-blue) ![Stack](https://img.shields.io/badge/stack-Next.js%2015%20%7C%20shadcn%2Fui%20%7C%20Tailwind%204-2E75B6) ![License](https://img.shields.io/badge/license-proprietary-gray)
+![Status](https://img.shields.io/badge/status-Beta-green) ![Stack](https://img.shields.io/badge/stack-Next.js%2016%20%7C%20shadcn%2Fui%20%7C%20Tailwind%204-2E75B6) ![License](https://img.shields.io/badge/license-proprietary-gray)
 
 **Geotherm** ist die modulare Geothermie-Suite der [vencly GmbH](https://www.vencly.com). Eine einheitliche Web-Plattform, die alle Werkzeuge entlang des Geothermie-Projektlebenszyklus in einem Workflow bündelt — **vom Standort zum Bohrplan**.
 
-🌐 **Live (geplant):** [geotherm.vencly.com](https://geotherm.vencly.com)
+🌐 **Live:** [geotherm.vencly.com](https://geotherm.vencly.com)
 🔒 **Repo:** privat
 
 ---
@@ -50,7 +50,7 @@ Jede In-App lebt in `src/apps/{name}/` und hat:
 - Keine hardcoded URLs — alle Backend-Endpunkte via `NEXT_PUBLIC_*` Env-Vars
 - Eigener `useAuth()`-Hook statt direkter Supabase-Calls → Migrations-sicher zu Keycloak
 - REST-only, keine Supabase-spezifischen Features (Realtime, Storage-Buckets)
-- `next.config.js` mit `output: 'standalone'` für Hetzner-Docker
+- `next.config.ts` mit `output: 'standalone'` für Hetzner-Docker
 - Dockerfile + docker-compose.yml von Anfang an im Repo
 
 ### 3. Shared Core
@@ -71,8 +71,6 @@ Jede Formel im Rechner-Kern hat eine Quellenangabe (VDI, DIN, EN, peer-reviewed 
 ---
 
 ## 🚀 Quick Start
-
-> **Hinweis:** Repo ist aktuell im **Bootstrap-Status**. Die folgenden Befehle funktionieren erst ab Milestone 1.
 
 ```bash
 # Voraussetzungen
@@ -124,33 +122,34 @@ Alle Public-Vars haben `NEXT_PUBLIC_`-Präfix (im Browser lesbar). Server-Secret
 
 ```
 geotherm/
-├── app/                              # Next.js App Router
-│   ├── (marketing)/                  # SSG für SEO
-│   │   ├── page.tsx                  # Landing
-│   │   ├── impressum/page.tsx
-│   │   ├── datenschutz/page.tsx
-│   │   ├── agb/page.tsx
-│   │   ├── security/page.tsx
-│   │   └── layout.tsx                # Marketing-Shell
-│   ├── (auth)/                       # Auth-Pages
-│   │   ├── login/page.tsx
-│   │   ├── signup/page.tsx
-│   │   ├── forgot-password/page.tsx
-│   │   ├── verify-email/page.tsx
-│   │   └── layout.tsx
-│   ├── (app)/                        # Auth-protected
-│   │   ├── atlas/page.tsx            # GPA
-│   │   ├── deltat/page.tsx           # DeltaT
-│   │   ├── projects/page.tsx
-│   │   ├── admin/
-│   │   │   └── feedback/page.tsx     # Admin-only
-│   │   └── layout.tsx                # App-Shell
-│   ├── api/
-│   │   └── feedback/route.ts         # Server Action
-│   ├── globals.css
-│   └── layout.tsx                    # Root Layout
-│
 ├── src/
+│   ├── app/                          # Next.js App Router
+│   │   ├── (marketing)/              # SSG für SEO
+│   │   │   ├── page.tsx              # Landing
+│   │   │   ├── impressum/page.tsx
+│   │   │   ├── datenschutz/page.tsx
+│   │   │   ├── agb/page.tsx
+│   │   │   ├── security/page.tsx
+│   │   │   └── layout.tsx            # Marketing-Shell
+│   │   ├── (auth)/                   # Auth-Pages
+│   │   │   ├── login/page.tsx
+│   │   │   ├── signup/page.tsx
+│   │   │   ├── forgot-password/page.tsx
+│   │   │   ├── verify-email/page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── (app)/                    # Auth-protected
+│   │   │   ├── atlas/page.tsx        # GPA
+│   │   │   ├── deltat/page.tsx       # DeltaT
+│   │   │   ├── projects/page.tsx
+│   │   │   ├── admin/
+│   │   │   │   └── feedback/page.tsx # Admin-only
+│   │   │   └── layout.tsx            # App-Shell
+│   │   ├── api/
+│   │   │   └── feedback/route.ts     # Feedback API Route
+│   │   ├── manifest.ts               # PWA-Manifest (Next.js-nativ)
+│   │   ├── globals.css
+│   │   └── layout.tsx                # Root Layout
+│   │
 │   ├── apps/                         # Modulare In-Apps
 │   │   ├── gpa/
 │   │   │   ├── components/
@@ -165,43 +164,34 @@ geotherm/
 │   │       ├── store/
 │   │       └── index.tsx
 │   ├── core/
-│   │   ├── auth/                     # useAuth + AuthProvider
-│   │   ├── api/
-│   │   ├── ui/                       # shadcn/ui + Shared
-│   │   └── layout/                   # Header, Footer, Shell
+│   │   ├── auth/                     # useAuth, RequireAuth
+│   │   ├── api/                      # REST-Client, GitHub-Sync-Helper
+│   │   ├── store/                    # useWorkspaceStore (App-übergreifend)
+│   │   ├── ui/                       # shadcn/ui + Shared (ParamSlider, FeedbackModal)
+│   │   └── layout/                   # AppShell, Header, Footer
 │   ├── lib/
-│   │   ├── feedback/                 # github-sync, parser
-│   │   └── supabase/                 # Client + Server helpers
-│   ├── hooks/
-│   ├── store/                        # Globale Stores
+│   │   ├── feedback/                 # github-sync
+│   │   └── supabase/                 # client.ts + server.ts
+│   ├── middleware.ts
+│   ├── sw.ts                         # Service Worker (@serwist/next)
 │   └── types/
+│       └── supabase.ts               # Generierte Typen
 │
-├── content/                          # MDX für editierbaren Content
-│   ├── legal/
-│   │   ├── impressum.mdx
-│   │   ├── datenschutz.mdx
-│   │   ├── agb.mdx
-│   │   └── security.mdx
-│   └── marketing/
-│       ├── landing-hero.mdx
-│       └── feature-cards.mdx
+├── supabase/
+│   └── migrations/                   # SQL-Migrations (profiles, feedback, projects)
 │
 ├── public/
-│   ├── favicon.svg
-│   ├── vencly.png
-│   └── manifest.json                 # PWA
+│   ├── icons/                        # PWA-Icons
+│   └── sw.js                         # Generierter Service Worker (build-time)
 │
-├── .claude/
-│   └── hooks/
-│       └── session-start.sh          # Feedback-Triage-Hook
+├── nginx/
+│   └── nginx.conf                    # SPA-Fallback + Security-Headers
 │
 ├── .env.example
 ├── .gitignore
 ├── Dockerfile                        # Multi-Stage für Hetzner
 ├── docker-compose.yml                # App + Postgres + Backups
-├── nginx.conf                        # SPA-Fallback + Security
-├── next.config.js                    # output: 'standalone' + MDX + PWA
-├── tailwind.config.ts
+├── next.config.ts                    # output: 'standalone' + @serwist/next
 ├── components.json                   # shadcn/ui config
 ├── package.json
 ├── tsconfig.json
@@ -210,8 +200,7 @@ geotherm/
 ├── README.md                         # Du bist hier
 ├── CLAUDE.md                         # Konventionen
 ├── PLAUSI_CHECK.md                   # Wiss. Formelprüfung
-├── feedback.md                       # Feedback-Stream
-└── CHANGELOG.md
+└── feedback.md                       # Feedback-Stream
 ```
 
 ---
@@ -337,7 +326,7 @@ pg_dump $SUPABASE_CONN > /tmp/supabase.sql
 psql $LOCAL_CONN < /tmp/supabase.sql
 ```
 
-Detaillierte Anleitung: `docs/HETZNER_MIGRATION.md` *(wird in M6 erstellt)*
+Detaillierte Anleitung: `docs/HETZNER_MIGRATION.md` *(geplant)*
 
 ---
 
@@ -351,7 +340,7 @@ npm run test:e2e              # Playwright E2E (ab M7)
 ```
 
 **Wichtige Suites:**
-- `src/apps/deltat/calc/system.test.ts` — 20+ Testfälle aus PLAUSI_CHECK.md
+- `src/apps/deltat/calc/system.test.ts` — 41 Testfälle aus PLAUSI_CHECK.md
 - `src/core/auth/useAuth.test.ts` — Auth-Flows
 - `src/lib/feedback/parser.test.ts` — Feedback.md Parsing
 
@@ -403,7 +392,7 @@ chore: Tailwind auf 4.2 aktualisiert
 | **VDI Wärmeatlas** (2019) | LMTD & U-Wert |
 | **DIN 4030** | Scaling-Bewertung |
 
-Vollständiger Review: `PLAUSI_CHECK.md` (wird in M4 portiert).
+Vollständiger Review: `PLAUSI_CHECK.md`.
 
 ---
 
@@ -428,7 +417,7 @@ HRB 290524 (AG München) · USt-ID: DE367131457
 Vertretungsberechtigt: Clemens Eugen Theodor Pompeÿ
 📧 [hello@vencly.com](mailto:hello@vencly.com) · 🌐 [www.vencly.com](https://www.vencly.com)
 
-**Proprietäre Software.** Siehe `LICENSE` *(wird in M1 erstellt)*.
+**Proprietäre Software.**
 
 ---
 
