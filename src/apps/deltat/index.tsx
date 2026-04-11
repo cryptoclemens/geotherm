@@ -3,22 +3,28 @@
 import { useEffect } from 'react'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
+import { DeltaTTour } from './components/DeltaTTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { useDeltaTStore } from './store/useDeltaTStore'
 import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
 
-export default function DeltaTApp() {
-  const applyPreset    = useDeltaTStore(s => s.applyPreset)
-  const locationPreset = useWorkspaceStore(s => s.locationPreset)
-  const clearPreset    = useWorkspaceStore(s => s.clearLocationPreset)
-
-  // Einmalig Preset aus GPA anwenden, danach löschen
+/** Konsumiert den LocationPreset aus dem WorkspaceStore (gesetzt von GPA) */
+function useApplyLocationPreset() {
   useEffect(() => {
-    if (locationPreset) {
-      applyPreset(locationPreset)
-      clearPreset()
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    const preset = useWorkspaceStore.getState().locationPreset
+    if (!preset) return
+    // Preset direkt auf den Store schreiben – außerhalb des React-Renderpfads
+    const applyPreset = useDeltaTStore.getState().applyPreset
+    const clear       = useWorkspaceStore.getState().clearLocationPreset
+    setTimeout(() => {
+      applyPreset(preset)
+      clear()
+    }, 0)
+  }, [])
+}
+
+export default function DeltaTApp() {
+  useApplyLocationPreset()
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
@@ -43,6 +49,7 @@ export default function DeltaTApp() {
         </div>
       </div>
 
+      <DeltaTTour />
       <FeedbackModal defaultInApp="deltat" />
     </div>
   )
