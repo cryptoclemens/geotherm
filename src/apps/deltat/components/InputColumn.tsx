@@ -24,6 +24,8 @@ export function InputColumn() {
         <legend className="text-xs font-medium text-blue-700 mb-1">Bohrloch</legend>
         <ParamSlider label="Bohrtiefe" value={inputs.tiefe} min={50} max={3000} step={50} unit="m"
           onChange={v => setInput('tiefe', v)} />
+        <ParamSlider label="Förderhöhe Tauchpumpe" value={inputs.foerderhoehe} min={50} max={500} step={10} unit="m"
+          onChange={v => setInput('foerderhoehe', v)} />
         <ParamSlider label="Aquifer-Mächtigkeit" value={inputs.maechtig} min={5} max={500} step={5} unit="m"
           onChange={v => setInput('maechtig', v)} />
         <ParamSlider label="Bohrlochabstand" value={inputs.abstand} min={50} max={2000} step={50} unit="m"

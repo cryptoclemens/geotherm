@@ -3,8 +3,8 @@
  *
  * Quellen:
  *   - Wärmeinhalt:   Q_th = Q × ΔT × c_p  (c_p Wasser = 4.18 kJ/kg·K)
- *   - Tauchpumpe:    P = Q × ρ × g × H / η  (ρ=1000, g=9.81, η=0.6) — VDI 4640
- *   - Durchbruch:    t = π·n·b·d² / (4·Q)   (Drost 1978)
+ *   - Tauchpumpe:    P = Q × ρ × g × H / η  (ρ=1000, g=9.81, η=0.6, H=foerderhoehe) — VDI 4640, Stober & Bucher (2012) Kap. 7.4
+ *   - Durchbruch:    t = π·n·b·d² / (4·Q)   (Gringarten & Sauty 1975)
  *   - COP:           COP_real = COP_Carnot × 0.5 = (T_VL / (T_VL − T_GW)) × 0.5
  *                    (IEA HPP Annex 35, Arpagaus et al. 2018)
  *   - WP-Elektrik:   W_el = Q_geo / (COP − 1)
@@ -39,6 +39,8 @@ export interface DeltaTInputs {
   tRL: number
   /** Laufstunden pro Jahr [h/a] */
   laufstunden: number
+  /** Förderhöhe Tauchpumpe [m] — dynamischer Spiegel + Rohrreibung; typ. 100–250 m — Stober & Bucher (2012) Kap. 7.4 */
+  foerderhoehe: number
 }
 
 export type TrafficLight = 'green' | 'yellow' | 'red'
@@ -119,10 +121,11 @@ export const DEFAULT_INPUTS: DeltaTInputs = {
   tVL: 90,
   tRL: 55,
   laufstunden: 2000,
+  foerderhoehe: 150,
 }
 
 export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
-  const { tiefe, maechtig, kf, tGW, tds, Q, tR, abstand, zielLeistung, tVL, tRL, laufstunden } = inp
+  const { tiefe, maechtig, kf, tGW, tds, Q, tR, abstand, zielLeistung, tVL, tRL, laufstunden, foerderhoehe } = inp
 
   const transmissiv = kf * maechtig
   const deltaT = tGW - tR
@@ -147,10 +150,11 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     : qThGesamt
 
   const gesamtFoerderrate = anzahlDoubletten * Q
-  // P_pump = Q[m³/s] × ρ[kg/m³] × g[m/s²] × H[m] / η — VDI 4640
-  const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * tiefe / (0.6 * 1000)
+  // P_pump = Q[m³/s] × ρ[kg/m³] × g[m/s²] × H[m] / η — VDI 4640, Stober & Bucher (2012) Kap. 7.4
+  // H = foerderhoehe (dynamischer Spiegel + Rohrreibung), NICHT Bohrtiefe — Faktor 2-5 Unterschied!
+  const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * foerderhoehe / (0.6 * 1000)
 
-  // Durchbruchszeit [Jahre]  n=0.25 (Porosität) — Drost 1978
+  // Durchbruchszeit [Jahre]  n=0.25 (Porosität) — Gringarten & Sauty 1975
   const n = 0.25
   const tBreak = (Math.PI * n * maechtig * abstand * abstand) / (4 * (Q / 1000)) / (365 * 24 * 3600)
 
@@ -221,8 +225,8 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   const sCOP: TrafficLight        = cop > 3 ? 'green' : cop > 2 ? 'yellow' : 'red'
   const sMaterial: TrafficLight   = materialColor
 
-  // Jahreswärmemenge [MWh/a]
-  const jahreswaerme = qThGesamt * (laufstunden || 2000) / 1000
+  // Jahreswärmemenge [MWh/a] — gesamte ans Netz gelieferte Wärme (inkl. WP-Beitrag)
+  const jahreswaerme = qDelivered * (laufstunden || 2000) / 1000
 
   return {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,

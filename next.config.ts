@@ -10,6 +10,8 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   // Standalone-Build für Docker/Hetzner-Deployment
   output: 'standalone',
+  // Leeres turbopack-Config: behebt "webpack config but no turbopack config"-Fehler in Next.js 16
+  turbopack: {},
 }
 
 export default withSerwist(nextConfig)
