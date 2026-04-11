@@ -13,9 +13,14 @@ export function Header() {
         Zum Hauptinhalt springen
       </a>
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <Link href="/" className="font-semibold text-lg tracking-tight">
+        <Link href="/" className="font-semibold text-lg tracking-tight flex items-baseline gap-2">
           Geotherm{' '}
           <span className="text-muted-foreground font-normal text-sm">by Vencly</span>
+          {process.env.NEXT_PUBLIC_GIT_SHA && (
+            <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
+              {process.env.NEXT_PUBLIC_GIT_SHA}
+            </span>
+          )}
         </Link>
         <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
           <Link href="/atlas" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
