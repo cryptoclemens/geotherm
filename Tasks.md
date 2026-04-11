@@ -218,7 +218,7 @@ Nur für `role = 'admin'`:
 Aus `delta-t.html` → `src/apps/deltat/calc/system.ts` mit TypeScript-Types.
 
 ### 4.2 Unit-Tests ⭐
-`src/apps/deltat/calc/system.test.ts` mit **mindestens 20 Testfällen**:
+`src/apps/deltat/calc/system.test.ts` mit **41 Testfällen** (Stand April 2026):
 - Thermische Leistung: Default-Werte, Edge Cases (ΔT=0, negative ΔT)
 - Tauchpumpe: Q=15 l/s, H=500m → ~122.6 kW
 - Drost: d=500m, Q=15 l/s, b=40m → ~4 Jahre
@@ -252,7 +252,7 @@ Aus `delta-t.html` → `src/apps/deltat/calc/system.ts` mit TypeScript-Types.
 ### 4.6 Print-CSS portieren 📦
 `@media print` für Drucken-Button → `window.print()`.
 
-**DoD M4:** DeltaT läuft als `/deltat`, alle 20+ Unit-Tests grün, UI im Vencly-Design.
+**DoD M4:** DeltaT läuft als `/deltat`, alle 41 Unit-Tests grün, UI im Vencly-Design.
 
 ---
 
@@ -338,7 +338,7 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 - [x] 📦 PWA-Manifest + Icons (manifest.ts, /public/icons/icon.svg)
 - [x] 📦 Onboarding-Tour DeltaT (DeltaTTour, 4 Schritte, localStorage)
-- [ ] 📦 @serwist/next Service Worker (Offline-First)
+- [x] 📦 @serwist/next Service Worker (sw.ts konfiguriert, im Prod-Build aktiv)
 - [ ] 📦 CSV- und PDF-Export für Projekte
 - [ ] 📦 Accessibility-Audit (WCAG 2.1 AA)
 - [ ] 📦 Performance-Audit (Lighthouse ≥ 95)
