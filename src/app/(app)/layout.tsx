@@ -1,6 +1,10 @@
 import { AppShell } from '@/core/layout/AppShell'
+import { RequireAuth } from '@/core/auth/RequireAuth'
 
-// TODO M2: RequireAuth-Wrapper hier einbinden
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>
+  return (
+    <RequireAuth>
+      <AppShell>{children}</AppShell>
+    </RequireAuth>
+  )
 }
