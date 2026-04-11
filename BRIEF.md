@@ -166,8 +166,9 @@ Da das Repo `cryptoclemens/geotherm` **privat** ist, darf die E-Mail direkt in `
 
 | Layer | Wahl | Begründung |
 |---|---|---|
-| **Framework** | **Next.js 16** (App Router) | SSR/SSG für SEO, Route Groups für modulare In-Apps, Server Actions für Auth & Feedback |
-| **Styling** | Tailwind CSS 4 | Standard, schnell, Design-Tokens |
+| **Framework** | **Next.js 16.2** (App Router, Turbopack) | SSR/SSG für SEO, Route Groups für modulare In-Apps, Server Actions für Auth & Feedback |
+| **Styling** | Tailwind CSS 4 | Standard, schnell, Design-Tokens (OKLCH Farbraum) |
+| **Design-System** | macOS 26 Glassmorphism — Teal/Navy, `glass-card`, `glow-teal`, Plus Jakarta Sans | Einheitlicher Look, mobile-first |
 | **UI-Kit** | **shadcn/ui** | Copy-Paste Komponenten auf Radix-UI — kein npm-Dependency, volle Kontrolle, ideal für Whitelabel |
 | **Icons** | lucide-react | Standard-Icons, Tree-Shakeable |
 | **State (Client)** | Zustand | Leicht, wenig Boilerplate |
@@ -273,6 +274,7 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 | März 2026 | DeltaT Alpha live auf GitHub Pages (Single-File React) |
 | März 2026 | Geopotatlas internes Tool live (Vite + React + Passwort-Gate) |
 | April 2026 | **Dieser Brief** — Entscheidung zur Verschmelzung in Geotherm-Suite mit Next.js + Feedback-Loop |
-| April 2026 | Geotherm Beta live: GPA + DeltaT + Auth + Feedback + PWA |
+| April 2026 | Geotherm Beta live: GPA + DeltaT + Auth + Feedback + PWA auf geotherm.vencly.com |
+| April 2026 | macOS 26 Design-System, Plausi-Checks via Scientist-Agent (Opus 4.6), 46 Unit-Tests |
 | *geplant Q3 2026* | Geotherm Public Launch mit Pro-Tier |
 | *geplant Q4 2026* | 3. In-App live, erste Enterprise-Kunden |

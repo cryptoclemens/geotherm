@@ -334,16 +334,26 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
-## Milestone 7 – Polish & Launch *(Woche 7)* 🔄 TEILWEISE ERLEDIGT
+## Milestone 7 – Polish & Launch *(Woche 7)* 🔄 LAUFEND
 
 - [x] 📦 PWA-Manifest + Icons (manifest.ts, /public/icons/icon.svg)
 - [x] 📦 Onboarding-Tour DeltaT (DeltaTTour, 4 Schritte, localStorage)
 - [x] 📦 @serwist/next Service Worker (sw.ts konfiguriert, im Prod-Build aktiv)
-- [ ] 📦 CSV- und PDF-Export für Projekte
-- [ ] 📦 Accessibility-Audit (WCAG 2.1 AA)
-- [ ] 📦 Performance-Audit (Lighthouse ≥ 95)
-- [ ] 📦 Mobile-Testing (iOS Safari, Android Chrome)
+- [x] 📦 CSV-Export für Projekte (exportProjectsToCsv, UTF-8-BOM für Excel)
+- [x] 📦 Print/PDF-Export DeltaT (window.print() + @media print CSS mit data-Attributen)
+- [x] 📦 macOS 26 Glassmorphism Design (Teal/Navy, glass-card-Klassen, Plus Jakarta Sans)
+- [x] 📦 Login-Bug behoben (router.refresh() nach signIn)
+- [x] 📦 Version-Badge im Header (NEXT_PUBLIC_GIT_SHA, Vercel auto-inject)
+- [x] 📦 Plausi-Fixes A+B: foerderhoehe-Input, jahreswaerme=qDelivered (Scientist-Agent)
+- [x] 📦 Accessibility-Basis: Skip-to-content Link, aria-label auf Navigation (WCAG 2.1)
+- [x] 📦 46 Unit-Tests grün (System-Kern vollständig abgedeckt)
+- [ ] 📦 Accessibility-Vollaudit (WCAG 2.1 AA — Kontrast, Focus-Ring, ARIA vollständig)
+- [ ] 📦 Performance-Audit (Lighthouse ≥ 95 für Landing + /deltat)
+- [ ] 📦 Mobile-Testing (iOS Safari, Android Chrome — v.a. GPA/Atlas)
 - [ ] 📦 Cross-Browser (Firefox, Safari, Edge)
+- [ ] 📦 Supabase Site URL im Dashboard auf `https://geotherm.vencly.com` setzen (E-Mail-Bestätigung)
+- [ ] 📦 Plausi-Fixes C+D: Durchbruch /4→/3 + HC-Ratio; COP T_GW→T_R
+- [ ] 📦 Wissenschaftlicher Disclaimer auf /deltat prominent sichtbar (BRIEF.md § 7.3)
 - [ ] 📦 Public Beta Announcement
 - [ ] 💡 Erste Feedback-Items aus `feedback.md` einarbeiten
 
