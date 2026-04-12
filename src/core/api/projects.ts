@@ -36,6 +36,11 @@ export interface ProjectUpdate {
   deltat_result?: DeltaTOutputs
 }
 
+/** Castet typsichere Domain-Objekte in Supabases Json-Typ für INSERT/UPDATE */
+function toJson<T>(val: T): Json {
+  return val as unknown as Json
+}
+
 function rowToProject(row: {
   id: string
   user_id: string
@@ -82,9 +87,9 @@ export async function createProject(insert: ProjectInsert): Promise<Project> {
       user_id: user.id,
       name: insert.name,
       description: insert.description ?? null,
-      location: (insert.location as unknown as Json) ?? null,
-      deltat_input: (insert.deltat_input as unknown as Json) ?? null,
-      deltat_result: (insert.deltat_result as unknown as Json) ?? null,
+      location: insert.location != null ? toJson(insert.location) : null,
+      deltat_input: insert.deltat_input != null ? toJson(insert.deltat_input) : null,
+      deltat_result: insert.deltat_result != null ? toJson(insert.deltat_result) : null,
     })
     .select()
     .single()
@@ -100,9 +105,9 @@ export async function updateProject(id: string, update: ProjectUpdate): Promise<
     .update({
       ...(update.name !== undefined && { name: update.name }),
       ...(update.description !== undefined && { description: update.description }),
-      ...(update.location !== undefined && { location: update.location as unknown as Json }),
-      ...(update.deltat_input !== undefined && { deltat_input: update.deltat_input as unknown as Json }),
-      ...(update.deltat_result !== undefined && { deltat_result: update.deltat_result as unknown as Json }),
+      ...(update.location !== undefined && { location: toJson(update.location) }),
+      ...(update.deltat_input !== undefined && { deltat_input: toJson(update.deltat_input) }),
+      ...(update.deltat_result !== undefined && { deltat_result: toJson(update.deltat_result) }),
     })
     .eq('id', id)
     .select()

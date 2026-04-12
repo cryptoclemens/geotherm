@@ -118,8 +118,8 @@ export default function PrintDialog() {
           <button id="print-dialog-close" onClick={hidePrintDialog}>×</button>
         </div>
         <div id="print-dialog-body">
-          <div className="pd-section">
-            <div className="pd-section-label">Sichtbare Layer</div>
+          <fieldset className="pd-section" style={{ border: 'none', padding: 0, margin: 0 }}>
+            <legend className="pd-section-label">Sichtbare Layer</legend>
             <div className="pd-options">
               {PRINT_OPTIONS.map(opt => (
                 <label key={opt.key} className="pd-option">
@@ -128,9 +128,9 @@ export default function PrintDialog() {
                 </label>
               ))}
             </div>
-          </div>
-          <div className="pd-section">
-            <div className="pd-section-label">Ausschnitt</div>
+          </fieldset>
+          <fieldset className="pd-section" style={{ border: 'none', padding: 0, margin: 0 }}>
+            <legend className="pd-section-label">Ausschnitt</legend>
             <div className="pd-options">
               {[{val:'viewport',label:'Aktueller Viewport'},{val:'aktionsraum',label:'Aktionsraum'},{val:'nrw',label:'NRW gesamt'}].map(opt => (
                 <label key={opt.val} className="pd-option">
@@ -139,7 +139,7 @@ export default function PrintDialog() {
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="pd-hint">💡 Öffnet neuen Tab mit formatierter Liste — dort „Jetzt drucken" klicken.</div>
         </div>
         <div id="print-dialog-footer">

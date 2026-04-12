@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useGpaStore } from '../../store/useGpaStore'
 
 export default function OsmSpinner() {

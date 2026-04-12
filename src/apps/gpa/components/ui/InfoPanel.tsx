@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 
 export default function InfoPanel() {
