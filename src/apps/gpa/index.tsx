@@ -15,6 +15,7 @@ import GuidedTour from './components/ui/GuidedTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { useGpaStore } from './store/useGpaStore'
 import { FW_CITIES } from './data/fwCities'
+import { getMapInstance } from './lib/mapInstance'
 
 // Vite's __APP_VERSION__ → Next.js env var
 const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'
@@ -35,7 +36,7 @@ function StatTile({ statKey, label, title }: StatTileProps) {
 
   function handleClick() {
     if (statKey === 'fw') {
-      const bounds = (window as unknown as { _map?: { getBounds: () => { contains: (p: [number, number]) => boolean } } })._map?.getBounds()
+      const bounds = getMapInstance()?.getBounds()
       const cities = bounds
         ? FW_CITIES.filter((c: { dh: number; lat: number; lng: number }) => c.dh >= 20 && bounds.contains([c.lat, c.lng]))
         : FW_CITIES.filter((c: { dh: number }) => c.dh >= 20)

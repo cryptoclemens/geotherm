@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import L from 'leaflet'
+import { getMapInstance } from '../../lib/mapInstance'
 
 let searchMarker = null
 
@@ -11,6 +12,7 @@ async function fetchPlaces(q) {
     + '?q=' + encodeURIComponent(q)
     + '&format=json&limit=6&addressdetails=1&accept-language=de&countrycodes=de,at,ch,nl,be,pl'
   const res = await fetch(url)
+  if (!res.ok) throw new Error(`Nominatim: ${res.status}`)
   return res.json()
 }
 
@@ -55,7 +57,7 @@ export default function Ortssuche() {
     const type   = d.type || d.class || ''
     setQuery(name)
 
-    const map  = window._map
+    const map = getMapInstance()
     if (!map) return
     const ll   = [parseFloat(d.lat), parseFloat(d.lon)]
     const zoom = type === 'city' ? 12 : type === 'town' ? 13 : 14

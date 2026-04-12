@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useGpaStore } from '../../store/useGpaStore'
+import { getMapInstance } from '../../lib/mapInstance'
 
 const CAT_LABELS = {
   dc:    { title: 'Rechenzentren', icon: '🖥', color: '#5bafd6' },
@@ -18,8 +19,9 @@ export default function StatListPanel() {
   const meta = CAT_LABELS[statListCategory] || { title: 'Objekte', icon: '📍', color: '#5bafd6' }
 
   function flyTo(item) {
-    if (window._map && item.lat && item.lng) {
-      window._map.flyTo([item.lat, item.lng], 13, { duration: 1.2 })
+    const map = getMapInstance()
+    if (map && item.lat && item.lng) {
+      map.flyTo([item.lat, item.lng], 13, { duration: 1.2 })
       hideStatList()
     }
   }

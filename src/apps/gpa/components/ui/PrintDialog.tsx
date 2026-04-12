@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useGpaStore } from '../../store/useGpaStore'
 import { FW_CITIES } from '../../data/fwCities'
+import { getMapInstance } from '../../lib/mapInstance'
 
 const PRINT_OPTIONS = [
   { key: 'fw',    label: 'Fernwärme-Städte' },
@@ -40,7 +41,7 @@ function secHtml(title, color, rows, useBounds) {
 }
 
 function buildPrintHTML(selected, region, heatMarkers) {
-  const map = window._map
+  const map = getMapInstance()
   const bounds = map ? map.getBounds() : null
   const useBounds = region === 'viewport' && bounds
   const now = new Date().toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
