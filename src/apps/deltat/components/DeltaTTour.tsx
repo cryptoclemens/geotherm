@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const TOUR_KEY = 'deltat-tour-seen'
 
@@ -25,11 +25,12 @@ const STEPS = [
 
 export function DeltaTTour() {
   const [step, setStep] = useState(0)
-  // Lazy initializer: liest localStorage einmalig beim ersten Render
-  const [visible, setVisible] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return !localStorage.getItem(TOUR_KEY)
-  })
+  // useState(false) auf Server + Client identisch → kein Hydration-Mismatch
+  // useEffect liest localStorage erst nach Hydration
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    if (!localStorage.getItem(TOUR_KEY)) setVisible(true)
+  }, [])
 
   function close() {
     localStorage.setItem(TOUR_KEY, '1')
