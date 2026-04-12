@@ -29,6 +29,7 @@ export function DeltaTTour() {
   // useEffect liest localStorage erst nach Hydration
   const [visible, setVisible] = useState(false)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!localStorage.getItem(TOUR_KEY)) setVisible(true)
   }, [])
 
