@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { buttonVariants } from '@/core/ui/button'
 import { cn } from '@/core/ui/utils'
+import { UserNav } from './UserNav'
 
 export function Header() {
   return (
@@ -29,15 +30,7 @@ export function Header() {
           <Link href="/deltat" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
             DeltaT
           </Link>
-          <Link
-            href="/login"
-            className={cn(
-              buttonVariants({ size: 'sm' }),
-              'bg-primary hover:bg-primary/90 text-primary-foreground',
-            )}
-          >
-            Anmelden
-          </Link>
+          <UserNav />
         </nav>
       </div>
     </header>
