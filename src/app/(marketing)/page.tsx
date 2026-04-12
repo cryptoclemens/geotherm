@@ -1,6 +1,23 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buttonVariants } from '@/core/ui/button'
 import { cn } from '@/core/ui/utils'
+
+export const metadata: Metadata = {
+  title: 'Geotherm – Die modulare Geothermie-Suite',
+  description: 'Vom Standort zum Bohrplan in einem Workflow. GPA Atlas + DeltaT-Rechner für geothermische Dubletten-Auslegung. Kostenlos registrieren.',
+  openGraph: {
+    title: 'Geotherm by Vencly',
+    description: 'Die modulare Geothermie-Suite — GPA Atlas und DeltaT-Rechner in einem Workflow.',
+    url: 'https://geotherm.vencly.com',
+    siteName: 'Geotherm',
+    type: 'website',
+    locale: 'de_DE',
+  },
+  alternates: {
+    canonical: 'https://geotherm.vencly.com',
+  },
+}
 
 export default function LandingPage() {
   return (

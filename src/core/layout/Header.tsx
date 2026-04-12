@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import { buttonVariants } from '@/core/ui/button'
-import { cn } from '@/core/ui/utils'
 import { UserNav } from './UserNav'
+import { NavLinks } from './NavLinks'
 
 export function Header() {
   return (
@@ -24,12 +23,7 @@ export function Header() {
           )}
         </Link>
         <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
-          <Link href="/atlas" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
-            Atlas
-          </Link>
-          <Link href="/deltat" className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}>
-            DeltaT
-          </Link>
+          <NavLinks />
           <UserNav />
         </nav>
       </div>

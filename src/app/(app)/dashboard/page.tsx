@@ -91,7 +91,7 @@ export default function DashboardPage() {
 
       {/* App-Schnellzugriff */}
       <section aria-labelledby="apps-heading" className="mb-8">
-        <h2 id="apps-heading" className="text-[11px] font-semibold text-white/30 uppercase tracking-widest mb-3">
+        <h2 id="apps-heading" className="text-[11px] font-semibold text-white/60 uppercase tracking-widest mb-3">
           Direktzugriff
         </h2>
         <div className="grid grid-cols-3 gap-3">
@@ -122,7 +122,7 @@ export default function DashboardPage() {
       {recentProjects.length > 0 && (
         <section aria-labelledby="recent-heading">
           <div className="flex items-center justify-between mb-3">
-            <h2 id="recent-heading" className="text-[11px] font-semibold text-white/30 uppercase tracking-widest">
+            <h2 id="recent-heading" className="text-[11px] font-semibold text-white/60 uppercase tracking-widest">
               Zuletzt gespeichert
             </h2>
             <Link

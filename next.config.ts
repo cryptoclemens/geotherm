@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // Leeres turbopack-Config: behebt "webpack config but no turbopack config"-Fehler in Next.js 16
   turbopack: {},
+  // Sicherheits-Header + Performance
+  poweredByHeader: false,
+  compress: true,
+  // Moderne Bildformate
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 365,
+  },
   // Build-Zeit Env-Vars — VERCEL_GIT_COMMIT_SHA wird von Vercel automatisch gesetzt
   env: {
     NEXT_PUBLIC_GIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',

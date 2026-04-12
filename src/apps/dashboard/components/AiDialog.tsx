@@ -96,12 +96,13 @@ export function AiDialog() {
         </div>
         <span className="text-sm font-medium text-white">Geotherm-Assistent</span>
         {isStreaming && (
-          <div className="ml-auto flex gap-1" aria-label="Antwort wird generiert">
+          <div className="ml-auto flex gap-1" role="status" aria-label="Antwort wird generiert" aria-live="polite">
             {[0, 150, 300].map(delay => (
               <span
                 key={delay}
                 className="w-1.5 h-1.5 rounded-full bg-[oklch(0.72_0.15_195)] animate-bounce"
                 style={{ animationDelay: `${delay}ms` }}
+                aria-hidden="true"
               />
             ))}
           </div>
@@ -126,7 +127,7 @@ export function AiDialog() {
                   const label = TOOL_LABELS[tp.toolName]
                   if (label && (tp.state === 'call' || tp.state === 'result')) {
                     return (
-                      <span key={i} className="italic text-white/50 text-xs block mt-1">
+                      <span key={i} className="italic text-white/50 text-xs block mt-1" role="status" aria-live="polite">
                         {label}
                       </span>
                     )
@@ -167,7 +168,7 @@ export function AiDialog() {
           placeholder="Schreib eine Nachricht…"
           disabled={isStreaming}
           aria-label="Nachricht an den Geotherm-Assistenten"
-          className="flex-1 bg-white/[0.05] border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-[oklch(0.72_0.15_195/0.5)] disabled:opacity-50 transition-colors"
+          className="flex-1 bg-white/[0.05] border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/50 outline-none focus:border-[oklch(0.72_0.15_195/0.5)] disabled:opacity-50 transition-colors"
         />
         <button
           type="submit"
