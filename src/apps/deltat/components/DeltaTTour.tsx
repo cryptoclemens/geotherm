@@ -29,6 +29,7 @@ export function DeltaTTour() {
   // useEffect liest localStorage erst nach Hydration
   const [visible, setVisible] = useState(false)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!localStorage.getItem(TOUR_KEY)) setVisible(true)
   }, [])
 
@@ -69,11 +70,13 @@ export function DeltaTTour() {
           >
             ← Zurück
           </button>
-          <div className="flex gap-1">
+          <div className="flex gap-1" role="group" aria-label="Tour-Fortschritt">
             {STEPS.map((_, i) => (
               <span
                 key={i}
                 className={`w-1.5 h-1.5 rounded-full ${i === step ? 'bg-blue-600' : 'bg-muted-foreground/30'}`}
+                aria-label={`Schritt ${i + 1} von ${STEPS.length}${i === step ? ' — aktuell' : ''}`}
+                aria-current={i === step ? 'step' : undefined}
               />
             ))}
           </div>

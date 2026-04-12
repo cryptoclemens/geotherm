@@ -80,9 +80,10 @@ export function FeedbackModal({ defaultInApp = 'allgemein' }: FeedbackModalProps
       {/* Pill-Button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+        aria-label="Feedback-Dialog öffnen"
+        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors min-h-[44px]"
       >
-        <MessageSquare className="size-4" />
+        <MessageSquare className="size-4" aria-hidden="true" />
         Feedback
       </button>
 
@@ -96,11 +97,20 @@ export function FeedbackModal({ defaultInApp = 'allgemein' }: FeedbackModalProps
 
       {/* Modal */}
       {open && (
-        <div className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-card shadow-2xl">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="feedback-modal-title"
+          className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-xl border bg-card shadow-2xl"
+        >
           <div className="flex items-center justify-between border-b px-4 py-3">
-            <span className="font-semibold text-sm">Feedback geben</span>
-            <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
-              <X className="size-4" />
+            <span id="feedback-modal-title" className="font-semibold text-sm">Feedback geben</span>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Feedback-Dialog schließen"
+              className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
+            >
+              <X className="size-4" aria-hidden="true" />
             </button>
           </div>
 
@@ -112,14 +122,16 @@ export function FeedbackModal({ defaultInApp = 'allgemein' }: FeedbackModalProps
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 p-4">
               {/* Sterne */}
-              <div className="flex justify-center gap-1">
+              <div className="flex justify-center gap-1" role="group" aria-label="Bewertung auswählen">
                 {[1, 2, 3, 4, 5].map(s => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => handleStarClick(s)}
-                    className={`text-2xl transition-colors ${s <= stars ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
-                  >★</button>
+                    aria-label={`${s} ${s === 1 ? 'Stern' : 'Sterne'}`}
+                    aria-pressed={s <= stars}
+                    className={`text-2xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${s <= stars ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
+                  ><span aria-hidden="true">★</span></button>
                 ))}
               </div>
 

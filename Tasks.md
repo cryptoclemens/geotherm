@@ -356,6 +356,8 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] 📦 Wissenschaftlicher Disclaimer auf /deltat prominent sichtbar (BRIEF.md § 7.3)
 - [x] 📦 Service-Worker-Crash behoben: @serwist disabled + Cache-clearing SW (public/sw.js)
 - [x] 📦 Middleware-Härtung: Env-Guard + try/catch + Auth-Redirect → /deltat
+- [x] 📦 Post-Login-Dashboard mit App-Übersicht, Direktzugriff-Kacheln und Projektliste
+- [x] 📦 KI-Assistent auf Dashboard (claude-haiku, navigate_to_deltat/atlas, create_feedback, Vercel AI SDK v6)
 - [ ] 📦 Public Beta Announcement
 - [ ] 💡 Erste Feedback-Items aus `feedback.md` einarbeiten
 

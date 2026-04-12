@@ -8,6 +8,7 @@ import { useAuth } from '@/core/auth/useAuth'
 import { listProjects, type Project } from '@/core/api/projects'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
 import { Button } from '@/core/ui/button'
+import { AiDialog } from '@/apps/dashboard/components/AiDialog'
 
 const APPS = [
   {
@@ -74,18 +75,23 @@ export default function DashboardPage() {
     <div className="container mx-auto px-4 py-10 max-w-4xl">
 
       {/* Begrüßung */}
-      <div className="mb-10">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">
           {greeting()}{name ? `, ${name}` : ''}
         </h1>
         <p className="text-white/50 mt-1.5 text-sm">
-          Deine Geothermie-Suite — alle Werkzeuge auf einen Blick.
+          Beschreibe dein Projekt — ich öffne den passenden Rechner für dich.
         </p>
+      </div>
+
+      {/* KI-Dialog — Herzstück des Dashboards */}
+      <div className="mb-8">
+        <AiDialog />
       </div>
 
       {/* App-Kacheln */}
       <section aria-labelledby="apps-heading" className="mb-12">
-        <h2 id="apps-heading" className="text-[11px] font-semibold text-white/35 uppercase tracking-widest mb-4">
+        <h2 id="apps-heading" className="text-[11px] font-semibold text-white/60 uppercase tracking-widest mb-4">
           Anwendungen
         </h2>
         <div className="grid sm:grid-cols-3 gap-4">
@@ -104,7 +110,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-1 text-xs font-medium" style={{ color }}>
                 Öffnen
-                <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </div>
             </Link>
           ))}
@@ -115,7 +121,7 @@ export default function DashboardPage() {
       {recentProjects.length > 0 && (
         <section aria-labelledby="recent-heading">
           <div className="flex items-center justify-between mb-4">
-            <h2 id="recent-heading" className="text-[11px] font-semibold text-white/35 uppercase tracking-widest">
+            <h2 id="recent-heading" className="text-[11px] font-semibold text-white/60 uppercase tracking-widest">
               Zuletzt gespeichert
             </h2>
             <Link
@@ -146,7 +152,7 @@ export default function DashboardPage() {
                   onClick={() => loadProject(project)}
                 >
                   In DeltaT laden
-                  <ArrowRightIcon className="w-3.5 h-3.5" />
+                  <ArrowRightIcon className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </div>
             ))}

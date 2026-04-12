@@ -4,15 +4,20 @@ import { useState } from 'react'
 export default function InfoPanel() {
   const [open, setOpen] = useState(false)
   if (!open) return (
-    <button id="info-toggle" onClick={() => setOpen(true)} title="Strategische Logik">
-      💡
+    <button
+      id="info-toggle"
+      onClick={() => setOpen(true)}
+      aria-label="Strategische Logik anzeigen"
+      aria-expanded={false}
+    >
+      <span aria-hidden="true">💡</span>
     </button>
   )
   return (
-    <div id="info-panel">
+    <div id="info-panel" role="region" aria-label="Strategische Logik">
       <div id="info-panel-hdr">
         <span>💡 Strategische Logik</span>
-        <button onClick={() => setOpen(false)} title="Schließen">×</button>
+        <button onClick={() => setOpen(false)} aria-label="Panel schließen"><span aria-hidden="true">×</span></button>
       </div>
       <div id="info-panel-body">
         <p>

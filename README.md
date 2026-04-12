@@ -29,6 +29,7 @@ Geotherm ist ein **App-Container** mit modularen **In-Apps**:
 
 | In-App | Route | Beschreibung | Herkunft |
 |---|---|---|---|
+| **Dashboard** | `/dashboard` | Post-Login-Startseite: KI-Assistent, App-Direktzugriff, letzte Projekte | — |
 | **GPA** – Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Fernwärme-, Geologie- und Wärmequellen-Overlays | [geopotatlas](https://github.com/cryptoclemens/geopotatlas) |
 | **DeltaT** – Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten mit WP-Dimensionierung | [vencly-delta-t](https://github.com/cryptoclemens/vencly-delta-t) |
 
@@ -111,6 +112,7 @@ Alle Public-Vars haben `NEXT_PUBLIC_`-Präfix (im Browser lesbar). Server-Secret
 | `GITHUB_FEEDBACK_TOKEN` | ✅ | **Server-only** | Fine-grained PAT mit `Contents: Read/Write` für dieses Repo |
 | `GITHUB_FEEDBACK_REPO` | ✅ | Server-only | z.B. `cryptoclemens/geotherm` |
 | `NEXT_PUBLIC_APP_URL` | ✅ | Public | Basis-URL für OAuth-Redirects (z.B. `https://geotherm.vencly.com`) |
+| `ANTHROPIC_API_KEY` | ✅ | **Server-only** | Anthropic API Key für KI-Assistent (Dashboard-Dialog) |
 | `NEXT_PUBLIC_GIT_SHA` | auto | Public | 7-stelliger Git-SHA, von Vercel automatisch injiziert (`VERCEL_GIT_COMMIT_SHA`) |
 | `NEXT_PUBLIC_SENTRY_DSN` | ❌ | Public | Sentry Error-Tracking |
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | ❌ | Public | Plausible Analytics Domain |
@@ -139,6 +141,7 @@ geotherm/
 │   │   │   ├── verify-email/page.tsx
 │   │   │   └── layout.tsx
 │   │   ├── (app)/                    # Auth-protected
+│   │   │   ├── dashboard/page.tsx    # Post-Login-Dashboard mit KI-Dialog
 │   │   │   ├── atlas/page.tsx        # GPA
 │   │   │   ├── deltat/page.tsx       # DeltaT
 │   │   │   ├── projects/page.tsx
@@ -146,6 +149,8 @@ geotherm/
 │   │   │   │   └── feedback/page.tsx # Admin-only
 │   │   │   └── layout.tsx            # App-Shell
 │   │   ├── api/
+│   │   │   ├── ai/
+│   │   │   │   └── chat/route.ts     # KI-Assistent (streamText, claude-haiku)
 │   │   │   └── feedback/route.ts     # Feedback API Route
 │   │   ├── manifest.ts               # PWA-Manifest (Next.js-nativ)
 │   │   ├── globals.css
@@ -157,13 +162,15 @@ geotherm/
 │   │   │   ├── store/
 │   │   │   ├── data/
 │   │   │   └── index.tsx
-│   │   └── deltat/
+│   │   ├── deltat/
 │   │       ├── components/
 │   │       ├── calc/                 # Pure Logic + Unit-Tests
 │   │       │   ├── system.ts
 │   │       │   └── system.test.ts
 │   │       ├── store/
 │   │       └── index.tsx
+│   │   └── dashboard/
+│   │       └── components/           # AiDialog.tsx
 │   ├── core/
 │   │   ├── auth/                     # useAuth, RequireAuth
 │   │   ├── api/                      # REST-Client, GitHub-Sync-Helper

@@ -26,6 +26,8 @@ export default function MapView() {
       maxZoom={14}
       zoomControl={false}
       style={{ width: '100%', height: '100%' }}
+      aria-label="Interaktive Geothermie-Potenzial-Karte des norddeutschen Tieflandes. Zoomen mit +/- oder Mausrad, Verschieben mit Drag, Klick auf Marker für Details."
+      role="region"
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

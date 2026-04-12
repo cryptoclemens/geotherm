@@ -32,6 +32,7 @@ Geotherm ist keine monolithische App, sondern ein **App-Container**. Jede Teil-A
 
 | Code | Name | Beschreibung |
 |---|---|---|
+| **Dashboard** | KI-Assistent + Übersicht | Post-Login-Startseite mit KI-Dialog (Projektparameter → DeltaT/GPA), App-Kacheln, letzte Projekte | — |
 | **GPA** | Geothermie-Potenzial-Atlas | Interaktive Karte des norddeutschen Tieflandes mit Overlay für Lockergestein, Fernwärme-Städte, Industriewärmequellen und Rechenzentren |
 | **DeltaT** | Dubletten-Auslegungsrechner | Echtzeit-Rechner für geothermische Dubletten-Systeme (Förder- und Reinjektionsbohrung) mit WP-Dimensionierung |
 
@@ -134,7 +135,7 @@ Da das Repo `cryptoclemens/geotherm` **privat** ist, darf die E-Mail direkt in `
 | **BGR Geothermis-Portal** | Offizielle Datenquelle | Nur Viewer, keine Projektplanung |
 | **Geothermie.ch (CH)** | Ähnlicher Ansatz für CH | Nur CH, kein Rechner |
 
-**Unser USP:** *Der einzige Webservice, der Kartendaten, Auslegungsrechner und Wirtschaftlichkeit in einem nahtlosen Workflow verbindet — mit integriertem, AI-gestütztem Feedback-Loop, ohne Installation, mit deutschem Fokus und wissenschaftlich validierten Formeln.*
+**Unser USP:** *Der einzige Webservice, der Kartendaten, Auslegungsrechner und Wirtschaftlichkeit in einem nahtlosen Workflow verbindet — mit integriertem KI-Assistenten auf dem Dashboard (Parameterextraktion, Navigation, Feedback-Collection), ohne Installation, mit deutschem Fokus und wissenschaftlich validierten Formeln.*
 
 ### 5.2 Preismodell (Hypothese)
 
@@ -176,6 +177,7 @@ Da das Repo `cryptoclemens/geotherm` **privat** ist, darf die E-Mail direkt in `
 | **Forms** | react-hook-form + zod | Type-safe Validation |
 | **Content** | **MDX** für Landing/Legal-Seiten | Nicht-technische Editoren können Texte anpassen |
 | **Auth** | Supabase Auth (via `@supabase/ssr`) + eigener `useAuth()`-Hook als Abstraktionsschicht | Migrations-sicher |
+| **KI-Dialog** | Vercel AI SDK v6 (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/react`) + `claude-haiku-4-5` | Dashboard-Assistent: Parameter-Extraktion, Navigation, Feedback-Collection |
 | **DB** | Postgres (Supabase → später Hetzner) | Portabel |
 | **Maps** | `react-leaflet` (Dynamic Import, `ssr: false`) | Bewährt aus Geopotatlas |
 | **PWA** | `@serwist/next` | Moderner Service-Worker, einfache Integration |
@@ -276,5 +278,6 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 | April 2026 | **Dieser Brief** — Entscheidung zur Verschmelzung in Geotherm-Suite mit Next.js + Feedback-Loop |
 | April 2026 | Geotherm Beta live: GPA + DeltaT + Auth + Feedback + PWA auf geotherm.vencly.com |
 | April 2026 | macOS 26 Design-System, Plausi-Checks via Scientist-Agent (Opus 4.6), 46 Unit-Tests |
+| April 2026 | KI-Dialog auf Dashboard live: claude-haiku navigiert zu DeltaT/GPA mit Parameterextraktion, Feedback-Collection per Tool |
 | *geplant Q3 2026* | Geotherm Public Launch mit Pro-Tier |
 | *geplant Q4 2026* | 3. In-App live, erste Enterprise-Kunden |
