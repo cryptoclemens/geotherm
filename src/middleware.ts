@@ -44,6 +44,7 @@ export async function middleware(request: NextRequest) {
   const isAppRoute = pathname.startsWith('/atlas') ||
     pathname.startsWith('/deltat') ||
     pathname.startsWith('/projects') ||
+    pathname.startsWith('/dashboard') ||
     pathname.startsWith('/admin')
 
   if (isAppRoute && !user) {
@@ -52,11 +53,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Eingeloggte Nutzer von Auth-Seiten weglenken → DeltaT als Standard-Einstieg
+  // Eingeloggte Nutzer von Auth-Seiten weglenken → Dashboard als Einstieg
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup')
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/deltat'
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
