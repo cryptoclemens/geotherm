@@ -13,15 +13,24 @@ export function Header() {
         Zum Hauptinhalt springen
       </a>
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <Link href="/" className="font-semibold text-lg tracking-tight flex items-baseline gap-2">
-          Geotherm{' '}
-          <span className="text-muted-foreground font-normal text-sm">by Vencly</span>
-          {process.env.NEXT_PUBLIC_GIT_SHA && (
+        <div className="flex items-baseline gap-2">
+          <Link href="/" className="font-semibold text-lg tracking-tight">
+            Geotherm
+          </Link>
+          <a
+            href="https://www.vencly.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground font-normal text-sm hover:text-foreground transition-colors"
+          >
+            by Vencly
+          </a>
+          {process.env.NEXT_PUBLIC_APP_VERSION && (
             <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
-              {process.env.NEXT_PUBLIC_GIT_SHA}
+              v{process.env.NEXT_PUBLIC_APP_VERSION}
             </span>
           )}
-        </Link>
+        </div>
         <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
           <NavLinks />
           <UserNav />
