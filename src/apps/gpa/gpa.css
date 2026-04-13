@@ -456,6 +456,48 @@
 }
 #geo-spots-footer { padding:7px 12px; border-top:1px solid rgba(255,255,255,.06); flex-shrink:0; }
 #geo-spots-hint { font-size:9px; color:var(--muted); font-style:italic; opacity:.7; }
+#geo-spots-empty { padding:16px 12px; text-align:center; font-size:11px; color:var(--muted); line-height:1.5; }
+
+/* Speichern-Button */
+.geo-spots-save-btn {
+  background:transparent; border:none; cursor:pointer; font-size:13px;
+  opacity:0.65; transition:opacity .15s; padding:0 2px; line-height:1;
+}
+.geo-spots-save-btn:hover { opacity:1; }
+
+/* Tabs */
+#geo-spots-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.07); flex-shrink:0; }
+.geo-spots-tab {
+  flex:1; background:transparent; border:none; cursor:pointer;
+  padding:7px 8px; font-size:10px; color:var(--muted);
+  transition:color .15s, border-color .15s;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.geo-spots-tab:hover { color:var(--text); }
+.geo-spots-tab--active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* Gespeicherte Suchen */
+.geo-saved-item { border-bottom:1px solid rgba(255,255,255,.04); }
+.geo-saved-item:last-child { border-bottom:none; }
+.geo-saved-row {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; cursor:pointer; transition:background .15s;
+}
+.geo-saved-row:hover { background:rgba(91,175,214,.07); }
+.geo-saved-meta { flex:1; min-width:0; }
+.geo-saved-name { font-size:11px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.geo-saved-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+.geo-saved-load {
+  background:rgba(91,175,214,.12); border:1px solid rgba(91,175,214,.25);
+  border-radius:4px; padding:2px 7px; font-size:10px; color:var(--accent);
+  cursor:pointer; transition:background .15s; flex-shrink:0;
+}
+.geo-saved-load:hover { background:rgba(91,175,214,.22); }
+.geo-saved-del {
+  background:transparent; border:none; color:var(--muted); cursor:pointer;
+  font-size:16px; line-height:1; padding:0 2px; flex-shrink:0;
+}
+.geo-saved-del:hover { color:#ef4444; }
 
 /* ── PRINT DIALOG ─────────────────────────────────────────────────────────── */
 #print-dialog-backdrop {

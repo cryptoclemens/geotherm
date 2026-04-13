@@ -38,21 +38,34 @@ export interface GeoSpot {
   explanation: string
 }
 
+export interface SavedSearch {
+  id: string
+  name: string
+  spots: GeoSpot[]
+  queryContext: string
+  savedAt: string
+}
+
 interface WorkspaceState {
   /** Zuletzt in GPA gewählter / angepinnter Standort */
   locationPreset: LocationPreset | null
   setLocationPreset: (preset: LocationPreset) => void
   clearLocationPreset: () => void
-  /** KI-Suchergebnisse: geothermische Spots */
+  /** Aktuell angezeigte KI-Suchergebnisse */
   geoSpots: GeoSpot[]
   queryContext: string
   setGeoSpots: (spots: GeoSpot[], queryContext: string) => void
   clearGeoSpots: () => void
+  /** Gespeicherte Suchen (localStorage) */
+  savedSearches: SavedSearch[]
+  saveCurrentSearch: (name?: string) => void
+  loadSavedSearch: (id: string) => void
+  deleteSavedSearch: (id: string) => void
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       locationPreset: null,
       setLocationPreset: (preset) => set({ locationPreset: preset }),
       clearLocationPreset: () => set({ locationPreset: null }),
@@ -60,6 +73,25 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       queryContext: '',
       setGeoSpots: (spots, queryContext) => set({ geoSpots: spots, queryContext }),
       clearGeoSpots: () => set({ geoSpots: [], queryContext: '' }),
+      savedSearches: [],
+      saveCurrentSearch: (name) => {
+        const { geoSpots, queryContext, savedSearches } = get()
+        if (!geoSpots.length) return
+        const entry: SavedSearch = {
+          id: Date.now().toString(),
+          name: name ?? (queryContext.slice(0, 60) || 'Gespeicherte Suche'),
+          spots: geoSpots,
+          queryContext,
+          savedAt: new Date().toISOString(),
+        }
+        set({ savedSearches: [entry, ...savedSearches].slice(0, 20) })
+      },
+      loadSavedSearch: (id) => {
+        const entry = get().savedSearches.find(s => s.id === id)
+        if (entry) set({ geoSpots: entry.spots, queryContext: entry.queryContext })
+      },
+      deleteSavedSearch: (id) =>
+        set(s => ({ savedSearches: s.savedSearches.filter(x => x.id !== id) })),
     }),
     { name: 'workspace' },
   ),
