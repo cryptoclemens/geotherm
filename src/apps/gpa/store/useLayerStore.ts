@@ -1,32 +1,38 @@
 import { create } from 'zustand'
 
 const DEFAULT_LAYERS: Record<string, boolean> = {
+  // Basisdaten — nur Hauptrahmen sichtbar
   'tiefland-plain':  true,
-  'tiefland-rhein':  true,
+  'tiefland-rhein':  false,   // Rhein-spezifisch, optional
   'aktionsraum':     true,
-  'aq-niederrhein':  true,
+  // Aquifer — nur Norddeutscher als primäres Zielgebiet
+  'aq-niederrhein':  false,
   'aq-norddeutsch':  true,
-  'aq-molasse':      true,
-  'aq-oberrhein':    true,
+  'aq-molasse':      false,
+  'aq-oberrhein':    false,
+  // Geologie / Hydrogeologie — nur ein WMS auf Anhieb
   'geo-egdi':        false,
   'geo-bgr':         true,
-  'geo-huek250':     true,
+  'geo-huek250':     false,   // zweites WMS = visuelles Rauschen
   'waerme-wms':      false,
   'waerme-bbsr':     false,
+  // Wärme-Produzenten — nur Rechenzentren als Einstieg
   'heat-dc':         true,
   'heat-pp':         false,
   'heat-waste':      false,
   'heat-steel':      false,
   'heat-abw':        false,
+  // Fernwärme-Städte — nur hohe Anteile (>50 %)
   'fw-cities-hi':    true,
-  'fw-cities-mid':   true,
-  'fw-cities-lo':    true,
+  'fw-cities-mid':   false,
+  'fw-cities-lo':    false,
   'fw-expand':       false,
   'fw-new':          false,
   'hoeff-locker':    false,
+  // NRW KWP — off by default (grosse GeoJSON-Dateien)
   'kwp-energietraeger': false,
   'kwp-waermecluster':  false,
-  // GeotIS (LIAG Hannover) — geothermische Anlagenstandorte + Höffigkeitskarten
+  // GeotIS (LIAG Hannover)
   'geotis-standorte': false,
   'geotis-hoeff-a':   false,
   'geotis-hoeff-b':   false,

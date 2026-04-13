@@ -17,9 +17,6 @@ import { useGpaStore } from './store/useGpaStore'
 import { FW_CITIES } from './data/fwCities'
 import { getMapInstance } from './lib/mapInstance'
 
-// Vite's __APP_VERSION__ → Next.js env var
-const VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev'
-
 type StatKey = 'dc' | 'pp' | 'abw' | 'fw'
 
 interface StatTileProps {
@@ -74,7 +71,7 @@ export default function GpaApp() {
       <header>
         <div className="hdr-left">
           <div className="hdr-title">
-            <h1>Geothermie-Potenzial-Atlas {VERSION}</h1>
+            <h1>Geothermie-Potenzial-Atlas</h1>
             <p>Live-Daten · Nordeuropäisches Tiefland · Fernwärme · Wärmeproduzenten</p>
           </div>
         </div>

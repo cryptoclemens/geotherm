@@ -285,7 +285,8 @@
   padding:0; overflow:hidden;
 }
 .det-popup-wrap .leaflet-popup-tip-container { display:none; }
-.det-popup-wrap .leaflet-popup-content { margin:0; width:auto !important; }
+.det-popup-wrap .leaflet-popup-content-wrapper { min-width:380px !important; }
+.det-popup-wrap .leaflet-popup-content { margin:0 !important; width:auto !important; min-width:378px !important; }
 .det-popup-wrap .leaflet-popup-close-button {
   color:var(--muted) !important; top:10px !important; right:10px !important;
   font-size:18px !important; z-index:10;
@@ -295,10 +296,10 @@
 .det-title { font-family:'Georgia',serif; font-size:15px; color:var(--text); }
 .det-op { font-size:11px; color:var(--muted); margin-top:3px; }
 .det-body { padding:12px 16px 14px; }
-.det-row { display:flex; justify-content:space-between; gap:12px;
-  font-size:12px; margin-bottom:6px; align-items:flex-start; }
-.det-k { color:var(--muted); flex-shrink:0; min-width:70px; }
-.det-v { color:var(--text); text-align:right; word-break:break-word; }
+.det-row { display:flex; justify-content:space-between; gap:16px;
+  font-size:12px; margin-bottom:6px; align-items:baseline; }
+.det-k { color:var(--muted); flex-shrink:0; min-width:90px; white-space:nowrap; }
+.det-v { color:var(--text); text-align:right; overflow-wrap:break-word; max-width:220px; }
 .det-divider { border-top:1px solid var(--border); margin:10px 0; }
 .det-disclaimer { font-size:10px; color:var(--muted); font-style:italic;
   line-height:1.5; margin-top:8px; padding:6px 8px;
