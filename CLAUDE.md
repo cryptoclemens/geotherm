@@ -156,7 +156,10 @@ Jede Claude-Session endet mit diesen Schritten:
 2. Offene Änderungen committen
 3. Branch pushen
 4. PR erstellen (falls noch kein offener PR existiert): `feature/… → main`
-5. **Veraltete Branches und PRs schließen** — nie mehr als 2 offene PRs gleichzeitig
+5. PR **automatisch mergen** (squash) via GitHub MCP — kein manueller Schritt nötig
+6. **Veraltete Branches und PRs schließen** — nie mehr als 1 offener PR gleichzeitig
+
+> Merge auf `main` = Vercel-Produktions-Deploy. Nur mergen wenn lint+test+typecheck grün.
 
 ### Keine Long-Running-Branches
 Branches leben **maximal 1–2 Sessions** oder **1 Feature**. Danach:
