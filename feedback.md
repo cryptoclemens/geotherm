@@ -33,13 +33,15 @@
 
 ---
 
-## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [in-arbeit]
+## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [erledigt]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
 **Gerät:** Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
 
 > Speicher-Möglichkeit mit Hinterlegung eines Projektnamens fehlen
+
+**Bearbeitung (2026-04-13):** „Speichern"-Button im DeltaT-Header ergänzt. Öffnet Dialog mit vorausgefülltem Projektnamen (Tiefe · Temp · Leistung), speichert alle Parameter + Ergebnisse via `createProject()` in Supabase. Projekt danach im Dashboard unter „Zuletzt gespeichert" sichtbar. Fix in diesem Commit.
 
 ---
 
