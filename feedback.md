@@ -12,9 +12,7 @@
 
 ---
 
-**Noch keine Feedback-Items. Sobald Nutzer Feedback geben, erscheinen sie hier automatisch.**
-
-## 2026-04-13T10:55:25.737Z · deltat · ui-design · [offen]
+## 2026-04-13T10:55:25.737Z · deltat · ui-design · [triage]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
@@ -25,7 +23,7 @@
 
 ---
 
-## 2026-04-13T10:56:39.085Z · deltat · feature-wunsch · [offen]
+## 2026-04-13T10:56:39.085Z · deltat · feature-wunsch · [triage]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
@@ -35,7 +33,7 @@
 
 ---
 
-## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [offen]
+## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [triage]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
