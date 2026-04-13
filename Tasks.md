@@ -394,9 +394,40 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
+## Milestone 7.5 – Bohrkostenrechner & Meine Projekte *(April 2026)* ✅ ERLEDIGT
+
+### 7.5.1 Bohrkostenrechner (`/bohrkost`) ✅
+- [x] 🔥 `src/apps/bohrkost/calc/kosten.ts` — Lukawski-Formel (Lukawski et al. 2014, J. Pet. Sci. Eng. 118, 1–14)
+- [x] 🔥 Linearer Fallback für Tiefen < 500 m (GtV Bohrpreise 2024; DVGW W 115)
+- [x] 🔥 3 Bohrungstypen: Dublette, Einzelbohrung, Explorationsbohrung (+15 %)
+- [x] 🔥 3 Produktionsdurchmesser: 7", 9 5/8", 13 3/8" (Korrekturfaktoren 0.85/1.00/1.25)
+- [x] 🔥 Gesteinstypen: Lockergestein (0.70), Festgestein_sed (1.00), Festgestein_kristallin (1.30)
+- [x] 🔥 Regionen: NDB (0.95), Molasse (1.00), Oberrheingraben (1.05), Sonstiges (1.00)
+- [x] 🔥 Bandbreite Min (×0.65) / Mid / Max (×1.50) pro Bohrung und Gesamtprojekt
+- [x] 🔥 Komplettierungskosten: Pumpe+Steigleitung, Pumptest, Genehmigung, Gutachten, Fündigkeitsrisiko-Versicherung
+- [x] 🔥 MAP/KfW-Förderung: 375 EUR/m, max. 2.500.000 EUR (BEG / KfW 2024) — toggle-bar
+- [x] 🔥 Ampeln: Kosten/kW_th, Gesteinsrisiko, Tiefe
+- [x] 📦 Formelwerk-Tab (`BohrkostFormelTab.tsx`) mit Quellenübersicht + Feedback-Link
+- [x] 📦 Unit-Tests `kosten.test.ts`
+- [x] ⭐ Route `app/(app)/bohrkost/page.tsx` registriert, NavLinks ergänzt
+
+### 7.5.2 Meine Projekte (erweitert) ✅
+- [x] 🔥 Neue Typen: `ProjectType` (Dublette/Einzelbohrung/Exploration), `ProjectStatus` (Idee/InPlanung/InAusfuehrung/Abgeschlossen/Archiviert), `ProjectGeologicalData`, `AiSuggestion`
+- [x] 🔥 `useProjectStore.ts` (Zustand, persist) — CRUD, Selektion, AI-Suggestions
+- [x] 🔥 `ProjectFormDialog.tsx` — Create/Edit mit Typ, Status, Ort, Notizen, DeltaT-Übernahme
+- [x] 🔥 `LoadProjectDialog.tsx` in DeltaT — Projekt in DeltaT laden mit Typ/Status-Badges
+- [x] 📦 `ProjectsLayer.tsx` (GPA) — Leaflet-Marker pro Projekt (Farbe nach Status)
+- [x] 📦 `ProjectDetailPanel.tsx` — Floating Panel (Geo-Daten, DeltaT-Params, „In DeltaT laden")
+- [x] 📦 `ProjectsTab.tsx` — dritter GPA-Tab „Projekte"
+- [x] 📦 KI-Tool `suggest_project_optimization` (Dashboard-Chat → `/api/ai/project-optimize`, Haiku)
+- [x] ⭐ `/projects`-Seite: „Neues Projekt"-Button, Edit-Dialog pro Karte, Typ/Status-Badges
+
+**DoD M7.5:** Bohrkostenrechner unter `/bohrkost` live; Meine Projekte mit vollständigem CRUD, GPA-Layer und KI-Optimierungsvorschlag; NavLinks: Atlas · DeltaT · Bohrkosten · Projekte.
+
+---
+
 ## Backlog – Weitere In-Apps (ab M8+)
 
-- [ ] ⏸ **Bohrkosten-Kalkulator** (CAPEX/OPEX)
 - [ ] ⏸ **LCOH-Modul** (Levelized Cost of Heat)
 - [ ] ⏸ **Genehmigungs-Guide** (WHG-Anträge je Bundesland)
 - [ ] ⏸ **Netzanschluss-Planer** (Distanz zu Fernwärme)
