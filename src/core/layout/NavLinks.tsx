@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/atlas', label: 'Atlas' },
   { href: '/deltat', label: 'DeltaT' },
   { href: '/bohrkost', label: 'Bohrkosten' },
+  { href: '/projects', label: 'Projekte' },
 ] as const
 
 export function NavLinks() {

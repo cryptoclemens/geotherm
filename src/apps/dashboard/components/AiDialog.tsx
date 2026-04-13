@@ -10,6 +10,8 @@ import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
 import type { DeltaTInputs } from '@/apps/deltat/calc/system'
 import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
 import type { GeoSpot } from '@/core/store/useWorkspaceStore'
+import { useProjectStore } from '@/core/store/useProjectStore'
+import type { AiSuggestion } from '@/core/api/projects'
 
 const STORAGE_KEY = 'ai-dialog-history'
 
@@ -143,6 +145,24 @@ export function AiDialog() {
 
       if (tc.toolName === 'navigate_to_atlas') {
         setTimeout(() => router.push('/atlas'), 800)
+      }
+
+      if (tc.toolName === 'suggest_project_optimization') {
+        const input = tc.input as {
+          project_id: string
+          project_name: string
+          current_params: Record<string, number>
+        }
+        fetch('/api/ai/project-optimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        })
+          .then((r) => r.json())
+          .then((suggestion: AiSuggestion) => {
+            useProjectStore.getState().addAiSuggestion(suggestion)
+          })
+          .catch(() => { /* ignorieren */ })
       }
 
       if (tc.toolName === 'show_geothermal_spots') {
