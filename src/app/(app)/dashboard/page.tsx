@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MapIcon, ThermometerIcon, FolderOpenIcon, ArrowRightIcon } from 'lucide-react'
+import { MapIcon, ThermometerIcon, FolderOpenIcon, ArrowRightIcon, HardHatIcon } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
 import { listProjects, type Project } from '@/core/api/projects'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
@@ -28,6 +28,15 @@ const APPS = [
     Icon: ThermometerIcon,
     color: 'oklch(0.68 0.14 60)',
     bg: 'oklch(0.78 0.14 60 / 0.15)',
+  },
+  {
+    id: 'bohrkost',
+    name: 'Bohrkostenrechner',
+    description: 'Investitionsschätzung für Geothermie-Bohrungen — Lukawski-Formel, MAP/KfW-Förderung, Bandbreite Min/Mid/Max.',
+    href: '/bohrkost',
+    Icon: HardHatIcon,
+    color: 'oklch(0.58 0.15 40)',
+    bg: 'oklch(0.80 0.12 40 / 0.15)',
   },
   {
     id: 'projects',
