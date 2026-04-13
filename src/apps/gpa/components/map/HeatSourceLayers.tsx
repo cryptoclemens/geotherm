@@ -51,19 +51,7 @@ const HEAT_CONFIGS = [
     // und ist nur über das BfEE-Portal zugänglich, nicht als öffentlicher WMS/API verfügbar.
     // OSM-Abdeckung: ~60–80 % der relevanten Großstandorte; kleinere Anlagen fehlen.
     label: 'Industrieabwärme (OSM)',
-    query: (bbox) => `[out:json][timeout:25][bbox:${bbox}];(
-nwr["industrial"="refinery"];
-nwr["industrial"="chemical_plant"];
-nwr["industrial"="paper_mill"];
-nwr["industrial"="glass"];
-nwr["industrial"="works"];
-nwr["industrial"="factory"]["name"];
-nwr["man_made"="works"]["product"~"cement|glass|paper|aluminium|aluminum|chemicals|pharmaceutical|rubber|plastic|sugar|fertilizer|steel|coke|oil|gas|acid|chlorine|nitrogen"];
-nwr["man_made"="works"]["name"];
-nwr["man_made"="works"]["operator"];
-nwr["landuse"="industrial"]["operator"]["name"];
-nwr["landuse"="industrial"]["industrial"~"chemical|refinery|paper|glass|cement|aluminium|steel|works|factory"];
-);out center tags;`,
+    query: (bbox) => `[out:json][timeout:25][bbox:${bbox}];(nwr["industrial"="refinery"];nwr["industrial"="chemical_plant"];nwr["industrial"="paper_mill"];nwr["industrial"="glass"];nwr["industrial"="works"];nwr["industrial"="factory"]["name"];nwr["man_made"="works"]["product"~"cement|glass|paper|aluminium|aluminum|chemicals|pharmaceutical|rubber|plastic|sugar|fertilizer|steel|coke|oil|gas|acid|chlorine|nitrogen"];nwr["man_made"="works"]["name"];nwr["man_made"="works"]["operator"];nwr["landuse"="industrial"]["operator"]["name"];nwr["landuse"="industrial"]["industrial"~"chemical|refinery|paper|glass|cement|aluminium|steel|works|factory"];);out center tags;`,
     filter: (el: { tags?: Record<string, string> }) => {
       // Nur benannte oder betrieberzugeordnete Großstandorte — generische Industriegebiete ausschließen
       const t = el.tags || {}
