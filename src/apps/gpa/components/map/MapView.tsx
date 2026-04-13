@@ -8,6 +8,7 @@ import WMSLayers from './WMSLayers'
 import HeatSourceLayers from './HeatSourceLayers'
 import FWCitiesLayer from './FWCitiesLayer'
 import KwpLayers from './KwpLayers'
+import GeoSpotsLayer from './GeoSpotsLayer'
 import ViewportCounter from './ViewportCounter'
 import { setMapInstance } from '../../lib/mapInstance'
 
@@ -41,6 +42,7 @@ export default function MapView() {
       <HeatSourceLayers />
       <FWCitiesLayer />
       <KwpLayers />
+      <GeoSpotsLayer />
       <ViewportCounter />
     </MapContainer>
   )

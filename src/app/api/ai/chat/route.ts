@@ -9,12 +9,14 @@ AUFGABE: Erkenne die Absicht des Nutzers und ruf das passende Tool auf.
 
 TOOLS:
 - navigate_to_deltat: Öffnet den DeltaT-Dubletten-Auslegungsrechner (optional mit Parametern vorausgefüllt)
-- navigate_to_atlas: Öffnet den Geothermie-Potenzial-Atlas (interaktive Karte Norddeutschland)
+- navigate_to_atlas: Öffnet den Geothermie-Potenzial-Atlas (interaktive Karte)
+- show_geothermal_spots: Zeigt eine Liste geothermischer Standort-Empfehlungen im Chat und markiert sie auf der Karte
 - create_feedback: Speichert einen Feature-Wunsch oder Feedback-Eintrag
 
 REGELN:
 - Erwähnt der Nutzer Tiefen, Temperaturen, Förderraten oder Wärmeleistung → navigate_to_deltat mit extrahierten Werten
-- Geht es um Standorterkundung, Karte oder "wo bohren?" → navigate_to_atlas
+- Fragt der Nutzer nach Top-Standorten, besten Erkundungsgebieten oder "wo bohren?" mit Kriterien (Tiefe, Aquifer, Region, Potenzial) → show_geothermal_spots mit 5–8 Einträgen
+- Geht es nur allgemein um die Karte (ohne Standort-Empfehlung) → navigate_to_atlas
 - Wünscht sich der Nutzer ein neues Tool, nennt einen Fehler oder gibt Verbesserungsvorschläge → create_feedback
 - Antworte immer auf Deutsch, kurz und technisch präzise
 - Erkläre kurz was du tust, bevor du das Tool aufrufst
@@ -22,7 +24,10 @@ REGELN:
 DeltaT-Parameter (alle in SI-Einheiten, alle optional):
 tiefe [m] · maechtig [m] · kf [m/s] · tGW [°C] · tds [mg/l]
 Q [l/s] · tR [°C] · abstand [m] · zielLeistung [kW]
-tVL [°C] · tRL [°C] · laufstunden [h/a] · foerderhoehe [m]`
+tVL [°C] · tRL [°C] · laufstunden [h/a] · foerderhoehe [m]
+
+Für show_geothermal_spots: lat/lng immer als dezimale WGS84-Koordinaten (Deutschland: lat 47–55, lng 6–15).
+Potenzial-Skala: "sehr hoch" (T > 15°C Überschuss + sehr gute Transmissivität), "hoch" (gute Bedingungen), "mittel" (ausreichend aber mit Einschränkungen).`
 
 export async function POST(req: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -60,9 +65,26 @@ export async function POST(req: Request) {
         }),
       }),
       navigate_to_atlas: tool({
-        description: 'Öffnet den Geothermie-Potenzial-Atlas.',
+        description: 'Öffnet den Geothermie-Potenzial-Atlas ohne Standort-Empfehlungen.',
         inputSchema: z.object({
           location: z.string().optional().describe('Ortsname oder Regionsbeschreibung'),
+        }),
+      }),
+      // Kein execute → Client-Side Tool: AiDialog rendert die Spots-Liste
+      show_geothermal_spots: tool({
+        description: 'Zeigt eine Liste geothermischer Standort-Empfehlungen im Chat und markiert sie auf der Atlas-Karte. Nutze dieses Tool wenn der Nutzer nach Top-Spots, besten Erkundungsorten oder konkreten Bohrempfehlungen fragt.',
+        inputSchema: z.object({
+          spots: z.array(z.object({
+            name:        z.string().describe('Standortname oder Region, z.B. "Münchner Becken Süd"'),
+            lat:         z.number().describe('Breitengrad WGS84 (Deutschland: 47–55)'),
+            lng:         z.number().describe('Längengrad WGS84 (Deutschland: 6–15)'),
+            aquifer:     z.string().describe('Aquifer-Formation, z.B. "Malmkarst" oder "Rhaetium"'),
+            depth:       z.string().describe('Typische Bohrtiefe, z.B. "800–1.500 m"'),
+            temperature: z.string().describe('Grundwassertemperatur, z.B. "28–42 °C"'),
+            potential:   z.enum(['sehr hoch', 'hoch', 'mittel']),
+            explanation: z.string().describe('2–3 Sätze: Warum dieser Spot geeignet ist, welche Bedingungen ihn auszeichnen und was zu beachten ist.'),
+          })).min(1).max(8),
+          query_context: z.string().describe('Kurze Zusammenfassung der Suchanfrage in einem Satz, z.B. "Top-5 Spots für mitteltiefe Exploration im Lockergestein in NRW"'),
         }),
       }),
       // Mit execute → Server-Side Tool: läuft im API-Handler, Ergebnis wird an KI zurückgegeben

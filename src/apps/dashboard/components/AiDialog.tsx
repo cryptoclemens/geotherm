@@ -5,9 +5,11 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
 import { useRouter } from 'next/navigation'
-import { BotIcon, SendIcon, Trash2Icon } from 'lucide-react'
+import { BotIcon, SendIcon, Trash2Icon, MapPinIcon } from 'lucide-react'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
 import type { DeltaTInputs } from '@/apps/deltat/calc/system'
+import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
+import type { GeoSpot } from '@/core/store/useWorkspaceStore'
 
 const STORAGE_KEY = 'ai-dialog-history'
 
@@ -19,11 +21,61 @@ const STARTERS = [
   'Ich wünsche mir eine Wirtschaftlichkeitsrechnung',
 ]
 
-// Beschriftung für Tool-Aufrufe im Chat
+// Beschriftung für einfache Tool-Aufrufe im Chat
 const TOOL_LABELS: Record<string, string> = {
   navigate_to_deltat: '⟶ Öffne DeltaT-Rechner…',
   navigate_to_atlas:  '⟶ Öffne Atlas…',
   create_feedback:    '✓ Feedback gespeichert',
+}
+
+function potentialStyle(p: string): { color: string; bg: string } {
+  if (p === 'sehr hoch') return { color: '#16a34a', bg: 'rgba(22,163,74,0.10)' }
+  if (p === 'hoch')      return { color: '#b45309', bg: 'rgba(180,83,9,0.10)' }
+  return                        { color: '#475569', bg: 'rgba(71,85,105,0.10)' }
+}
+
+interface GeoSpotsCardProps {
+  spots: GeoSpot[]
+  queryContext: string
+  onNavigate: () => void
+}
+
+function GeoSpotsCard({ spots, queryContext, onNavigate }: GeoSpotsCardProps) {
+  return (
+    <div className="mt-1.5 flex flex-col gap-1.5">
+      <p className="text-[11px] text-muted-foreground italic">{queryContext}</p>
+      {spots.map((spot, i) => {
+        const { color, bg } = potentialStyle(spot.potential)
+        return (
+          <div key={i} className="flex items-start gap-2 text-xs border border-border/40 rounded-lg px-2.5 py-2 bg-background/60">
+            <span
+              className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
+              style={{ background: bg, color }}
+            >
+              {i + 1}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-foreground leading-tight">{spot.name}</div>
+              <div className="text-muted-foreground text-[11px] mt-0.5">{spot.aquifer} · {spot.depth} · {spot.temperature}</div>
+            </div>
+            <span
+              className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap"
+              style={{ color, background: bg }}
+            >
+              {spot.potential}
+            </span>
+          </div>
+        )
+      })}
+      <button
+        onClick={onNavigate}
+        className="mt-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+      >
+        <MapPinIcon className="w-3.5 h-3.5" />
+        Auf Karte anzeigen
+      </button>
+    </div>
+  )
 }
 
 const WELCOME_MESSAGE: UIMessage = {
@@ -60,6 +112,7 @@ function saveHistory(msgs: UIMessage[]) {
 export function AiDialog() {
   const router = useRouter()
   const setInput = useDeltaTStore(s => s.setInput)
+  const setGeoSpots = useWorkspaceStore(s => s.setGeoSpots)
   const [text, setText] = useState('')
   const [initialMessages] = useState<UIMessage[]>(loadHistory)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -86,6 +139,12 @@ export function AiDialog() {
 
       if (tc.toolName === 'navigate_to_atlas') {
         setTimeout(() => router.push('/atlas'), 800)
+      }
+
+      if (tc.toolName === 'show_geothermal_spots') {
+        const input = tc.input as { spots: GeoSpot[]; query_context: string }
+        setGeoSpots(input.spots ?? [], input.query_context ?? '')
+        // Keine automatische Navigation — Nutzer klickt selbst auf "Auf Karte anzeigen"
       }
     },
   })
@@ -162,7 +221,23 @@ export function AiDialog() {
                   return <span key={i}>{part.text}</span>
                 }
                 if (part.type === 'tool-invocation') {
-                  const tp = part as unknown as { toolName: string; state: string }
+                  const tp = part as unknown as { toolName: string; state: string; input?: unknown }
+
+                  // Spots-Karte — custom Rendering
+                  if (tp.toolName === 'show_geothermal_spots' && (tp.state === 'call' || tp.state === 'result')) {
+                    const spotsInput = tp.input as { spots: GeoSpot[]; query_context: string } | undefined
+                    if (spotsInput?.spots?.length) {
+                      return (
+                        <GeoSpotsCard
+                          key={i}
+                          spots={spotsInput.spots}
+                          queryContext={spotsInput.query_context}
+                          onNavigate={() => router.push('/atlas')}
+                        />
+                      )
+                    }
+                  }
+
                   const label = TOOL_LABELS[tp.toolName]
                   if (label && (tp.state === 'call' || tp.state === 'result')) {
                     return (

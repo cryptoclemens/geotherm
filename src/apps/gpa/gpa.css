@@ -404,6 +404,59 @@
 #stat-list-footer { padding:8px 16px; border-top:1px solid rgba(255,255,255,.06); }
 #stat-list-hint { font-size:10px; color:var(--muted); font-style:italic; }
 
+/* ── GEO SPOTS PANEL (KI-Standortsuche) ───────────────────────────────────── */
+#geo-spots-panel {
+  position:absolute; right:14px; bottom:28px; z-index:1001;
+  width:300px; max-height:calc(100vh - 200px);
+  background:rgba(10,22,40,.97); border:1px solid rgba(74,144,194,.25);
+  border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.55);
+  display:flex; flex-direction:column; overflow:hidden;
+  margin-right:228px; /* neben der Legende (210px + 14px gap) */
+}
+#geo-spots-hdr {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+  padding:12px 14px 10px; border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03); flex-shrink:0;
+}
+#geo-spots-hdr-text { flex:1; min-width:0; }
+#geo-spots-title { font-size:12px; font-weight:700; color:var(--text); margin-bottom:2px; }
+#geo-spots-context { font-size:10px; color:var(--muted); line-height:1.4; }
+#geo-spots-close {
+  background:transparent; border:none; color:var(--muted);
+  font-size:20px; cursor:pointer; line-height:1; padding:0; flex-shrink:0;
+  margin-top:-2px;
+}
+#geo-spots-close:hover { color:var(--text); }
+#geo-spots-list { flex:1; overflow-y:auto; padding:6px 0; scrollbar-width:thin; scrollbar-color:var(--accent) rgba(255,255,255,.05); }
+.geo-spot-item {
+  padding:8px 12px; cursor:pointer; transition:background .15s; border-bottom:1px solid rgba(255,255,255,.04);
+}
+.geo-spot-item:last-child { border-bottom:none; }
+.geo-spot-item:hover { background:rgba(91,175,214,.07); }
+.geo-spot-item--active { background:rgba(91,175,214,.10); }
+.geo-spot-row { display:flex; align-items:flex-start; gap:8px; }
+.geo-spot-num {
+  flex-shrink:0; width:18px; height:18px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; color:#fff;
+  margin-top:1px;
+}
+.geo-spot-meta { flex:1; min-width:0; }
+.geo-spot-name { font-size:11px; font-weight:600; color:var(--text); line-height:1.3; }
+.geo-spot-sub { font-size:10px; color:var(--muted); margin-top:1px; line-height:1.3; }
+.geo-spot-badge {
+  flex-shrink:0; font-size:9px; font-weight:600;
+  border:1px solid; border-radius:4px; padding:1px 5px;
+  white-space:nowrap; margin-top:2px;
+}
+.geo-spot-explanation {
+  margin-top:8px; font-size:10px; color:var(--muted); line-height:1.55;
+  background:rgba(255,255,255,.03); border-radius:6px; padding:8px 10px;
+  border-left:2px solid rgba(91,175,214,.35);
+}
+#geo-spots-footer { padding:7px 12px; border-top:1px solid rgba(255,255,255,.06); flex-shrink:0; }
+#geo-spots-hint { font-size:9px; color:var(--muted); font-style:italic; opacity:.7; }
+
 /* ── PRINT DIALOG ─────────────────────────────────────────────────────────── */
 #print-dialog-backdrop {
   position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,.5);
