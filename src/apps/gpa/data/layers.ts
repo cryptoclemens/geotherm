@@ -76,6 +76,39 @@ export const AQUIFER_LAYERS = {
 
 // ── WMS layer configs ─────────────────────────────────────────────────────────
 export const WMS_LAYERS = {
+  // ── GeotIS (LIAG Hannover) ────────────────────────────────────────────────
+  // GetCapabilities: https://www.geotis.de/vgs_wms.php?SERVICE=WMS&REQUEST=GetCapabilities
+  // GetCapabilities: https://www.geotis.de/wms_atlas.php?SERVICE=WMS&REQUEST=GetCapabilities
+  'geotis-standorte': {
+    url: 'https://www.geotis.de/vgs_wms.php',
+    params: { layers: 'Standorte', format: 'image/png', transparent: true, version: '1.1.1' },
+    label: 'GeotIS: Geothermische Anlagenstandorte', opacity: 0.9,
+    attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+  },
+  'geotis-hoeff-a': {
+    url: 'https://www.geotis.de/wms_atlas.php',
+    params: { layers: 'KarteA', format: 'image/png', transparent: true, version: '1.1.1' },
+    label: 'GeotIS Höffigkeit: Hydrothermisch (nachgewiesen)', opacity: 0.6,
+    attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+  },
+  'geotis-hoeff-b': {
+    url: 'https://www.geotis.de/wms_atlas.php',
+    params: { layers: 'KarteB', format: 'image/png', transparent: true, version: '1.1.1' },
+    label: 'GeotIS Höffigkeit: Hydrothermisch (vermutet)', opacity: 0.6,
+    attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+  },
+  'geotis-hoeff-d': {
+    url: 'https://www.geotis.de/wms_atlas.php',
+    params: { layers: 'KarteD', format: 'image/png', transparent: true, version: '1.1.1' },
+    label: 'GeotIS Geothermie-Atlas (Kompilation A+B+C)', opacity: 0.6,
+    attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+  },
+  // ── BGR Tiefentemperatur-WMS ──────────────────────────────────────────────
+  // TODO: BGR veröffentlicht Untergrundtemperaturkarten (1000m/2000m/3000m Tiefe).
+  //   Offizieller Zugang unklar; bekannte URL services.bgr.de/wms/geothermie/ → 404.
+  //   Kandidat: GeoServer BGR oder GDI-DE Katalog prüfen.
+  //   Wenn verfügbar: Ist der wichtigste fehlende Parameter für Potenzialaussagen.
+  // ── BGR Geologie/Hydrogeologie (bestehend) ─────────────────────────────────
   'geo-egdi': {
     url: 'https://services.bgr.de/wms/geologie/igme5000/',
     params: { layers: '3', format: 'image/png', transparent: true, version: '1.3.0' },

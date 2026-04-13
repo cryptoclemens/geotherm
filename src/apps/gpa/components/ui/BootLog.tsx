@@ -1,15 +1,21 @@
-// @ts-nocheck
 import { useEffect, useRef } from 'react'
 import { useGpaStore } from '../../store/useGpaStore'
 
+const STATUS_COLOR: Record<string, string> = {
+  ok: '#5bd68a',
+  warn: '#e8a857',
+  error: '#d65b5b',
+  info: '#5bafd6',
+}
+
 export default function BootLog() {
   const { bootLogOpen, bootLogEntries, toggleBootLog, clearLog } = useGpaStore()
-  const bodyRef = useRef(null)
+  const bodyRef = useRef<HTMLDivElement | null>(null)
 
   // Keyboard shortcut: B = toggle boot log
   useEffect(() => {
-    function onKey(e) {
-      if (e.key === 'b' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'b' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
         toggleBootLog()
       }
     }
@@ -29,8 +35,6 @@ export default function BootLog() {
     navigator.clipboard?.writeText(text)
   }
 
-  const statusColor = { ok: '#5bd68a', warn: '#e8a857', error: '#d65b5b', info: '#5bafd6' }
-
   return (
     <div id="boot-log-panel" className={bootLogOpen ? '' : 'collapsed'}>
       <div id="boot-log-header" onClick={toggleBootLog}>
@@ -48,7 +52,7 @@ export default function BootLog() {
           {bootLogEntries.map((e, i) => (
             <div key={i} className="bl-entry">
               <span className="bl-time">{e.time}</span>
-              <span className="bl-status" style={{ color: statusColor[e.status] || '#5bafd6' }}>●</span>
+              <span className="bl-status" style={{ color: STATUS_COLOR[e.status] ?? '#5bafd6' }}>●</span>
               <span className="bl-msg">{e.msg}</span>
             </div>
           ))}

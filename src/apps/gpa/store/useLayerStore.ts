@@ -26,6 +26,11 @@ const DEFAULT_LAYERS: Record<string, boolean> = {
   'hoeff-locker':    false,
   'kwp-energietraeger': false,
   'kwp-waermecluster':  false,
+  // GeotIS (LIAG Hannover) — geothermische Anlagenstandorte + Höffigkeitskarten
+  'geotis-standorte': false,
+  'geotis-hoeff-a':   false,
+  'geotis-hoeff-b':   false,
+  'geotis-hoeff-d':   false,
 }
 
 interface LayerState {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 import { useLayerStore } from '../../store/useLayerStore'
 
@@ -12,17 +11,21 @@ export function AqChips() {
     { key: 'aq-oberrhein',   label: 'Oberrhein',   color: '#e8a857' },
   ]
   return (
-    <div className="aq-chips">
+    <div className="aq-chips" role="group" aria-label="Aquifer-Filter">
       {chips.map(c => {
         const on = layers[c.key]
         return (
           <div
             key={c.key}
+            role="checkbox"
+            aria-checked={!!on}
+            tabIndex={0}
             className={'aq-chip' + (on ? ' on' : '')}
             style={on ? { background: c.color + '33', borderColor: c.color } : {}}
             onClick={() => toggle(c.key)}
+            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle(c.key))}
           >
-            <div className="aq-chip-dot" style={{ background: c.color }} />
+            <div className="aq-chip-dot" style={{ background: c.color }} aria-hidden="true" />
             {c.label}
           </div>
         )
@@ -32,48 +35,114 @@ export function AqChips() {
 }
 
 // ── SubItem ─────────────────────────────────────────────────────────────────
-export function SubItem({ layerKey, label, dotColor, dotShape = 'circle', badge, children }) {
+interface SubItemProps {
+  layerKey: string
+  label: string
+  dotColor?: string
+  dotShape?: 'circle' | 'square'
+  badge?: string
+  children?: React.ReactNode
+}
+
+export function SubItem({ layerKey, label, dotColor, dotShape = 'circle', badge, children }: SubItemProps) {
   const { layers, toggle } = useLayerStore()
   const on = layers[layerKey] ?? false
+
+  const badgeLabel = badge === '⟳' ? 'lädt…' : badge === '✓' ? 'aktiv' : badge === '✗' ? 'Fehler' : badge
+
   return (
     <div className="sub-item">
-      <div className={'sub-toggle' + (on ? ' on' : '')} onClick={() => toggle(layerKey)} />
+      <div
+        role="checkbox"
+        aria-checked={on}
+        aria-label={`Layer ${label} ${on ? 'deaktivieren' : 'aktivieren'}`}
+        tabIndex={0}
+        className={'sub-toggle' + (on ? ' on' : '')}
+        onClick={() => toggle(layerKey)}
+        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggle(layerKey))}
+      />
       {dotColor && (
         <div
           className={'sub-dot' + (dotShape === 'square' ? ' square' : '')}
           style={{ background: dotColor }}
+          aria-hidden="true"
         />
       )}
       <span className="sub-label">{label}</span>
-      {badge && <span className="loading-badge">{badge}</span>}
+      {badge && (
+        <span
+          className="loading-badge"
+          role="status"
+          aria-label={`WMS-Status: ${badgeLabel}`}
+          title={`Status: ${badgeLabel}`}
+        >
+          {badge}
+        </span>
+      )}
       {children}
     </div>
   )
 }
 
 // ── LayerGroup ───────────────────────────────────────────────────────────────
-export default function LayerGroup({ id, label, dotColor, dotShape = 'square', groupKeys = [], defaultOpen = false, children }) {
+interface LayerGroupProps {
+  id?: string
+  label: string
+  dotColor?: string
+  dotShape?: 'circle' | 'square'
+  groupKeys?: string[]
+  defaultOpen?: boolean
+  children?: React.ReactNode
+}
+
+export default function LayerGroup({
+  id,
+  label,
+  dotColor,
+  dotShape = 'square',
+  groupKeys = [],
+  defaultOpen = false,
+  children,
+}: LayerGroupProps) {
   const [open, setOpen] = useState(defaultOpen)
   const { setGroup, isGroupOn } = useLayerStore()
   const on = isGroupOn(groupKeys)
 
   return (
     <div className="layer-group">
-      <div className="group-header" onClick={() => setOpen(o => !o)}>
-        <span className={'group-arrow' + (open ? ' open' : '')}>▶</span>
+      <div
+        className="group-header"
+        role="button"
+        aria-expanded={open}
+        aria-controls={id ? `layergroup-${id}` : undefined}
+        tabIndex={0}
+        onClick={() => setOpen(o => !o)}
+        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setOpen(o => !o))}
+      >
+        <span className={'group-arrow' + (open ? ' open' : '')} aria-hidden="true">▶</span>
         <div
+          role="checkbox"
+          aria-checked={on}
+          aria-label={`Gruppe ${label} ${on ? 'deaktivieren' : 'aktivieren'}`}
+          tabIndex={0}
           className={'group-toggle' + (on ? ' on' : '')}
           onClick={e => { e.stopPropagation(); setGroup(groupKeys, !on) }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setGroup(groupKeys, !on) } }}
         />
         {dotColor && (
           <div
             className={'group-dot' + (dotShape === 'circle' ? ' circle' : '')}
             style={{ background: dotColor }}
+            aria-hidden="true"
           />
         )}
         <span className="group-label">{label}</span>
       </div>
-      <div className={'sub-layers' + (open ? ' open' : '')}>
+      <div
+        id={id ? `layergroup-${id}` : undefined}
+        className={'sub-layers' + (open ? ' open' : '')}
+        aria-hidden={!open}
+      >
         {children}
       </div>
     </div>

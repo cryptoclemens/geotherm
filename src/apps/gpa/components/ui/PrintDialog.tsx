@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useGpaStore } from '../../store/useGpaStore'
 import { FW_CITIES } from '../../data/fwCities'
+import { getMapInstance } from '../../lib/mapInstance'
 
 const PRINT_OPTIONS = [
   { key: 'fw',    label: 'Fernwärme-Städte' },
@@ -40,7 +41,7 @@ function secHtml(title, color, rows, useBounds) {
 }
 
 function buildPrintHTML(selected, region, heatMarkers) {
-  const map = window._map
+  const map = getMapInstance()
   const bounds = map ? map.getBounds() : null
   const useBounds = region === 'viewport' && bounds
   const now = new Date().toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
@@ -117,8 +118,8 @@ export default function PrintDialog() {
           <button id="print-dialog-close" onClick={hidePrintDialog}>×</button>
         </div>
         <div id="print-dialog-body">
-          <div className="pd-section">
-            <div className="pd-section-label">Sichtbare Layer</div>
+          <fieldset className="pd-section" style={{ border: 'none', padding: 0, margin: 0 }}>
+            <legend className="pd-section-label">Sichtbare Layer</legend>
             <div className="pd-options">
               {PRINT_OPTIONS.map(opt => (
                 <label key={opt.key} className="pd-option">
@@ -127,9 +128,9 @@ export default function PrintDialog() {
                 </label>
               ))}
             </div>
-          </div>
-          <div className="pd-section">
-            <div className="pd-section-label">Ausschnitt</div>
+          </fieldset>
+          <fieldset className="pd-section" style={{ border: 'none', padding: 0, margin: 0 }}>
+            <legend className="pd-section-label">Ausschnitt</legend>
             <div className="pd-options">
               {[{val:'viewport',label:'Aktueller Viewport'},{val:'aktionsraum',label:'Aktionsraum'},{val:'nrw',label:'NRW gesamt'}].map(opt => (
                 <label key={opt.val} className="pd-option">
@@ -138,7 +139,7 @@ export default function PrintDialog() {
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="pd-hint">💡 Öffnet neuen Tab mit formatierter Liste — dort „Jetzt drucken" klicken.</div>
         </div>
         <div id="print-dialog-footer">

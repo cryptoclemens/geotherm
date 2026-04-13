@@ -30,7 +30,7 @@ interface GpaState {
 
   // Viewport Stat Counts
   statCounts: Record<string, number | null>
-  setStatCount: (key: string, n: number) => void
+  setStatCount: (key: string, n: number | null) => void
 
   // Stat List Panel
   statListOpen: boolean

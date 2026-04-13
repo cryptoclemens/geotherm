@@ -60,7 +60,7 @@ export default function DashboardPage() {
   useEffect(() => {
     listProjects()
       .then(projects => setRecentProjects(projects.slice(0, 3)))
-      .catch(() => {})
+      .catch(err => console.error('Projekte laden fehlgeschlagen:', err))
   }, [])
 
   function loadProject(project: Project) {

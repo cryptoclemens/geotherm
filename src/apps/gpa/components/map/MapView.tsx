@@ -9,11 +9,11 @@ import HeatSourceLayers from './HeatSourceLayers'
 import FWCitiesLayer from './FWCitiesLayer'
 import KwpLayers from './KwpLayers'
 import ViewportCounter from './ViewportCounter'
+import { setMapInstance } from '../../lib/mapInstance'
 
-// Exposes map instance globally for flyTo from Ortssuche
 function MapRef() {
   const map = useMap()
-  useEffect(() => { window._map = map }, [map])
+  useEffect(() => { setMapInstance(map) }, [map])
   return null
 }
 
