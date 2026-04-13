@@ -25,6 +25,16 @@
 
 ---
 
+## 2026-04-13T10:56:39.085Z · deltat · feature-wunsch · [offen]
+**Nutzer:** clemens.pompey@vencly.com
+**Version:** 1.0.0
+**Sterne:** ★★★★☆
+**Gerät:** Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+
+> Informations-"i" bei jeder Eingabe bzw. Berechnungs-Ergebnis fehlt, bei der die Berechnung bzw. dahinterliegende Berechnungsformel in einem Popup angezeigt wird.
+
+---
+
 ---
 
 ## Format-Beispiel
