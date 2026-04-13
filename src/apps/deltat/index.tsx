@@ -5,6 +5,7 @@ import { PrinterIcon } from 'lucide-react'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
 import { SecondaryColumn } from './components/SecondaryColumn'
+import { SaveProjectDialog } from './components/SaveProjectDialog'
 import { DeltaTTour } from './components/DeltaTTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { Button } from '@/core/ui/button'
@@ -62,16 +63,18 @@ export default function DeltaTApp() {
             Auf Basis VDI 4640 · DVGW W 115 · Drost 1978 · Arpagaus 2018
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          data-print-hide
-          onClick={() => window.print()}
-          aria-label="Ergebnisse drucken oder als PDF speichern"
-        >
-          <PrinterIcon />
-          Drucken / PDF
-        </Button>
+        <div className="flex items-center gap-2" data-print-hide>
+          <SaveProjectDialog />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.print()}
+            aria-label="Ergebnisse drucken oder als PDF speichern"
+          >
+            <PrinterIcon />
+            Drucken / PDF
+          </Button>
+        </div>
       </header>
 
       {/* ── 3-Spalten-Layout ─────────────────────────────────────────────── */}
