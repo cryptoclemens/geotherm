@@ -119,7 +119,7 @@ export function AiDialog() {
   const setGeoSpots = useWorkspaceStore(s => s.setGeoSpots)
   const [text, setText] = useState('')
   const [initialMessages] = useState<UIMessage[]>(loadHistory)
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const chatScrollRef = useRef<HTMLDivElement>(null)
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/ai/chat' }),
@@ -153,9 +153,11 @@ export function AiDialog() {
     },
   })
 
-  // Scroll to bottom + History speichern bei neuen Nachrichten
+  // Scroll innerhalb des Chat-Containers (nicht Seite!) + History speichern
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight
+    }
     if (status !== 'streaming') saveHistory(messages)
   }, [messages, status])
 
@@ -212,7 +214,7 @@ export function AiDialog() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3 min-h-0">
+      <div ref={chatScrollRef} className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3 min-h-0">
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
@@ -274,7 +276,6 @@ export function AiDialog() {
             </div>
           </div>
         ))}
-        <div ref={bottomRef} />
       </div>
 
       {/* Starter chips — nur wenn noch keine Nutzer-Nachricht */}

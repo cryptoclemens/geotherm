@@ -46,16 +46,33 @@ const HEAT_CONFIGS = [
     key: 'heat-abw',
     color: '#a85bd6',
     icon: '♨️',
-    // Datenquelle: OpenStreetMap / Overpass API (Raffinerie, Chemie, Papier, Glas, Zement …)
+    // Datenquelle: OpenStreetMap / Overpass API (Raffinerie, Chemie, Papier, Glas, Zement, Stahl …)
     // KEIN echter BfEE-Abwärme-Atlas (www.bfee.de/abwaerme-atlas) — der enthält gemessene MWh/a-Werte
     // und ist nur über das BfEE-Portal zugänglich, nicht als öffentlicher WMS/API verfügbar.
     // OSM-Abdeckung: ~60–80 % der relevanten Großstandorte; kleinere Anlagen fehlen.
     label: 'Industrieabwärme (OSM)',
-    query: (bbox) => `[out:json][timeout:20][bbox:${bbox}];(nwr["industrial"="refinery"];nwr["industrial"="chemical_plant"];nwr["industrial"="paper_mill"];nwr["industrial"="glass"];nwr["man_made"="works"]["product"~"cement|glass|paper|aluminium|aluminum|chemicals|pharmaceutical|rubber|plastic|sugar|fertilizer"];nwr["landuse"="industrial"]["man_made"="works"]["operator"];);out center tags;`,
+    query: (bbox) => `[out:json][timeout:25][bbox:${bbox}];(
+nwr["industrial"="refinery"];
+nwr["industrial"="chemical_plant"];
+nwr["industrial"="paper_mill"];
+nwr["industrial"="glass"];
+nwr["industrial"="works"];
+nwr["industrial"="factory"]["name"];
+nwr["man_made"="works"]["product"~"cement|glass|paper|aluminium|aluminum|chemicals|pharmaceutical|rubber|plastic|sugar|fertilizer|steel|coke|oil|gas|acid|chlorine|nitrogen"];
+nwr["man_made"="works"]["name"];
+nwr["man_made"="works"]["operator"];
+nwr["landuse"="industrial"]["operator"]["name"];
+nwr["landuse"="industrial"]["industrial"~"chemical|refinery|paper|glass|cement|aluminium|steel|works|factory"];
+);out center tags;`,
     filter: (el: { tags?: Record<string, string> }) => {
-      // Exclude very generic/unnamed industrial areas
+      // Nur benannte oder betrieberzugeordnete Großstandorte — generische Industriegebiete ausschließen
       const t = el.tags || {}
-      return !!(t.name || t.operator || t.product)
+      if (!t.name && !t.operator && !t.product) return false
+      // Kleine Gewerbegebiete ohne erkennbare thermische Relevanz ausschließen
+      const name = (t.name || '').toLowerCase()
+      const exclude = /gewerbegebiet|gewerbezone|gewerbepark|industriegebiet(?! )|logistik(?!zentrum)|lager|depot|werkstatt/i
+      if (exclude.test(name) && !t.operator) return false
+      return true
     },
   },
 ]

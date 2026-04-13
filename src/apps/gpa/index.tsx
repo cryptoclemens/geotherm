@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import './gpa.css'
 import MapView from './components/map/MapView'
 import Sidebar from './components/sidebar/Sidebar'
@@ -14,11 +15,15 @@ import WelcomeOverlay from './components/ui/WelcomeOverlay'
 import GuidedTour from './components/ui/GuidedTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import SearchResultsPanel from './components/ui/SearchResultsPanel'
+import LocationInspectorPanel from './components/ui/LocationInspectorPanel'
+import SavedLocationsTab from './components/ui/SavedLocationsTab'
 import { useGpaStore } from './store/useGpaStore'
+import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
 import { FW_CITIES } from './data/fwCities'
 import { getMapInstance } from './lib/mapInstance'
 
 type StatKey = 'dc' | 'pp' | 'abw' | 'fw'
+type GpaTab = 'atlas' | 'orte'
 
 interface StatTileProps {
   statKey: StatKey
@@ -60,8 +65,8 @@ function StatTile({ statKey, label, title }: StatTileProps) {
 
 export default function GpaApp() {
   const showPrintDialog = useGpaStore(s => s.showPrintDialog)
-
-  // PwScreen entfernt — Authentifizierung erfolgt über RequireAuth + Middleware
+  const savedLocations = useWorkspaceStore(s => s.savedLocations)
+  const [tab, setTab] = useState<GpaTab>('atlas')
 
   return (
     <div id="gpa-root">
@@ -74,6 +79,21 @@ export default function GpaApp() {
           <div className="hdr-title">
             <h1>Geothermie-Potenzial-Atlas</h1>
             <p>Live-Daten · Nordeuropäisches Tiefland · Fernwärme · Wärmeproduzenten</p>
+          </div>
+          {/* Sub-Tabs */}
+          <div id="gpa-tabs">
+            <button
+              className={`gpa-tab${tab === 'atlas' ? ' gpa-tab--active' : ''}`}
+              onClick={() => setTab('atlas')}
+            >
+              Atlas
+            </button>
+            <button
+              className={`gpa-tab${tab === 'orte' ? ' gpa-tab--active' : ''}`}
+              onClick={() => setTab('orte')}
+            >
+              Meine Orte{savedLocations.length > 0 ? ` (${savedLocations.length})` : ''}
+            </button>
           </div>
         </div>
         <div className="hdr-stats">
@@ -90,18 +110,29 @@ export default function GpaApp() {
         </div>
       </header>
 
-      <div id="map-wrap">
-        <MapView />
-        <Sidebar />
-        <InfoPanel />
-        <Legend />
-        <SearchResultsPanel />
-        <OsmSpinner />
-        <BootLog />
-        <div className="powered-by">
-          powered by <a href="https://www.vencly.com" target="_blank" rel="noopener">Venclÿ</a>
+      {/* Atlas-Ansicht */}
+      {tab === 'atlas' && (
+        <div id="map-wrap">
+          <MapView />
+          <Sidebar />
+          <InfoPanel />
+          <Legend />
+          <SearchResultsPanel />
+          <LocationInspectorPanel />
+          <OsmSpinner />
+          <BootLog />
+          <div className="powered-by">
+            powered by <a href="https://www.vencly.com" target="_blank" rel="noopener">Venclÿ</a>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Meine Orte */}
+      {tab === 'orte' && (
+        <div id="saved-locs-view">
+          <SavedLocationsTab />
+        </div>
+      )}
 
       <FeedbackModal defaultInApp="gpa" />
       <StatListPanel />

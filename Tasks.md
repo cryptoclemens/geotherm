@@ -256,7 +256,7 @@ Aus `delta-t.html` → `src/apps/deltat/calc/system.ts` mit TypeScript-Types.
 
 ---
 
-## Milestone 5 – Daten-Austausch zwischen Apps *(Woche 5)* ✅ ERLEDIGT (WorkspaceStore + OpenInDeltaT)
+## Milestone 5 – Daten-Austausch zwischen Apps *(Woche 5)* ✅ ERLEDIGT (WorkspaceStore + OpenInDeltaT + Location Inspector + KI-Standortsuche)
 
 ### 5.1 Workspace-Store 🔥
 `src/store/useWorkspaceStore.ts` mit `LocationPreset`-Typ:
@@ -283,6 +283,24 @@ type LocationPreset = {
 - Navigiert zu `/atlas?filter=tGW_min,tGW_max,maechtig_min,…`
 - GPA filtert Marker entsprechend
 
+### 5.3b Map-Click Location Inspector 🔥 ✅ ERLEDIGT
+- Klick auf beliebige Kartenposition in GPA → API `POST /api/ai/location` (lat, lng, placeName)
+- Claude Haiku analysiert geologische/hydrologische Kennwerte des Standorts
+- `MapClickLayer.tsx` + `LocationInspectorPanel.tsx` als Overlay-Komponenten
+- Buttons: „Ort speichern" (→ `WorkspaceStore.savedLocations[]`) + „in DeltaT" (→ DeltaT mit Preset)
+- `saveLocation` / `deleteLocation`-Actions im WorkspaceStore
+
+### 5.3c KI-Standortsuche (Dashboard → GPA) 🔥 ✅ ERLEDIGT
+- Dashboard-KI-Dialog zeigt `GeoSpots`-Karte als Tool-Result mit „Auf Karte anzeigen"-Button
+- GPA zeigt `SearchResultsPanel` mit Tab „Aktuell | Gespeichert"
+- ⭐ Speichern-Button für AI-Suchergebnisse; gespeicherte Suchen laden/löschen
+- `GeoSpotsLayer`: nummerierte Marker auf GPA-Karte für KI-Suchergebnisse
+
+### 5.3d GPA „Meine Orte"-Tab 🔥 ✅ ERLEDIGT
+- Sub-Tabs im GPA-Header: „Atlas" | „Meine Orte"
+- `SavedLocationsTab.tsx`: Liste aller gespeicherten Standorte aus WorkspaceStore
+- DeltaT-Export-Button pro Eintrag; Löschen-Funktion
+
 ### 5.4 `projects`-Tabelle 📦
 ```sql
 CREATE TABLE projects (
@@ -307,10 +325,11 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
-## Milestone 6 – Deployment & Domain *(Woche 6)* ✅ ERLEDIGT (Dockerfile + docker-compose + nginx — Domain/Vercel manuell)
+## Milestone 6 – Deployment & Domain *(Woche 6)* ✅ ERLEDIGT (Dockerfile + docker-compose + nginx + Vercel-Config + CI — Domain manuell)
 
-### 6.1 Vercel ⭐
-- Projekt verknüpft mit Repo
+### 6.1 Vercel ⭐ ✅ ERLEDIGT (vercel.json)
+- `vercel.json` im Repo für Build-Config + Preview-Deployments
+- CI-Pipeline `.github/workflows/ci.yml` (lint + typecheck + test auf jedem Push)
 - Env-Vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GITHUB_FEEDBACK_TOKEN`, `GITHUB_FEEDBACK_REPO`
 - Preview-Deployments pro Branch
 
@@ -358,6 +377,16 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] 📦 Middleware-Härtung: Env-Guard + try/catch + Auth-Redirect → /deltat
 - [x] 📦 Post-Login-Dashboard mit App-Übersicht, Direktzugriff-Kacheln und Projektliste
 - [x] 📦 KI-Assistent auf Dashboard (claude-haiku, navigate_to_deltat/atlas, create_feedback, Vercel AI SDK v6)
+- [x] 📦 FormelTab in DeltaT: Tab-Switcher „Berechnung | Formelwerk" mit Quellenübersicht
+- [x] 📦 KI-Standortsuche: GeoSpots-Karte im Dashboard-Chat + SearchResultsPanel in GPA (Tab Aktuell|Gespeichert, ⭐ Speichern/Laden/Löschen)
+- [x] 📦 GeoSpotsLayer: nummerierte Marker auf GPA-Karte für AI-Suchergebnisse
+- [x] 📦 Map-Click Location Inspector: Klick auf Karte → KI-Analyse (Geologie/Hydrogeologie) + „Ort speichern" + „in DeltaT"-Buttons
+- [x] 📦 Meine Orte Tab: Sub-Tab im GPA-Header mit gespeicherten Standorten + DeltaT-Export
+- [x] 📦 FW-Städte Marker-Fix: weißer Stroke auf Kreis-Markern für GÜK250-Sichtbarkeit
+- [x] 📦 Dashboard Scroll Fix: Chat-Öffnung scrollt nicht mehr die Seite
+- [x] 📦 Favicon-Set: icon.svg, favicon.ico, apple-icon.png, icon-192/512.png
+- [x] 📦 heat-abw OSM-Query erweitert: mehr Industriestandorte (industrial=works, landuse=industrial+operator, …)
+- [x] 📦 Vercel-Config + CI: vercel.json + .github/workflows/ci.yml
 - [ ] 📦 Public Beta Announcement
 - [ ] 💡 Erste Feedback-Items aus `feedback.md` einarbeiten
 
