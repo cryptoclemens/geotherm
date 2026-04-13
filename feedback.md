@@ -33,7 +33,7 @@
 
 ---
 
-## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [triage]
+## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [in-arbeit]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
