@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { UserNav } from './UserNav'
 import { NavLinks } from './NavLinks'
+import { ThemeToggle } from '@/core/ui/ThemeToggle'
 
 export function Header() {
   return (
@@ -33,6 +34,7 @@ export function Header() {
         </div>
         <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
           <NavLinks />
+          <ThemeToggle />
           <UserNav />
         </nav>
       </div>

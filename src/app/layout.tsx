@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
+import { TooltipProvider } from '@/core/ui/tooltip'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -38,9 +39,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="de" className={`${plusJakartaSans.variable} h-full antialiased dark`}>
+    <html lang="de" className={`${plusJakartaSans.variable} h-full antialiased dark`} suppressHydrationWarning>
+      <head>
+        {/* Theme flash prevention: apply stored preference before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}}catch(e){}` }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        {children}
+        <TooltipProvider delay={300}>
+          {children}
+        </TooltipProvider>
       </body>
     </html>
   )
