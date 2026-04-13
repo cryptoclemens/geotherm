@@ -4,18 +4,19 @@ import { useEffect } from 'react'
 import { PrinterIcon } from 'lucide-react'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
+import { SecondaryColumn } from './components/SecondaryColumn'
 import { DeltaTTour } from './components/DeltaTTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { Button } from '@/core/ui/button'
 import { useDeltaTStore } from './store/useDeltaTStore'
 import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
+import type { TrafficLight } from './calc/system'
 
 /** Konsumiert den LocationPreset aus dem WorkspaceStore (gesetzt von GPA) */
 function useApplyLocationPreset() {
   useEffect(() => {
     const preset = useWorkspaceStore.getState().locationPreset
     if (!preset) return
-    // Preset direkt auf den Store schreiben – außerhalb des React-Renderpfads
     const applyPreset = useDeltaTStore.getState().applyPreset
     const clear       = useWorkspaceStore.getState().clearLocationPreset
     setTimeout(() => {
@@ -25,8 +26,30 @@ function useApplyLocationPreset() {
   }, [])
 }
 
+const dotColor: Record<TrafficLight, string> = {
+  green:  'bg-green-400',
+  yellow: 'bg-yellow-400',
+  red:    'bg-red-400',
+}
+
+function StatusDot({ color }: { color: TrafficLight }) {
+  return <span className={`inline-block w-2 h-2 rounded-full ${dotColor[color]}`} />
+}
+
+function StatusItem({ label, color, value }: { label: string; color: TrafficLight; value: string }) {
+  return (
+    <div className="flex items-center gap-1.5 text-xs">
+      <StatusDot color={color} />
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-foreground/70 font-mono">{value}</span>
+    </div>
+  )
+}
+
 export default function DeltaTApp() {
   useApplyLocationPreset()
+  const r = useDeltaTStore(s => s.outputs)
+  const inputs = useDeltaTStore(s => s.inputs)
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
@@ -51,25 +74,55 @@ export default function DeltaTApp() {
         </Button>
       </header>
 
-      <div className="flex flex-1 overflow-hidden gap-4 p-4" data-deltat-layout>
-        {/* Left: Input parameters */}
-        <div className="w-72 shrink-0 overflow-y-auto" data-deltat-inputs>
+      {/* ── 3-Spalten-Layout ─────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden gap-3 p-3" data-deltat-layout>
+        {/* Spalte 1: Eingabeparameter */}
+        <div className="w-64 shrink-0 overflow-y-auto" data-deltat-inputs>
           <InputColumn />
         </div>
 
-        {/* Right: Results */}
-        <div className="flex-1 overflow-y-auto" data-deltat-results>
+        {/* Spalte 2: Primärkreislauf */}
+        <div className="flex-1 overflow-hidden min-w-0" data-deltat-results>
           <ResultColumn />
+        </div>
+
+        {/* Spalte 3: Sekundärkreislauf */}
+        <div className="w-72 shrink-0 overflow-hidden" data-deltat-secondary>
+          <SecondaryColumn />
         </div>
       </div>
 
-      {/* Wissenschaftlicher Disclaimer — BRIEF.md § 7.3 */}
-      <div className="mx-4 mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-200/70 leading-relaxed">
-        <strong className="text-amber-300/90 font-medium">Vorauslegung · Machbarkeitsebene:</strong>{' '}
-        Für Investitions- und Genehmigungsentscheidungen sind zusätzlich erforderlich:
-        hydrogeologisches Gutachten, 3D-Simulation (FEFLOW/TOUGH2/COMSOL),
-        standortspezifische Aquifer-Untersuchung und detaillierte Wirtschaftlichkeitsrechnung.
-      </div>
+      {/* ── Statusbar ──────────────────────────────────────────────────────── */}
+      <footer className="shrink-0 px-4 py-2 border-t bg-muted/30 flex flex-wrap items-center gap-x-6 gap-y-1">
+        <StatusItem
+          label="Hydraulik"
+          color={r.sHydraulik}
+          value={`k\u1da0 = ${r.transmissiv.toExponential(1)} m\u00b2/s`}
+        />
+        <StatusItem
+          label="Thermik"
+          color={r.sThermik}
+          value={`${r.qDelivered.toFixed(0)} / ${inputs.zielLeistung} kW`}
+        />
+        <StatusItem
+          label="Durchbruchszeit"
+          color={r.sDurchbruch}
+          value={`${r.tBreak.toFixed(1)} Jahre`}
+        />
+        <StatusItem
+          label="WP-Effizienz"
+          color={r.sCOP}
+          value={`COP = ${r.cop < 90 ? r.cop.toFixed(2) : '—'}`}
+        />
+        <StatusItem
+          label="Materialklasse"
+          color={r.sMaterial}
+          value={r.material.split(' ')[0]}
+        />
+        <p className="ml-auto text-[10px] text-muted-foreground/50 italic hidden lg:block">
+          Vorauslegung · Machbarkeitsebene — kein Ersatz für hydrogeol. Gutachten
+        </p>
+      </footer>
 
       <DeltaTTour />
       <FeedbackModal defaultInApp="deltat" />
