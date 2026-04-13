@@ -17,7 +17,7 @@ const APPS = [
     description: 'Interaktive Karte des norddeutschen Tieflandes — Aquifer-Überblick, Fernwärme-Städte und Industriestandorte.',
     href: '/atlas',
     Icon: MapIcon,
-    color: 'oklch(0.72 0.15 195)',
+    color: 'oklch(0.62 0.14 195)',
     bg: 'oklch(0.62 0.14 195 / 0.15)',
   },
   {
@@ -26,7 +26,7 @@ const APPS = [
     description: 'Echtzeit-Auslegung geothermischer Dubletten — Wärmepumpe, COP, Durchbruchszeit, Materialwahl.',
     href: '/deltat',
     Icon: ThermometerIcon,
-    color: 'oklch(0.82 0.14 60)',
+    color: 'oklch(0.68 0.14 60)',
     bg: 'oklch(0.78 0.14 60 / 0.15)',
   },
   {
@@ -35,7 +35,7 @@ const APPS = [
     description: 'Gespeicherte DeltaT-Berechnungen — schnell laden, vergleichen und als CSV exportieren.',
     href: '/projects',
     Icon: FolderOpenIcon,
-    color: 'oklch(0.75 0.12 280)',
+    color: 'oklch(0.55 0.12 280)',
     bg: 'oklch(0.72 0.12 280 / 0.15)',
   },
 ] as const
@@ -76,10 +76,10 @@ export default function DashboardPage() {
 
       {/* Begrüßung */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           {greeting()}{name ? `, ${name}` : ''}
         </h1>
-        <p className="text-white/50 mt-1.5 text-sm">
+        <p className="text-muted-foreground mt-1.5 text-sm">
           Beschreibe dein Projekt — ich öffne den passenden Rechner für dich.
         </p>
       </div>
@@ -91,7 +91,7 @@ export default function DashboardPage() {
 
       {/* App-Kacheln */}
       <section aria-labelledby="apps-heading" className="mb-12">
-        <h2 id="apps-heading" className="text-[11px] font-semibold text-white/60 uppercase tracking-widest mb-4">
+        <h2 id="apps-heading" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-4">
           Anwendungen
         </h2>
         <div className="grid sm:grid-cols-3 gap-4">
@@ -99,14 +99,14 @@ export default function DashboardPage() {
             <Link
               key={id}
               href={href}
-              className="glass-card rounded-2xl p-5 flex flex-col gap-3 hover:bg-white/[0.07] transition-colors group"
+              className="glass-card rounded-2xl p-5 flex flex-col gap-3 hover:bg-muted/40 dark:hover:bg-white/[0.07] transition-colors group"
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: bg }}>
                 <Icon className="w-5 h-5" style={{ color }} aria-hidden="true" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-white text-sm leading-tight mb-1.5">{appName}</h3>
-                <p className="text-xs text-white/45 leading-relaxed">{description}</p>
+                <h3 className="font-semibold text-foreground text-sm leading-tight mb-1.5">{appName}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
               </div>
               <div className="flex items-center gap-1 text-xs font-medium" style={{ color }}>
                 Öffnen
@@ -121,25 +121,25 @@ export default function DashboardPage() {
       {recentProjects.length > 0 && (
         <section aria-labelledby="recent-heading">
           <div className="flex items-center justify-between mb-4">
-            <h2 id="recent-heading" className="text-[11px] font-semibold text-white/60 uppercase tracking-widest">
+            <h2 id="recent-heading" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
               Zuletzt gespeichert
             </h2>
             <Link
               href="/projects"
-              className="text-xs text-[oklch(0.72_0.15_195)] hover:text-[oklch(0.82_0.14_195)] transition-colors"
+              className="text-xs text-primary hover:text-primary/80 transition-colors"
             >
               Alle anzeigen →
             </Link>
           </div>
-          <div className="glass-card rounded-2xl overflow-hidden divide-y divide-white/[0.07]">
+          <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border">
             {recentProjects.map(project => (
               <div
                 key={project.id}
-                className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.04] transition-colors"
+                className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 dark:hover:bg-white/[0.04] transition-colors"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{project.name}</p>
-                  <p className="text-xs text-white/40 mt-0.5">
+                  <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {project.deltat_input && `${project.deltat_input.tiefe} m · ${project.deltat_input.tGW} °C`}
                     {project.deltat_result && ` · ${project.deltat_result.qDelivered.toFixed(0)} kW`}
                     {' · '}{formatDate(project.created_at)}
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="shrink-0 ml-4 text-[oklch(0.72_0.15_195)] hover:bg-[oklch(0.62_0.14_195/0.1)]"
+                  className="shrink-0 ml-4 text-primary hover:bg-primary/10"
                   onClick={() => loadProject(project)}
                 >
                   In DeltaT laden

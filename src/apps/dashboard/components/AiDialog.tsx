@@ -119,16 +119,16 @@ export function AiDialog() {
   return (
     <div className="glass-card rounded-2xl flex flex-col overflow-hidden" style={{ height: '360px' }}>
       {/* Header */}
-      <div className="shrink-0 flex items-center gap-2.5 px-4 py-2.5 border-b border-white/[0.08]">
-        <div className="w-6 h-6 rounded-full bg-[oklch(0.62_0.14_195/0.25)] flex items-center justify-center">
-          <BotIcon className="w-3.5 h-3.5 text-[oklch(0.72_0.15_195)]" aria-hidden="true" />
+      <div className="shrink-0 flex items-center gap-2.5 px-4 py-2.5 border-b border-border">
+        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+          <BotIcon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
-        <span className="text-sm font-medium text-white">Geotherm-Assistent</span>
+        <span className="text-sm font-medium text-foreground">Geotherm-Assistent</span>
         {hasUserMessage && !isStreaming && (
           <button
             onClick={clearHistory}
             title="Verlauf löschen"
-            className="ml-auto text-white/30 hover:text-white/60 transition-colors"
+            className="ml-auto text-muted-foreground/50 hover:text-muted-foreground transition-colors"
             aria-label="Chat-Verlauf löschen"
           >
             <Trash2Icon className="w-3.5 h-3.5" />
@@ -139,7 +139,7 @@ export function AiDialog() {
             {[0, 150, 300].map(delay => (
               <span
                 key={delay}
-                className="w-1.5 h-1.5 rounded-full bg-[oklch(0.72_0.15_195)] animate-bounce"
+                className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
                 style={{ animationDelay: `${delay}ms` }}
                 aria-hidden="true"
               />
@@ -154,8 +154,8 @@ export function AiDialog() {
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-[oklch(0.62_0.14_195)] text-white'
-                : 'bg-white/[0.06] text-white/85'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-foreground'
             }`}>
               {msg.parts.map((part, i) => {
                 if (part.type === 'text') {
@@ -166,7 +166,7 @@ export function AiDialog() {
                   const label = TOOL_LABELS[tp.toolName]
                   if (label && (tp.state === 'call' || tp.state === 'result')) {
                     return (
-                      <span key={i} className="italic text-white/50 text-xs block mt-1" role="status" aria-live="polite">
+                      <span key={i} className="italic text-muted-foreground text-xs block mt-1" role="status" aria-live="polite">
                         {label}
                       </span>
                     )
@@ -188,7 +188,7 @@ export function AiDialog() {
               key={s}
               onClick={() => sendStarter(s)}
               disabled={isStreaming}
-              className="text-xs px-2.5 py-1 rounded-full border border-white/15 text-white/50 hover:border-[oklch(0.72_0.15_195/0.5)] hover:text-[oklch(0.72_0.15_195)] disabled:opacity-40 transition-colors"
+              className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 hover:text-primary disabled:opacity-40 transition-colors"
             >
               {s}
             </button>
@@ -199,7 +199,7 @@ export function AiDialog() {
       {/* Input */}
       <form
         onSubmit={submit}
-        className="shrink-0 flex items-center gap-2 px-4 py-3 border-t border-white/[0.08]"
+        className="shrink-0 flex items-center gap-2 px-4 py-3 border-t border-border"
       >
         <input
           value={text}
@@ -207,15 +207,15 @@ export function AiDialog() {
           placeholder="Schreib eine Nachricht…"
           disabled={isStreaming}
           aria-label="Nachricht an den Geotherm-Assistenten"
-          className="flex-1 bg-white/[0.05] border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/50 outline-none focus:border-[oklch(0.72_0.15_195/0.5)] disabled:opacity-50 transition-colors"
+          className="flex-1 bg-muted border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 disabled:opacity-50 transition-colors"
         />
         <button
           type="submit"
           disabled={!text.trim() || isStreaming}
           aria-label="Senden"
-          className="shrink-0 w-9 h-9 rounded-lg bg-[oklch(0.62_0.14_195)] hover:bg-[oklch(0.68_0.15_195)] disabled:opacity-40 flex items-center justify-center transition-colors"
+          className="shrink-0 w-9 h-9 rounded-lg bg-primary hover:bg-primary/90 disabled:opacity-40 flex items-center justify-center transition-colors"
         >
-          <SendIcon className="w-4 h-4 text-white" />
+          <SendIcon className="w-4 h-4 text-primary-foreground" />
         </button>
       </form>
     </div>
