@@ -101,9 +101,13 @@ function loadHistory(): UIMessage[] {
 
 function saveHistory(msgs: UIMessage[]) {
   try {
-    // Nur Text-Messages speichern (keine laufenden Tool-Calls)
+    // Nur Text-Messages und abgeschlossene Tool-Calls speichern
     const toSave = msgs.filter(m =>
-      m.parts.every(p => p.type === 'text' || (p.type === 'tool-invocation' && (p as unknown as { state: string }).state === 'result'))
+      m.parts.every(p =>
+        p.type === 'text' ||
+        (typeof p.type === 'string' && p.type.startsWith('tool-') &&
+          (p as unknown as { state: string }).state === 'output-available')
+      )
     )
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave.slice(-50)))
   } catch { /* QuotaExceededError ignorieren */ }
@@ -176,7 +180,7 @@ export function AiDialog() {
   const hasUserMessage = messages.some(m => m.role === 'user')
 
   return (
-    <div className="glass-card rounded-2xl flex flex-col overflow-hidden" style={{ height: '360px' }}>
+    <div className="glass-card rounded-2xl flex flex-col overflow-hidden" style={{ height: '480px' }}>
       {/* Header */}
       <div className="shrink-0 flex items-center gap-2.5 px-4 py-2.5 border-b border-border">
         <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
@@ -218,13 +222,23 @@ export function AiDialog() {
             }`}>
               {msg.parts.map((part, i) => {
                 if (part.type === 'text') {
-                  return <span key={i}>{part.text}</span>
+                  return <span key={i}>{(part as unknown as { text: string }).text}</span>
                 }
-                if (part.type === 'tool-invocation') {
-                  const tp = part as unknown as { toolName: string; state: string; input?: unknown }
+
+                // AI SDK v6: Tool-Parts haben type 'tool-{name}', States: 'input-available', 'output-available'
+                if (typeof part.type === 'string' && part.type.startsWith('tool-')) {
+                  const tp = part as unknown as {
+                    type: string
+                    toolName?: string
+                    state: string
+                    input?: unknown
+                  }
+                  // Tool-Name aus Part-Type ableiten (static tools: 'tool-foo' → 'foo')
+                  const toolName = tp.toolName ?? tp.type.slice('tool-'.length)
+                  const isReady = tp.state === 'input-available' || tp.state === 'output-available'
 
                   // Spots-Karte — custom Rendering
-                  if (tp.toolName === 'show_geothermal_spots' && (tp.state === 'call' || tp.state === 'result')) {
+                  if (toolName === 'show_geothermal_spots') {
                     const spotsInput = tp.input as { spots: GeoSpot[]; query_context: string } | undefined
                     if (spotsInput?.spots?.length) {
                       return (
@@ -236,15 +250,23 @@ export function AiDialog() {
                         />
                       )
                     }
-                  }
-
-                  const label = TOOL_LABELS[tp.toolName]
-                  if (label && (tp.state === 'call' || tp.state === 'result')) {
+                    // Während Streaming: Lade-Indikator
                     return (
-                      <span key={i} className="italic text-muted-foreground text-xs block mt-1" role="status" aria-live="polite">
-                        {label}
+                      <span key={i} className="italic text-muted-foreground text-xs block mt-1">
+                        🔍 Standorte werden ermittelt…
                       </span>
                     )
+                  }
+
+                  if (isReady) {
+                    const label = TOOL_LABELS[toolName]
+                    if (label) {
+                      return (
+                        <span key={i} className="italic text-muted-foreground text-xs block mt-1" role="status" aria-live="polite">
+                          {label}
+                        </span>
+                      )
+                    }
                   }
                 }
                 return null
