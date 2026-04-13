@@ -104,8 +104,9 @@ export default function LayerGroup({
   defaultOpen = false,
   children,
 }: LayerGroupProps) {
-  const [open, setOpen] = useState(defaultOpen)
+  // Auto-aufklappen wenn mind. ein Layer der Gruppe aktiv ist (z.B. Default ON)
   const { setGroup, isGroupOn } = useLayerStore()
+  const [open, setOpen] = useState(() => defaultOpen || isGroupOn(groupKeys))
   const on = isGroupOn(groupKeys)
 
   return (
