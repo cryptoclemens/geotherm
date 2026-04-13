@@ -62,6 +62,10 @@ interface GpaState {
   // Welcome
   welcomeSeen: boolean
   setWelcomeSeen: () => void
+
+  // Map Click Inspector
+  clickedPoint: { lat: number; lng: number } | null
+  setClickedPoint: (pt: { lat: number; lng: number } | null) => void
 }
 
 export const useGpaStore = create<GpaState>((set) => ({
@@ -114,4 +118,7 @@ export const useGpaStore = create<GpaState>((set) => ({
 
   welcomeSeen: false,
   setWelcomeSeen: () => set({ welcomeSeen: true }),
+
+  clickedPoint: null,
+  setClickedPoint: (pt) => set({ clickedPoint: pt }),
 }))

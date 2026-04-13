@@ -46,6 +46,24 @@ export interface SavedSearch {
   savedAt: string
 }
 
+/** Gespeicherter Einzelstandort mit KI-generierten geologischen Details */
+export interface SavedLocation {
+  id: string
+  name: string
+  lat: number
+  lng: number
+  savedAt: string
+  /** Geologische/hydrologische Details (KI-generiert) */
+  aquiferType?: string
+  tiefe_m?: number
+  tGW_celsius?: number
+  maechtig_m?: number
+  kf_ms?: number
+  tds_mgl?: number
+  potential?: 'sehr hoch' | 'hoch' | 'mittel' | 'gering'
+  erlaeuterung?: string
+}
+
 interface WorkspaceState {
   /** Zuletzt in GPA gewählter / angepinnter Standort */
   locationPreset: LocationPreset | null
@@ -61,6 +79,10 @@ interface WorkspaceState {
   saveCurrentSearch: (name?: string) => void
   loadSavedSearch: (id: string) => void
   deleteSavedSearch: (id: string) => void
+  /** Gespeicherte Einzelstandorte (localStorage) */
+  savedLocations: SavedLocation[]
+  saveLocation: (loc: Omit<SavedLocation, 'id' | 'savedAt'>) => void
+  deleteLocation: (id: string) => void
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -92,6 +114,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       },
       deleteSavedSearch: (id) =>
         set(s => ({ savedSearches: s.savedSearches.filter(x => x.id !== id) })),
+      savedLocations: [],
+      saveLocation: (loc) => {
+        const entry: SavedLocation = {
+          ...loc,
+          id: Date.now().toString(),
+          savedAt: new Date().toISOString(),
+        }
+        set(s => ({ savedLocations: [entry, ...s.savedLocations].slice(0, 50) }))
+      },
+      deleteLocation: (id) =>
+        set(s => ({ savedLocations: s.savedLocations.filter(x => x.id !== id) })),
     }),
     { name: 'workspace' },
   ),
