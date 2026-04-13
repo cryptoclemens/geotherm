@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from '@/core/ui/dialog'
 import { Input } from '@/core/ui/input'
 import { Textarea } from '@/core/ui/textarea'
@@ -29,7 +30,7 @@ const PROJECT_STATUSES: ProjectStatus[] = ['Idee', 'Planung', 'Aktiv', 'Archivie
 interface ProjectFormDialogProps {
   mode: 'create' | 'edit'
   project?: Project
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
 }
 
 interface FormState {
@@ -151,9 +152,7 @@ export function ProjectFormDialog({ mode, project, trigger }: ProjectFormDialogP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)} style={{ display: 'contents', cursor: 'pointer' }}>
-        {trigger ?? defaultTrigger}
-      </div>
+      <DialogTrigger render={trigger ?? defaultTrigger} />
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
