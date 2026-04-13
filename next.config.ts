@@ -1,5 +1,19 @@
 import type { NextConfig } from 'next'
 import withSerwistInit from '@serwist/next'
+import { execSync } from 'child_process'
+
+function getGitSha(): string {
+  // Vercel setzt diese Variable automatisch bei jedem Deploy
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)
+  }
+  // Lokale Entwicklung: aus git lesen
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return ''
+  }
+}
 
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
@@ -24,11 +38,12 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24 * 365,
   },
-  // Build-Zeit Env-Vars
+  // Build-Zeit Env-Vars (werden bei jedem Vercel-Deploy automatisch aktualisiert)
   env: {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
-    NEXT_PUBLIC_GIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? '',
+    // Git-SHA: auf Vercel automatisch via VERCEL_GIT_COMMIT_SHA, lokal via git
+    NEXT_PUBLIC_GIT_SHA: getGitSha(),
   },
 }
 
