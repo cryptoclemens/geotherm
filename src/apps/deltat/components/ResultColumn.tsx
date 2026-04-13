@@ -5,7 +5,8 @@ import { KpiTile } from './KpiTile'
 import { AmpelBadge } from './AmpelBadge'
 
 export function ResultColumn() {
-  const { outputs: r, inputs } = useDeltaTStore(s => ({ outputs: s.outputs, inputs: s.inputs }))
+  const r = useDeltaTStore(s => s.outputs)
+  const inputs = useDeltaTStore(s => s.inputs)
 
   return (
     <div className="flex flex-col gap-5 p-4 bg-card rounded-xl border overflow-y-auto">
