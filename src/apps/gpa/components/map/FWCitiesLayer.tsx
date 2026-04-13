@@ -157,10 +157,10 @@ export default function FWCitiesLayer() {
             center={[city.lat, city.lng]}
             radius={r}
             pathOptions={{
-              color: c,
+              color: '#ffffff',
               fillColor: c,
-              fillOpacity: 0.75,
-              weight: 2,
+              fillOpacity: 0.85,
+              weight: 1.5,
             }}
           >
             <Tooltip direction="top" offset={[0, -r-2]} opacity={0.97}>
@@ -199,10 +199,10 @@ export default function FWCitiesLayer() {
             center={[city.lat, city.lng]}
             radius={r}
             pathOptions={{
-              color: c,
+              color: '#ffffff',
               fillColor: c,
-              fillOpacity: 0.45,
-              weight: 2,
+              fillOpacity: 0.6,
+              weight: 1.5,
               dashArray: '4 3',
             }}
           >

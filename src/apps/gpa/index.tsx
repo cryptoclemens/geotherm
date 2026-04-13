@@ -13,6 +13,7 @@ import PrintDialog from './components/ui/PrintDialog'
 import WelcomeOverlay from './components/ui/WelcomeOverlay'
 import GuidedTour from './components/ui/GuidedTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
+import SearchResultsPanel from './components/ui/SearchResultsPanel'
 import { useGpaStore } from './store/useGpaStore'
 import { FW_CITIES } from './data/fwCities'
 import { getMapInstance } from './lib/mapInstance'
@@ -94,6 +95,7 @@ export default function GpaApp() {
         <Sidebar />
         <InfoPanel />
         <Legend />
+        <SearchResultsPanel />
         <OsmSpinner />
         <BootLog />
         <div className="powered-by">
