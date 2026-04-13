@@ -29,9 +29,9 @@ Geotherm ist ein **App-Container** mit modularen **In-Apps**:
 
 | In-App | Route | Beschreibung | Herkunft |
 |---|---|---|---|
-| **Dashboard** | `/dashboard` | Post-Login-Startseite: KI-Assistent, App-Direktzugriff, letzte Projekte | — |
-| **GPA** – Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Fernwärme-, Geologie- und Wärmequellen-Overlays | [geopotatlas](https://github.com/cryptoclemens/geopotatlas) |
-| **DeltaT** – Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten mit WP-Dimensionierung | [vencly-delta-t](https://github.com/cryptoclemens/vencly-delta-t) |
+| **Dashboard** | `/dashboard` | Post-Login-Startseite: KI-Assistent, KI-Standortsuche (GeoSpots-Karte), App-Direktzugriff, letzte Projekte | — |
+| **GPA** – Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Fernwärme-, Geologie- und Wärmequellen-Overlays; Map-Click Location Inspector; GeoSpotsLayer; „Meine Orte"-Tab | [geopotatlas](https://github.com/cryptoclemens/geopotatlas) |
+| **DeltaT** – Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk" | [vencly-delta-t](https://github.com/cryptoclemens/vencly-delta-t) |
 
 Beide tauschen Daten über einen gemeinsamen **Workspace-Store** aus. Weitere In-Apps auf der Roadmap (siehe [BRIEF.md §2.4](BRIEF.md)).
 
@@ -150,7 +150,8 @@ geotherm/
 │   │   │   └── layout.tsx            # App-Shell
 │   │   ├── api/
 │   │   │   ├── ai/
-│   │   │   │   └── chat/route.ts     # KI-Assistent (streamText, claude-haiku)
+│   │   │   │   ├── chat/route.ts     # KI-Assistent (streamText, claude-haiku)
+│   │   │   │   └── location/route.ts # Location Inspector (lat/lng → geologische KI-Analyse)
 │   │   │   └── feedback/route.ts     # Feedback API Route
 │   │   ├── manifest.ts               # PWA-Manifest (Next.js-nativ)
 │   │   ├── globals.css
@@ -159,22 +160,28 @@ geotherm/
 │   ├── apps/                         # Modulare In-Apps
 │   │   ├── gpa/
 │   │   │   ├── components/
+│   │   │   │   ├── MapClickLayer.tsx         # Klick-Handler für Location Inspector
+│   │   │   │   ├── LocationInspectorPanel.tsx# KI-Analyse-Popup
+│   │   │   │   ├── GeoSpotsLayer.tsx         # Nummerierte Marker für KI-Suchergebnisse
+│   │   │   │   ├── SearchResultsPanel.tsx    # Tab Aktuell|Gespeichert
+│   │   │   │   └── SavedLocationsTab.tsx     # „Meine Orte"-Tab
 │   │   │   ├── store/
 │   │   │   ├── data/
 │   │   │   └── index.tsx
 │   │   ├── deltat/
 │   │       ├── components/
-│   │       ├── calc/                 # Pure Logic + Unit-Tests
+│   │       │   └── FormelTab.tsx             # Tab „Berechnung | Formelwerk"
+│   │       ├── calc/                         # Pure Logic + Unit-Tests
 │   │       │   ├── system.ts
 │   │       │   └── system.test.ts
 │   │       ├── store/
 │   │       └── index.tsx
 │   │   └── dashboard/
-│   │       └── components/           # AiDialog.tsx
+│   │       └── components/           # AiDialog.tsx (inkl. GeoSpots Tool-Result)
 │   ├── core/
 │   │   ├── auth/                     # useAuth, RequireAuth
 │   │   ├── api/                      # REST-Client, GitHub-Sync-Helper
-│   │   ├── store/                    # useWorkspaceStore (App-übergreifend)
+│   │   ├── store/                    # useWorkspaceStore (LocationPresets + savedLocations)
 │   │   ├── ui/                       # shadcn/ui + Shared (ParamSlider, FeedbackModal)
 │   │   └── layout/                   # AppShell, Header, Footer
 │   ├── lib/
@@ -196,10 +203,13 @@ geotherm/
 │   └── nginx.conf                    # SPA-Fallback + Security-Headers
 │
 ├── .env.example
+├── .github/
+│   └── workflows/ci.yml              # CI: lint + typecheck + test auf jedem Push
 ├── .gitignore
 ├── Dockerfile                        # Multi-Stage für Hetzner
 ├── docker-compose.yml                # App + Postgres + Backups
 ├── next.config.ts                    # output: 'standalone' + @serwist/next
+├── vercel.json                       # Vercel Build-Config + Preview-Deployments
 ├── components.json                   # shadcn/ui config
 ├── package.json
 ├── tsconfig.json

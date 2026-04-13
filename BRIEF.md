@@ -32,9 +32,9 @@ Geotherm ist keine monolithische App, sondern ein **App-Container**. Jede Teil-A
 
 | Code | Name | Beschreibung |
 |---|---|---|
-| **Dashboard** | KI-Assistent + Übersicht | Post-Login-Startseite mit KI-Dialog (Projektparameter → DeltaT/GPA), App-Kacheln, letzte Projekte | — |
-| **GPA** | Geothermie-Potenzial-Atlas | Interaktive Karte des norddeutschen Tieflandes mit Overlay für Lockergestein, Fernwärme-Städte, Industriewärmequellen und Rechenzentren |
-| **DeltaT** | Dubletten-Auslegungsrechner | Echtzeit-Rechner für geothermische Dubletten-Systeme (Förder- und Reinjektionsbohrung) mit WP-Dimensionierung |
+| **Dashboard** | KI-Assistent + Übersicht | Post-Login-Startseite mit KI-Dialog (Projektparameter → DeltaT/GPA, KI-Standortsuche mit GeoSpots-Karte), App-Kacheln, letzte Projekte | — |
+| **GPA** | Geothermie-Potenzial-Atlas | Interaktive Karte mit Overlay für Lockergestein, Fernwärme-Städte, Industriewärmequellen; Map-Click Location Inspector (KI-Analyse per Klick); „Meine Orte"-Tab; KI-Suchergebnisse als nummerierte Marker (GeoSpotsLayer) |
+| **DeltaT** | Dubletten-Auslegungsrechner | Echtzeit-Rechner für geothermische Dubletten-Systeme mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk" |
 
 ### 2.3 Daten-Austausch zwischen Apps
 
@@ -279,5 +279,8 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 | April 2026 | Geotherm Beta live: GPA + DeltaT + Auth + Feedback + PWA auf geotherm.vencly.com |
 | April 2026 | macOS 26 Design-System, Plausi-Checks via Scientist-Agent (Opus 4.6), 46 Unit-Tests |
 | April 2026 | KI-Dialog auf Dashboard live: claude-haiku navigiert zu DeltaT/GPA mit Parameterextraktion, Feedback-Collection per Tool |
+| April 2026 | KI-Standortsuche: GeoSpots-Karte im Dashboard-Chat, SearchResultsPanel in GPA (Aktuell/Gespeichert), GeoSpotsLayer mit nummerierten Markern |
+| April 2026 | Map-Click Location Inspector in GPA: Klick auf Karte → KI-Analyse (Geologie/Hydrogeologie) + „Ort speichern" + „in DeltaT"-Workflow; „Meine Orte"-Tab im GPA-Header |
+| April 2026 | FormelTab in DeltaT, FW-Städte Marker-Fix, Favicon-Set, heat-abw Query erweitert, Vercel-Config + CI-Pipeline |
 | *geplant Q3 2026* | Geotherm Public Launch mit Pro-Tier |
 | *geplant Q4 2026* | 3. In-App live, erste Enterprise-Kunden |
