@@ -5,8 +5,10 @@ import { SunIcon, MoonIcon } from 'lucide-react'
 import { Button } from './button'
 
 export function ThemeToggle() {
-  // Initialize from DOM — the flash-prevention script in layout.tsx ensures
-  // the correct class is already applied before first paint.
+  // Lazy initializer reads from DOM on client, defaults to dark on server.
+  // suppressHydrationWarning on the button prevents React complaining if
+  // the server-rendered icon differs from the client-hydrated icon (e.g. when
+  // the user previously chose light mode and the flash-prevention script fired).
   const [dark, setDark] = useState(() => {
     if (typeof window === 'undefined') return true
     return document.documentElement.classList.contains('dark')
@@ -21,13 +23,17 @@ export function ThemeToggle() {
 
   return (
     <Button
-      variant="ghost"
-      size="icon"
+      variant="outline"
+      size="icon-sm"
       onClick={toggle}
       aria-label={dark ? 'Light Mode aktivieren' : 'Dark Mode aktivieren'}
-      title={dark ? 'Light Mode' : 'Dark Mode'}
+      title={dark ? 'Light Mode aktivieren' : 'Dark Mode aktivieren'}
+      suppressHydrationWarning
     >
-      {dark ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
+      {dark
+        ? <SunIcon className="w-3.5 h-3.5" suppressHydrationWarning />
+        : <MoonIcon className="w-3.5 h-3.5" suppressHydrationWarning />
+      }
     </Button>
   )
 }

@@ -1,0 +1,71 @@
+# Datensicherheit
+
+Technische und organisatorische Maßnahmen (TOMs) gemäß Art. 32 DSGVO — Stand: März 2026
+
+## Übertragungssicherheit
+
+- TLS 1.3 für alle Datenübertragungen
+- HSTS (max-age 1 Jahr, includeSubDomains)
+- HTTPS erzwungen, HTTP-Redirect aktiv
+
+## Speichersicherheit
+
+- AES-256-GCM-Verschlüsselung für sensible Inhalte und API-Keys
+- Authentifizierungs-Tag (AEAD) verhindert unbemerkte Manipulation
+- Randomisierter IV pro Verschlüsselungsvorgang
+
+## Zugriffskontrolle & Mandantentrennung
+
+- PostgreSQL Row-Level Security (RLS) auf allen Tabellen
+- Vollständige Mandantentrennung auf Datenbankebene
+- Service-Role-Client nur serverseitig, nie im Browser
+
+## API-Keys & Token
+
+- API-Keys SHA-256-gehashed (kein Klartext in der Datenbank)
+- Einladungs-Token: 256-Bit Entropie (randomBytes)
+- Scope-Prüfung (read/write) auf allen API-Endpunkten
+
+## HTTP-Sicherheitsheader
+
+- X-Frame-Options: DENY (kein Clickjacking)
+- X-Content-Type-Options: nosniff
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: camera=(), microphone=()
+
+## Eingabevalidierung
+
+- Zod-Schema-Validierung auf allen API-Routen
+- UUID-Format-Prüfung auf Query-Parametern
+- Fehlerbehandlung ohne Stack-Trace-Exposure
+
+## Serverstandort & Compliance
+
+- Datenbankserver: Frankfurt am Main, Deutschland (EU)
+- DSGVO-konformer Betrieb
+- Kein Tracking, keine Analyse-Cookies
+
+## Sicherheitsüberprüfung
+
+- Statisches Code-Audit durchgeführt (März 2026)
+- Alle identifizierten Schwachstellen behoben
+- Audit-Log für alle datenschutzrelevanten Änderungen
+
+## BYOK-Hinweis
+
+Bei Nutzung des BYOK-Modells verlassen Inhalte die Plattform ausschließlich in
+Richtung des vom Nutzer gewählten KI-Anbieters. Die Plattform speichert diese Inhalte
+nicht dauerhaft auf eigenen Servern. Für die Sicherheit der Verarbeitung beim
+Drittanbieter gelten dessen eigene Sicherheitsrichtlinien.
+
+## Sicherheitslücken melden
+
+Sicherheitslücken bitte verantwortungsvoll melden an: **security@vencly.com**
+
+Wir bemühen uns um eine Antwort innerhalb von 48 Stunden und behandeln alle Meldungen vertraulich.
+
+## Auftragsverarbeitungsvertrag (AVV)
+
+B2B-Kunden, die personenbezogene Daten über die Plattform verarbeiten, können einen AVV
+nach Art. 28 DSGVO anfordern: datenschutz@vencly.com

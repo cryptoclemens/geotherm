@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { UserNav } from './UserNav'
 import { NavLinks } from './NavLinks'
 import { ThemeToggle } from '@/core/ui/ThemeToggle'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: appVersion } = require('../../../package.json') as { version: string }
 
 export function Header() {
   return (
@@ -26,9 +28,9 @@ export function Header() {
           >
             by Vencly
           </a>
-          {process.env.NEXT_PUBLIC_APP_VERSION && (
+          {appVersion && (
             <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
-              v{process.env.NEXT_PUBLIC_APP_VERSION}
+              v{appVersion}
             </span>
           )}
         </div>
