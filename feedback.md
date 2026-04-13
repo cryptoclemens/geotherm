@@ -14,6 +14,37 @@
 
 **Noch keine Feedback-Items. Sobald Nutzer Feedback geben, erscheinen sie hier automatisch.**
 
+## 2026-04-13T10:55:25.737Z · deltat · ui-design · [offen]
+**Nutzer:** clemens.pompey@vencly.com
+**Version:** 1.0.0
+**Sterne:** ★★★★☆
+**Gerät:** Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+
+> bisher nur darkmode, wäre cool, wenn es das auch in light mode gäbe.
+> Farbe blau bei "Parameter" ist etwas zu intensiv
+
+---
+
+## 2026-04-13T10:56:39.085Z · deltat · feature-wunsch · [offen]
+**Nutzer:** clemens.pompey@vencly.com
+**Version:** 1.0.0
+**Sterne:** ★★★★☆
+**Gerät:** Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+
+> Informations-"i" bei jeder Eingabe bzw. Berechnungs-Ergebnis fehlt, bei der die Berechnung bzw. dahinterliegende Berechnungsformel in einem Popup angezeigt wird.
+
+---
+
+## 2026-04-13T10:57:43.512Z · deltat · feature-wunsch · [offen]
+**Nutzer:** clemens.pompey@vencly.com
+**Version:** 1.0.0
+**Sterne:** ★★★★☆
+**Gerät:** Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+
+> Speicher-Möglichkeit mit Hinterlegung eines Projektnamens fehlen
+
+---
+
 ---
 
 ## Format-Beispiel
