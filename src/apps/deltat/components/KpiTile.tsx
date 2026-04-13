@@ -9,28 +9,28 @@ interface KpiTileProps {
 }
 
 const colorMap: Record<string, string> = {
-  green:  'border-green-400  bg-green-50',
-  yellow: 'border-yellow-400 bg-yellow-50',
-  red:    'border-red-400    bg-red-50',
-  navy:   'border-blue-900   bg-blue-50',
+  green:  'border-green-500  bg-green-950/40',
+  yellow: 'border-yellow-500 bg-yellow-950/40',
+  red:    'border-red-500    bg-red-950/40',
+  navy:   'border-blue-600   bg-blue-950/30',
 }
 
 const textMap: Record<string, string> = {
-  green:  'text-green-800',
-  yellow: 'text-yellow-800',
-  red:    'text-red-800',
-  navy:   'text-blue-900',
+  green:  'text-green-300',
+  yellow: 'text-yellow-200',
+  red:    'text-red-300',
+  navy:   'text-blue-200',
 }
 
 export function KpiTile({ label, value, unit, color = 'navy', sub }: KpiTileProps) {
   return (
-    <div className={`rounded-lg border-l-4 px-3 py-2 ${colorMap[color]}`}>
-      <div className="text-xs text-muted-foreground mb-0.5">{label}</div>
-      <div className={`text-xl font-bold font-mono tabular-nums leading-tight ${textMap[color]}`}>
+    <div className={`rounded-lg border-l-4 px-3 py-2.5 ${colorMap[color]}`}>
+      <div className="text-[11px] text-muted-foreground mb-0.5 uppercase tracking-wide">{label}</div>
+      <div className={`text-2xl font-bold font-mono tabular-nums leading-tight ${textMap[color]}`}>
         {typeof value === 'number' ? value.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : value}
-        {unit && <span className="text-sm font-normal ml-1">{unit}</span>}
+        {unit && <span className="text-sm font-normal ml-1 opacity-70">{unit}</span>}
       </div>
-      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
+      {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   )
 }
