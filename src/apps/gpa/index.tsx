@@ -110,29 +110,25 @@ export default function GpaApp() {
         </div>
       </header>
 
-      {/* Atlas-Ansicht */}
-      {tab === 'atlas' && (
-        <div id="map-wrap">
-          <MapView />
-          <Sidebar />
-          <InfoPanel />
-          <Legend />
-          <SearchResultsPanel />
-          <LocationInspectorPanel />
-          <OsmSpinner />
-          <BootLog />
-          <div className="powered-by">
-            powered by <a href="https://www.vencly.com" target="_blank" rel="noopener">Venclÿ</a>
-          </div>
+      {/* Atlas-Ansicht — MapContainer darf NICHT unmounten (Leaflet verliert Initialisierung) */}
+      <div id="map-wrap" style={{ display: tab === 'atlas' ? '' : 'none' }}>
+        <MapView />
+        <Sidebar />
+        <InfoPanel />
+        <Legend />
+        <SearchResultsPanel />
+        <LocationInspectorPanel />
+        <OsmSpinner />
+        <BootLog />
+        <div className="powered-by">
+          powered by <a href="https://www.vencly.com" target="_blank" rel="noopener">Venclÿ</a>
         </div>
-      )}
+      </div>
 
       {/* Meine Orte */}
-      {tab === 'orte' && (
-        <div id="saved-locs-view">
-          <SavedLocationsTab />
-        </div>
-      )}
+      <div id="saved-locs-view" style={{ display: tab === 'orte' ? '' : 'none' }}>
+        <SavedLocationsTab />
+      </div>
 
       <FeedbackModal defaultInApp="gpa" />
       <StatListPanel />
