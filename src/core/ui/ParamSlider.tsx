@@ -1,5 +1,8 @@
 'use client'
 
+import { InfoIcon } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip'
+
 // UI/UX Pro Max: form-labels (label+for), touch-target-size (≥44px via py-2), focus-states
 
 interface ParamSliderProps {
@@ -14,10 +17,12 @@ interface ParamSliderProps {
   format?: (val: number) => string
   /** Logarithmische Skala */
   log?: boolean
+  /** Formel / Erläuterung als Tooltip */
+  info?: string
 }
 
 export function ParamSlider({
-  label, value, min, max, step, unit, onChange, format, log = false,
+  label, value, min, max, step, unit, onChange, format, log = false, info,
 }: ParamSliderProps) {
   const display = format ? format(value) : value.toLocaleString('de-DE')
   // Stable ID from label — letters + numbers only
@@ -42,10 +47,25 @@ export function ParamSlider({
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex justify-between items-baseline text-xs">
-        {/* form-labels: <label for="…"> verknüpft visuelles Label mit Input */}
-        <label htmlFor={id} className="text-muted-foreground cursor-pointer select-none">
-          {label}
-        </label>
+        <div className="flex items-center gap-1">
+          {/* form-labels: <label for="…"> verknüpft visuelles Label mit Input */}
+          <label htmlFor={id} className="text-muted-foreground cursor-pointer select-none">
+            {label}
+          </label>
+          {info && (
+            <Tooltip>
+              <TooltipTrigger
+                className="inline-flex items-center text-muted-foreground/50 hover:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded"
+                aria-label={`Info zu ${label}`}
+              >
+                <InfoIcon className="w-3 h-3" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-64 text-left whitespace-pre-line">
+                {info}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         <span
           className="font-mono font-semibold text-foreground tabular-nums"
           aria-live="polite"
@@ -65,7 +85,7 @@ export function ParamSlider({
         onChange={handleChange}
         aria-label={label}
         aria-valuetext={`${display} ${unit}`}
-        className="w-full h-1.5 py-2 accent-blue-600 cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 rounded"
+        className="w-full h-1.5 py-2 accent-primary cursor-pointer focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2 rounded"
       />
     </div>
   )

@@ -12,7 +12,7 @@
 
 ---
 
-## 2026-04-13T10:55:25.737Z · deltat · ui-design · [triage]
+## 2026-04-13T10:55:25.737Z · deltat · ui-design · [erledigt]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
@@ -21,15 +21,19 @@
 > bisher nur darkmode, wäre cool, wenn es das auch in light mode gäbe.
 > Farbe blau bei "Parameter" ist etwas zu intensiv
 
+**Bearbeitung (2026-04-13):** Light-Mode-Toggle (Sonne/Mond-Icon) im Header ergänzt. Präferenz wird in localStorage gespeichert, Flash-Prevention-Script verhindert FOUC. Alle DeltaT-Komponenten (KpiTile, SecondaryColumn) mit `dark:`-Varianten versehen. Feldset-Legend-Farbe von `text-blue-700` auf `text-primary/80` (adaptives Teal) geändert.
+
 ---
 
-## 2026-04-13T10:56:39.085Z · deltat · feature-wunsch · [triage]
+## 2026-04-13T10:56:39.085Z · deltat · feature-wunsch · [erledigt]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Sterne:** ★★★★☆
 **Gerät:** Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
 
 > Informations-"i" bei jeder Eingabe bzw. Berechnungs-Ergebnis fehlt, bei der die Berechnung bzw. dahinterliegende Berechnungsformel in einem Popup angezeigt wird.
+
+**Bearbeitung (2026-04-13):** ⓘ-Icon (InfoIcon aus lucide-react) bei allen 13 ParamSlidern und allen 9 KPI-Kacheln ergänzt. Tooltip zeigt Formel mit Quellenangabe (VDI 4640, DVGW W 115, Drost 1978, Gringarten & Sauty 1975, Arpagaus 2018). shadcn/ui Tooltip-Komponente (@base-ui/react) installiert und in Root-Layout mit TooltipProvider gewrappt.
 
 ---
 

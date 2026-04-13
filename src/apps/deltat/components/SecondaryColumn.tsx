@@ -8,14 +8,14 @@ function fmt(n: number, dec = 1) {
 }
 
 const bgColor: Record<TrafficLight, string> = {
-  green:  'bg-green-950/60  border-green-600',
-  yellow: 'bg-yellow-950/60 border-yellow-600',
-  red:    'bg-red-950/60    border-red-600',
+  green:  'bg-green-50 dark:bg-green-950/60 border-green-500',
+  yellow: 'bg-yellow-50 dark:bg-yellow-950/60 border-yellow-500',
+  red:    'bg-red-50 dark:bg-red-950/60 border-red-500',
 }
 const textColor: Record<TrafficLight, string> = {
-  green:  'text-green-300',
-  yellow: 'text-yellow-200',
-  red:    'text-red-300',
+  green:  'text-green-700 dark:text-green-300',
+  yellow: 'text-yellow-700 dark:text-yellow-200',
+  red:    'text-red-700 dark:text-red-300',
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -71,13 +71,13 @@ export function SecondaryColumn() {
         <div className="grid grid-cols-2 gap-2 mb-2">
           {/* COP – groß und farbig */}
           <div className={`col-span-2 rounded-lg border-l-4 px-3 py-2 ${
-            r.sCOP === 'green' ? 'border-green-500 bg-green-950/40'
-            : r.sCOP === 'yellow' ? 'border-yellow-500 bg-yellow-950/40'
-            : 'border-red-500 bg-red-950/40'
+            r.sCOP === 'green' ? 'border-green-500 bg-green-50 dark:bg-green-950/40'
+            : r.sCOP === 'yellow' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/40'
+            : 'border-red-500 bg-red-50 dark:bg-red-950/40'
           }`}>
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">COP real (Carnot × 50 %)</div>
             <div className={`text-3xl font-bold font-mono tabular-nums ${
-              r.sCOP === 'green' ? 'text-green-300' : r.sCOP === 'yellow' ? 'text-yellow-200' : 'text-red-300'
+              r.sCOP === 'green' ? 'text-green-700 dark:text-green-300' : r.sCOP === 'yellow' ? 'text-yellow-700 dark:text-yellow-200' : 'text-red-700 dark:text-red-300'
             }`}>
               {r.cop < 90 ? fmt(r.cop, 2) : '—'}
             </div>
@@ -92,24 +92,24 @@ export function SecondaryColumn() {
       <section className="shrink-0">
         <SectionHeading>Werkstoff &amp; Korrosion — DVGW W 115</SectionHeading>
         <div className={`rounded-lg border-l-4 px-3 py-1.5 mb-1.5 ${
-          r.materialColor === 'green' ? 'border-green-500 bg-green-950/30'
-          : r.materialColor === 'yellow' ? 'border-yellow-500 bg-yellow-950/30'
-          : 'border-red-500 bg-red-950/30'
+          r.materialColor === 'green' ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+          : r.materialColor === 'yellow' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/30'
+          : 'border-red-500 bg-red-50 dark:bg-red-950/30'
         }`}>
           <span className={`text-xs font-medium ${
-            r.materialColor === 'green' ? 'text-green-300' : r.materialColor === 'yellow' ? 'text-yellow-200' : 'text-red-300'
+            r.materialColor === 'green' ? 'text-green-700 dark:text-green-300' : r.materialColor === 'yellow' ? 'text-yellow-700 dark:text-yellow-200' : 'text-red-700 dark:text-red-300'
           }`}>
             ● {r.material}
           </span>
         </div>
         <DataRow label="TDS-Gehalt" value={`${fmt(inputs.tds, 0)} mg/l`} />
         <div className={`rounded-lg border-l-4 px-3 py-1.5 mt-1.5 ${
-          r.scalingColor === 'green' ? 'border-green-500 bg-green-950/30'
-          : r.scalingColor === 'yellow' ? 'border-yellow-500 bg-yellow-950/30'
-          : 'border-red-500 bg-red-950/30'
+          r.scalingColor === 'green' ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+          : r.scalingColor === 'yellow' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/30'
+          : 'border-red-500 bg-red-50 dark:bg-red-950/30'
         }`}>
           <span className={`text-xs font-medium ${
-            r.scalingColor === 'green' ? 'text-green-300' : r.scalingColor === 'yellow' ? 'text-yellow-200' : 'text-red-300'
+            r.scalingColor === 'green' ? 'text-green-700 dark:text-green-300' : r.scalingColor === 'yellow' ? 'text-yellow-700 dark:text-yellow-200' : 'text-red-700 dark:text-red-300'
           }`}>
             ● {r.scaling}
           </span>
