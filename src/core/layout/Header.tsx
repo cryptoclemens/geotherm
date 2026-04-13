@@ -2,8 +2,13 @@ import Link from 'next/link'
 import { UserNav } from './UserNav'
 import { NavLinks } from './NavLinks'
 import { ThemeToggle } from '@/core/ui/ThemeToggle'
+
+// Semver aus package.json (manuell für Major/Minor-Bumps)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: appVersion } = require('../../../package.json') as { version: string }
+// Git-SHA: auf Vercel automatisch bei jedem Deploy aktualisiert
+const gitSha = process.env.NEXT_PUBLIC_GIT_SHA ?? ''
+const buildLabel = gitSha ? `v${appVersion}+${gitSha}` : `v${appVersion}`
 
 export function Header() {
   return (
@@ -28,11 +33,9 @@ export function Header() {
           >
             by Vencly
           </a>
-          {appVersion && (
-            <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
-              v{appVersion}
-            </span>
-          )}
+          <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
+            {buildLabel}
+          </span>
         </div>
         <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
           <NavLinks />
