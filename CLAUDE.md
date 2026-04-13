@@ -146,9 +146,25 @@ Wenn > 0 → Triage-Vorschlag präsentieren.
 
 ### Branches
 - `main` — produktiv, Auto-Deploy via Vercel
-- `feature/{kurzbeschreibung}` — neue Features
+- `feature/{kurzbeschreibung}` — neue Features (max. 1–2 Sessions, dann mergen)
 - `fix/{kurzbeschreibung}` — Bugfixes
 - `docs/{kurzbeschreibung}` — nur Doku
+
+### Session-Ende-Ritual (PFLICHT)
+Jede Claude-Session endet mit diesen Schritten:
+1. `npm run lint && npm test && npm run typecheck` — alles grün
+2. Offene Änderungen committen
+3. Branch pushen
+4. PR erstellen (falls noch kein offener PR existiert): `feature/… → main`
+5. **Veraltete Branches und PRs schließen** — nie mehr als 2 offene PRs gleichzeitig
+
+### Keine Long-Running-Branches
+Branches leben **maximal 1–2 Sessions** oder **1 Feature**. Danach:
+- Mergen oder
+- Explizit als "on hold" in Tasks.md markieren
+
+**Ursache von Merge-Konflikten vermeiden:** Branches die > 1 Woche alt sind und
+nicht gemergt wurden, regelmäßig mit `git merge origin/main` aktuell halten.
 
 ### Commit-Messages (Deutsch, Conventional Commits)
 ```

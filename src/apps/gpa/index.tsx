@@ -66,7 +66,7 @@ export default function GpaApp() {
   // PwScreen entfernt — Authentifizierung erfolgt über RequireAuth + Middleware
 
   return (
-    <>
+    <div id="gpa-root">
       <Loader />
       <WelcomeOverlay />
       <GuidedTour />
@@ -82,7 +82,7 @@ export default function GpaApp() {
           <span className="potentiale-label">Potentiale</span>
           <StatTile statKey="dc"  label="Rechenzentren"    title="Rechenzentren im Ausschnitt" />
           <StatTile statKey="pp"  label="Kraftwerke/Ind."  title="Kraftwerke/Industrie im Ausschnitt" />
-          <StatTile statKey="abw" label="Abwärme (BfEE)"   title="BfEE-Abwärmestandorte im Ausschnitt" />
+          <StatTile statKey="abw" label="Abwärme (OSM)"    title="Industrieabwärme-Standorte im Ausschnitt" />
           <StatTile statKey="fw"  label="FW-Städte >20%"   title="Fernwärme-Städte >20% im Ausschnitt" />
           <button
             className="print-btn-hdr"
@@ -107,6 +107,6 @@ export default function GpaApp() {
       <FeedbackModal defaultInApp="gpa" />
       <StatListPanel />
       <PrintDialog />
-    </>
+    </div>
   )
 }
