@@ -46,9 +46,13 @@ const HEAT_CONFIGS = [
     key: 'heat-abw',
     color: '#a85bd6',
     icon: '♨️',
-    label: 'Industrieabwärme',
+    // Datenquelle: OpenStreetMap / Overpass API (Raffinerie, Chemie, Papier, Glas, Zement …)
+    // KEIN echter BfEE-Abwärme-Atlas (www.bfee.de/abwaerme-atlas) — der enthält gemessene MWh/a-Werte
+    // und ist nur über das BfEE-Portal zugänglich, nicht als öffentlicher WMS/API verfügbar.
+    // OSM-Abdeckung: ~60–80 % der relevanten Großstandorte; kleinere Anlagen fehlen.
+    label: 'Industrieabwärme (OSM)',
     query: (bbox) => `[out:json][timeout:20][bbox:${bbox}];(nwr["industrial"="refinery"];nwr["industrial"="chemical_plant"];nwr["industrial"="paper_mill"];nwr["industrial"="glass"];nwr["man_made"="works"]["product"~"cement|glass|paper|aluminium|aluminum|chemicals|pharmaceutical|rubber|plastic|sugar|fertilizer"];nwr["landuse"="industrial"]["man_made"="works"]["operator"];);out center tags;`,
-    filter: (el) => {
+    filter: (el: { tags?: Record<string, string> }) => {
       // Exclude very generic/unnamed industrial areas
       const t = el.tags || {}
       return !!(t.name || t.operator || t.product)

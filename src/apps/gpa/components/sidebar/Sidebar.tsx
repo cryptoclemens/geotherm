@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 import Ortssuche from './Ortssuche'
 import LayerGroup, { SubItem, AqChips } from './LayerGroup'
@@ -6,22 +5,26 @@ import { useGpaStore } from '../../store/useGpaStore'
 
 const SOURCES = [
   { color:'#5bafd6', name:'BGR Geologie (WMS)', desc:'GÜK250 · IGME5000 · HÜK250', type:'WMS' },
+  { color:'#9b6ef0', name:'GeotIS (LIAG Hannover)', desc:'Geothermische Anlagenstandorte · Höffigkeitskarten A/B/D', type:'WMS' },
   { color:'#4ecdc4', name:'Aquifer-Atlas', desc:'Tiefenaquifer-Potenziale NW-Europa', type:'Intern' },
   { color:'#f0c040', name:'OpenStreetMap', desc:'Fernwärme-Netze · Wärmequellen', type:'OSM' },
   { color:'#5bd68a', name:'Fernwärme-Statistik', desc:'BWP · Stadtwerke-Berichte 2023', type:'Statistik' },
-  { color:'#d67c5b', name:'BfEE Abwärme-Atlas', desc:'Industrielle Abwärmepotenziale DE', type:'BfEE' },
+  // Hinweis: heat-abw nutzt OSM/Overpass (Raffinerie, Chemie, Papier, Glas), NICHT den echten BfEE-Abwärme-Atlas (MWh/a-Messwerte)
+  { color:'#d67c5b', name:'Abwärmequellen (OSM)', desc:'Industrielle Abwärmepotenziale via OpenStreetMap (annähernd)', type:'OSM' },
   { color:'#e8a857', name:'Zensus 2022 (Destatis)', desc:'Heizungsart & Energieträger 100m', type:'WMS' },
   { color:'#22d3ee', name:'LANUK NRW – KWP', desc:'Kommunale Wärmeplanung NRW: Energieträger & Wärmecluster', type:'GeoJSON' },
 ]
 
-// WMS badge component
-function WmsBadge({ layerKey }) {
+interface WmsBadgeProps {
+  layerKey: string
+}
+
+function WmsBadge({ layerKey }: WmsBadgeProps) {
   const wmsBadges = useGpaStore(s => s.wmsBadges)
   const status = wmsBadges[layerKey]
   if (!status)              return null
   if (status === 'probing') return <span className="wms-badge wms-probing" title="Bester Proxy wird ermittelt…">⏳</span>
   if (status === 'live')    return <span className="wms-badge wms-live"    title="WMS erreichbar">●</span>
-  if (status === 'offline') return <span className="wms-badge wms-error"   title="Dienst nicht erreichbar">⚠</span>
   return <span className="wms-badge wms-error" title="WMS nicht erreichbar — Server offline oder CORS-Block">✗</span>
 }
 
@@ -63,21 +66,48 @@ export default function Sidebar() {
           <AqChips />
         </LayerGroup>
 
+        {/* GeotIS: behördliche Höffigkeitskarten (LIAG Hannover) */}
+        <LayerGroup
+          id="geotis"
+          label="GeotIS – Höffigkeit (LIAG)"
+          dotColor="#9b6ef0"
+          dotShape="square"
+          groupKeys={['geotis-standorte','geotis-hoeff-a','geotis-hoeff-b','geotis-hoeff-d']}
+          defaultOpen={false}
+        >
+          <SubItem layerKey="geotis-standorte" label="Anlagenstandorte DE" dotColor="#9b6ef0" dotShape="circle" badge="WMS">
+            <WmsBadge layerKey="geotis-standorte" />
+          </SubItem>
+          <div className="leg-section-label">Höffigkeitskarten</div>
+          <SubItem layerKey="geotis-hoeff-a" label="Hydrothermisch – nachgewiesen (A)" dotColor="#7b4fd0" dotShape="square" badge="WMS">
+            <WmsBadge layerKey="geotis-hoeff-a" />
+          </SubItem>
+          <SubItem layerKey="geotis-hoeff-b" label="Hydrothermisch – vermutet (B)" dotColor="#a06ee0" dotShape="square" badge="WMS">
+            <WmsBadge layerKey="geotis-hoeff-b" />
+          </SubItem>
+          <SubItem layerKey="geotis-hoeff-d" label="Gesamtübersicht A+B+C (D)" dotColor="#c090f0" dotShape="square" badge="WMS">
+            <WmsBadge layerKey="geotis-hoeff-d" />
+          </SubItem>
+        </LayerGroup>
+
         <LayerGroup
           id="geo"
-          label="Geothermie-Höffigkeit"
+          label="Geologie / Hydrogeologie"
           dotColor="#a78bfa"
           dotShape="square"
           groupKeys={['geo-egdi','geo-bgr','geo-huek250','waerme-wms','waerme-bbsr']}
           defaultOpen={false}
         >
-          <SubItem layerKey="geo-egdi"    label="Lockergestein"            dotColor="#5bd6c8" dotShape="square" badge="WMS">
+          {/* geo-egdi: IGME5000 = europäische Oberflächengeologie, kein Tiefenindikator */}
+          <SubItem layerKey="geo-egdi"    label="Geologie Europa (IGME5000)" dotColor="#5bd6c8" dotShape="square" badge="WMS">
             <WmsBadge layerKey="geo-egdi" />
           </SubItem>
-          <SubItem layerKey="geo-bgr"     label="Festgestein &lt;1.000 m"  dotColor="#c8a840" dotShape="square" badge="WMS">
+          {/* geo-bgr: GÜK250 = geologische Übersichtskarte Oberfläche, KEINE Tiefeninfo */}
+          <SubItem layerKey="geo-bgr"     label="Geologie Oberfläche (GÜK250)"    dotColor="#c8a840" dotShape="square" badge="WMS">
             <WmsBadge layerKey="geo-bgr" />
           </SubItem>
-          <SubItem layerKey="geo-huek250" label="Festgestein &gt;1.000 m"  dotColor="#b05050" dotShape="square" badge="WMS">
+          {/* geo-huek250: HÜK250 = Hydrogeologie bis ~100 m, NICHT für Tiefenaquifere >1000 m */}
+          <SubItem layerKey="geo-huek250" label="Hydrogeologie oberflächennah (HÜK250)" dotColor="#b05050" dotShape="square" badge="WMS">
             <WmsBadge layerKey="geo-huek250" />
           </SubItem>
           <div className="leg-section-label">Zensus 2022</div>
@@ -101,7 +131,8 @@ export default function Sidebar() {
           <SubItem layerKey="heat-pp"    label="Kraftwerke (OSM)"        dotColor="#d67c5b" dotShape="circle" />
           <SubItem layerKey="heat-waste" label="Müllverbrennung (OSM)"   dotColor="#5bd6c8" dotShape="circle" />
           <SubItem layerKey="heat-steel" label="Stahlwerke (OSM)"        dotColor="#d6c85b" dotShape="circle" />
-          <SubItem layerKey="heat-abw"   label="Abwärme BfEE"            dotColor="#e8a857" dotShape="square" badge="BfEE" />
+          {/* heat-abw: OSM-Abfrage (Raffinerie, Chemie, Papier, Glas), KEIN echter BfEE-Abwärme-Atlas */}
+          <SubItem layerKey="heat-abw"   label="Industrieabwärme (OSM, annähernd)" dotColor="#e8a857" dotShape="circle" />
         </LayerGroup>
 
         <LayerGroup

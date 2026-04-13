@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react'
 import { useLayerStore } from '../../store/useLayerStore'
 
@@ -36,7 +35,16 @@ export function AqChips() {
 }
 
 // ── SubItem ─────────────────────────────────────────────────────────────────
-export function SubItem({ layerKey, label, dotColor, dotShape = 'circle', badge, children }) {
+interface SubItemProps {
+  layerKey: string
+  label: string
+  dotColor?: string
+  dotShape?: 'circle' | 'square'
+  badge?: string
+  children?: React.ReactNode
+}
+
+export function SubItem({ layerKey, label, dotColor, dotShape = 'circle', badge, children }: SubItemProps) {
   const { layers, toggle } = useLayerStore()
   const on = layers[layerKey] ?? false
 
@@ -77,7 +85,25 @@ export function SubItem({ layerKey, label, dotColor, dotShape = 'circle', badge,
 }
 
 // ── LayerGroup ───────────────────────────────────────────────────────────────
-export default function LayerGroup({ id, label, dotColor, dotShape = 'square', groupKeys = [], defaultOpen = false, children }) {
+interface LayerGroupProps {
+  id?: string
+  label: string
+  dotColor?: string
+  dotShape?: 'circle' | 'square'
+  groupKeys?: string[]
+  defaultOpen?: boolean
+  children?: React.ReactNode
+}
+
+export default function LayerGroup({
+  id,
+  label,
+  dotColor,
+  dotShape = 'square',
+  groupKeys = [],
+  defaultOpen = false,
+  children,
+}: LayerGroupProps) {
   const [open, setOpen] = useState(defaultOpen)
   const { setGroup, isGroupOn } = useLayerStore()
   const on = isGroupOn(groupKeys)
