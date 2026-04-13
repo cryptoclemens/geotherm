@@ -148,34 +148,45 @@ export function ResultColumn({ inputs, outputs: r }: ResultColumnProps) {
         )}
       </section>
 
-      {/* ── EUR/kW Kennzahlen ─────────────────────────────────────────────── */}
-      {isDublette && r.leistung_kw > 0 && (
-        <section className="flex flex-col gap-2 shrink-0">
-          <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Spezifische Kosten</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-border p-3 bg-card/50">
-              <div className="text-[10px] text-muted-foreground mb-1">Thermische Leistung</div>
-              <div className="text-sm font-mono font-bold text-foreground">
-                {fmt(r.leistung_kw, 0)} kW
-              </div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
-                Q × ΔT × 4,18
-              </div>
+      {/* ── Spezifische Kennzahlen ────────────────────────────────────────── */}
+      <section className="flex flex-col gap-2 shrink-0">
+        <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Spezifische Kosten</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-border p-3 bg-card/50">
+            <div className="text-[10px] text-muted-foreground mb-1">Bohrkosten / Meter</div>
+            <div className="text-sm font-mono font-bold text-foreground">
+              {fmt(r.bohrkosten_pro_m, 0)} EUR/m
             </div>
-            <div className="rounded-lg border border-border p-3 bg-card/50">
-              <div className="text-[10px] text-muted-foreground mb-1">Kosten je kW_th</div>
-              <div className="text-sm font-mono font-bold text-foreground">
-                {fmt(r.kosten_pro_kw_mid, 0)} EUR/kW
-              </div>
-              {r.foerderung_betrag > 0 && (
-                <div className="text-[10px] text-green-600 dark:text-green-400 mt-0.5">
-                  {fmt(r.kosten_pro_kw_netto_mid, 0)} EUR/kW (netto)
-                </div>
-              )}
+            <div className="text-[10px] text-muted-foreground mt-0.5">
+              je Bohrung (Mittelpunkt)
             </div>
           </div>
-        </section>
-      )}
+          {isDublette && r.leistung_kw > 0 && (
+            <>
+              <div className="rounded-lg border border-border p-3 bg-card/50">
+                <div className="text-[10px] text-muted-foreground mb-1">Thermische Leistung</div>
+                <div className="text-sm font-mono font-bold text-foreground">
+                  {fmt(r.leistung_kw, 0)} kW
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  Q × ΔT × 4,18
+                </div>
+              </div>
+              <div className="rounded-lg border border-border p-3 bg-card/50">
+                <div className="text-[10px] text-muted-foreground mb-1">Kosten je kW_th</div>
+                <div className="text-sm font-mono font-bold text-foreground">
+                  {fmt(r.kosten_pro_kw_mid, 0)} EUR/kW
+                </div>
+                {r.foerderung_betrag > 0 && (
+                  <div className="text-[10px] text-green-600 dark:text-green-400 mt-0.5">
+                    {fmt(r.kosten_pro_kw_netto_mid, 0)} EUR/kW (netto)
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
 
       {/* ── Ampeln ───────────────────────────────────────────────────────── */}
       <section className="flex flex-col gap-2 shrink-0">

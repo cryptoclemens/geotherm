@@ -57,6 +57,8 @@ export interface BohrkostOutputs {
   leistung_kw: number
   kosten_pro_kw_mid: number
   kosten_pro_kw_netto_mid: number
+  /** Bohrkosten einer Bohrung / Tiefe [EUR/m] */
+  bohrkosten_pro_m: number
   // Ampeln
   ampel_kosten: 'green' | 'yellow' | 'red'
   ampel_risiko: 'green' | 'yellow' | 'red'
@@ -235,6 +237,9 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
   const kosten_pro_kw_mid      = leistung_kw > 0 ? projektkosten_mid / leistung_kw : 0
   const kosten_pro_kw_netto_mid = leistung_kw > 0 ? projektkosten_netto_mid / leistung_kw : 0
 
+  // Bohrkosten pro Meter [EUR/m] — eine Bohrung, Mittelpunkt
+  const bohrkosten_pro_m = basisMid / inputs.tiefe
+
   // Ampeln
   const ampel_kosten: BohrkostOutputs['ampel_kosten'] =
     kosten_pro_kw_mid <= 0     ? 'green'
@@ -266,6 +271,7 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     leistung_kw,
     kosten_pro_kw_mid,
     kosten_pro_kw_netto_mid,
+    bohrkosten_pro_m,
     ampel_kosten,
     ampel_risiko,
     ampel_tiefe,
