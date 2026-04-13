@@ -18,6 +18,7 @@ REGELN:
 - Fragt der Nutzer nach Top-Standorten, besten Erkundungsgebieten oder "wo bohren?" mit Kriterien (Tiefe, Aquifer, Region, Potenzial) → show_geothermal_spots mit 5–8 Einträgen
 - Geht es nur allgemein um die Karte (ohne Standort-Empfehlung) → navigate_to_atlas
 - Wünscht sich der Nutzer ein neues Tool, nennt einen Fehler oder gibt Verbesserungsvorschläge → create_feedback
+- Nennt der Nutzer "Optimiere Projekt [Name]" → suggest_project_optimization mit aktuellen Parametern
 - Antworte immer auf Deutsch, kurz und technisch präzise
 - Erkläre kurz was du tust, bevor du das Tool aufrufst
 
@@ -85,6 +86,25 @@ export async function POST(req: Request) {
             explanation: z.string().describe('2–3 Sätze: Warum dieser Spot geeignet ist, welche Bedingungen ihn auszeichnen und was zu beachten ist.'),
           })).min(1).max(8),
           query_context: z.string().describe('Kurze Zusammenfassung der Suchanfrage in einem Satz, z.B. "Top-5 Spots für mitteltiefe Exploration im Lockergestein in NRW"'),
+        }),
+      }),
+      // Kein execute → Client-Side Tool: AiDialog verarbeitet Optimierungsvorschläge
+      suggest_project_optimization: tool({
+        description: 'Analysiert ein gespeichertes Geothermie-Projekt und gibt Optimierungsvorschläge für DeltaT-Parameter zurück. Aufrufen wenn Nutzer sagt "Optimiere Projekt X" oder "was kann ich verbessern".',
+        inputSchema: z.object({
+          project_id: z.string(),
+          project_name: z.string(),
+          project_type: z.enum(['Dublette', 'Einzelbohrung', 'Explorationsbohrung', 'EGS']).nullable().optional(),
+          current_params: z.object({
+            tiefe: z.number().optional(),
+            maechtig: z.number().optional(),
+            kf: z.number().optional(),
+            tGW: z.number().optional(),
+            tds: z.number().optional(),
+            Q: z.number().optional(),
+            zielLeistung: z.number().optional(),
+          }),
+          optimization_goal: z.string().optional(),
         }),
       }),
       // Mit execute → Server-Side Tool: läuft im API-Handler, Ergebnis wird an KI zurückgegeben

@@ -10,8 +10,12 @@ import {
   createProject,
   deleteProject,
   type Project,
+  type ProjectType,
+  type ProjectStatus,
 } from '@/core/api/projects'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
+import { useProjectStore } from '@/core/store/useProjectStore'
+import { ProjectFormDialog } from './ProjectFormDialog'
 import {
   Card,
   CardContent,
@@ -116,6 +120,20 @@ function SaveProjectDialog({ onSave, saving }: SaveDialogProps) {
   )
 }
 
+const STATUS_COLOR: Record<ProjectStatus, string> = {
+  Idee: '#94a3b8',
+  Planung: '#3b82f6',
+  Aktiv: '#16a34a',
+  Archiviert: '#64748b',
+}
+
+const TYPE_COLOR: Record<ProjectType, string> = {
+  Dublette: '#5bafd6',
+  Einzelbohrung: '#a8d4e6',
+  Explorationsbohrung: '#e8a857',
+  EGS: '#a87cd6',
+}
+
 interface ProjectCardProps {
   project: Project
   onLoad: (project: Project) => void
@@ -129,7 +147,33 @@ function ProjectCard({ project, onLoad, onDelete, deleting }: ProjectCardProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{project.name}</CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="flex-1 min-w-0">{project.name}</CardTitle>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {project.project_type && (
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded border"
+                style={{
+                  color: TYPE_COLOR[project.project_type],
+                  borderColor: TYPE_COLOR[project.project_type],
+                }}
+              >
+                {project.project_type}
+              </span>
+            )}
+            {project.status && (
+              <span
+                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border"
+                style={{
+                  color: STATUS_COLOR[project.status],
+                  borderColor: STATUS_COLOR[project.status],
+                }}
+              >
+                {project.status}
+              </span>
+            )}
+          </div>
+        </div>
         {project.description && (
           <CardDescription>{project.description}</CardDescription>
         )}
@@ -169,6 +213,7 @@ function ProjectCard({ project, onLoad, onDelete, deleting }: ProjectCardProps) 
           <ArrowRightIcon />
           In DeltaT laden
         </Button>
+        <ProjectFormDialog mode="edit" project={project} />
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogTrigger render={
             <Button variant="ghost" size="icon-sm">
@@ -211,6 +256,7 @@ export default function ProjectsPage() {
   const deltaTInputs = useDeltaTStore((s) => s.inputs)
   const deltaTOutputs = useDeltaTStore((s) => s.outputs)
   const applyFullProject = useDeltaTStore((s) => s.applyFullProject)
+  const selectProject = useProjectStore((s) => s.selectProject)
 
   const [projects, setProjects] = useState<Project[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
@@ -272,6 +318,7 @@ export default function ProjectsPage() {
   function handleLoad(project: Project) {
     if (!project.deltat_input) return
     applyFullProject(project.deltat_input)
+    selectProject(project.id)
     router.push('/deltat')
   }
 
@@ -319,6 +366,7 @@ export default function ProjectsPage() {
             </Button>
           )}
           <SaveProjectDialog onSave={handleSave} saving={saving} />
+          <ProjectFormDialog mode="create" />
         </div>
       </div>
 

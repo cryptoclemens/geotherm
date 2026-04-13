@@ -14,6 +14,7 @@ const IN_APP_OPTIONS = [
   { value: 'allgemein', label: 'Allgemein' },
   { value: 'gpa', label: 'GPA – Atlas' },
   { value: 'deltat', label: 'DeltaT – Rechner' },
+  { value: 'bohrkost', label: 'Bohrkosten – Rechner' },
   { value: 'docs', label: 'Dokumentation' },
 ] as const
 
@@ -27,7 +28,7 @@ const CATEGORY_OPTIONS = [
 ] as const
 
 const schema = z.object({
-  inApp: z.enum(['allgemein', 'gpa', 'deltat', 'docs']),
+  inApp: z.enum(['allgemein', 'gpa', 'deltat', 'bohrkost', 'docs']),
   category: z.enum(['bug', 'ui-design', 'feature-wunsch', 'performance', 'datenqualitaet', 'sonstiges']),
   stars: z.number().int().min(1).max(5).nullable(),
   message: z.string().min(5, 'Bitte mindestens 5 Zeichen eingeben').max(2000),

@@ -17,13 +17,16 @@ import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import SearchResultsPanel from './components/ui/SearchResultsPanel'
 import LocationInspectorPanel from './components/ui/LocationInspectorPanel'
 import SavedLocationsTab from './components/ui/SavedLocationsTab'
+import ProjectsTab from './components/ui/ProjectsTab'
+import ProjectDetailPanel from './components/ui/ProjectDetailPanel'
 import { useGpaStore } from './store/useGpaStore'
 import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
+import { useProjectStore } from '@/core/store/useProjectStore'
 import { FW_CITIES } from './data/fwCities'
 import { getMapInstance } from './lib/mapInstance'
 
 type StatKey = 'dc' | 'pp' | 'abw' | 'fw'
-type GpaTab = 'atlas' | 'orte'
+type GpaTab = 'atlas' | 'orte' | 'projekte'
 
 interface StatTileProps {
   statKey: StatKey
@@ -66,6 +69,7 @@ function StatTile({ statKey, label, title }: StatTileProps) {
 export default function GpaApp() {
   const showPrintDialog = useGpaStore(s => s.showPrintDialog)
   const savedLocations = useWorkspaceStore(s => s.savedLocations)
+  const projects = useProjectStore(s => s.projects)
   const [tab, setTab] = useState<GpaTab>('atlas')
 
   return (
@@ -94,6 +98,12 @@ export default function GpaApp() {
             >
               Meine Orte{savedLocations.length > 0 ? ` (${savedLocations.length})` : ''}
             </button>
+            <button
+              className={`gpa-tab${tab === 'projekte' ? ' gpa-tab--active' : ''}`}
+              onClick={() => setTab('projekte')}
+            >
+              Projekte{projects.length > 0 ? ` (${projects.length})` : ''}
+            </button>
           </div>
         </div>
         <div className="hdr-stats">
@@ -118,6 +128,7 @@ export default function GpaApp() {
         <Legend />
         <SearchResultsPanel />
         <LocationInspectorPanel />
+        <ProjectDetailPanel />
         <OsmSpinner />
         <BootLog />
         <div className="powered-by">
@@ -128,6 +139,11 @@ export default function GpaApp() {
       {/* Meine Orte */}
       <div id="saved-locs-view" style={{ display: tab === 'orte' ? '' : 'none' }}>
         <SavedLocationsTab />
+      </div>
+
+      {/* Projekte */}
+      <div id="projects-tab-view" style={{ display: tab === 'projekte' ? '' : 'none' }}>
+        <ProjectsTab />
       </div>
 
       <FeedbackModal defaultInApp="gpa" />

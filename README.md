@@ -30,10 +30,12 @@ Geotherm ist ein **App-Container** mit modularen **In-Apps**:
 | In-App | Route | Beschreibung | Herkunft |
 |---|---|---|---|
 | **Dashboard** | `/dashboard` | Post-Login-Startseite: KI-Assistent, KI-Standortsuche (GeoSpots-Karte), App-Direktzugriff, letzte Projekte | — |
-| **GPA** – Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Fernwärme-, Geologie- und Wärmequellen-Overlays; Map-Click Location Inspector; GeoSpotsLayer; „Meine Orte"-Tab | [geopotatlas](https://github.com/cryptoclemens/geopotatlas) |
-| **DeltaT** – Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk" | [vencly-delta-t](https://github.com/cryptoclemens/vencly-delta-t) |
+| **GPA** – Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Fernwärme-, Geologie- und Wärmequellen-Overlays; Map-Click Location Inspector; GeoSpotsLayer; „Meine Orte"-Tab; Projekte-Tab mit GPA-Layer | [geopotatlas](https://github.com/cryptoclemens/geopotatlas) |
+| **DeltaT** – Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk"; Projekt laden/speichern | [vencly-delta-t](https://github.com/cryptoclemens/vencly-delta-t) |
+| **Bohrkost** – Bohrkostenrechner | `/bohrkost` | CAPEX-Schätzung: Lukawski-Formel (≥ 500 m) + linearer Fallback (< 500 m), 3 Bohrungstypen, 3 Durchmesser, Min/Mid/Max-Bandbreite, MAP/KfW-Förderung, Formelwerk-Tab | — |
+| **Projekte** – Meine Projekte | `/projects` | Projektverwaltung: Typ, Status, Geologie-Daten, GPA-Layer (Marker), KI-Optimierungsvorschlag, DeltaT-Export | — |
 
-Beide tauschen Daten über einen gemeinsamen **Workspace-Store** aus. Weitere In-Apps auf der Roadmap (siehe [BRIEF.md §2.4](BRIEF.md)).
+Alle In-Apps tauschen Daten über einen gemeinsamen **Workspace-Store** (`useWorkspaceStore`) und **Projekt-Store** (`useProjectStore`) aus. Weitere In-Apps auf der Roadmap (siehe [BRIEF.md §2.4](BRIEF.md)).
 
 ---
 
@@ -144,15 +146,17 @@ geotherm/
 │   │   │   ├── dashboard/page.tsx    # Post-Login-Dashboard mit KI-Dialog
 │   │   │   ├── atlas/page.tsx        # GPA
 │   │   │   ├── deltat/page.tsx       # DeltaT
-│   │   │   ├── projects/page.tsx
+│   │   │   ├── bohrkost/page.tsx     # Bohrkostenrechner
+│   │   │   ├── projects/page.tsx     # Meine Projekte + ProjectFormDialog
 │   │   │   ├── admin/
 │   │   │   │   └── feedback/page.tsx # Admin-only
 │   │   │   └── layout.tsx            # App-Shell
 │   │   ├── api/
 │   │   │   ├── ai/
-│   │   │   │   ├── chat/route.ts     # KI-Assistent (streamText, claude-haiku)
-│   │   │   │   └── location/route.ts # Location Inspector (lat/lng → geologische KI-Analyse)
-│   │   │   └── feedback/route.ts     # Feedback API Route
+│   │   │   │   ├── chat/route.ts              # KI-Assistent (streamText, claude-haiku)
+│   │   │   │   ├── location/route.ts          # Location Inspector (lat/lng → KI-Analyse)
+│   │   │   │   └── project-optimize/route.ts  # KI-Optimierungsvorschlag für Projekte
+│   │   │   └── feedback/route.ts              # Feedback API Route
 │   │   ├── manifest.ts               # PWA-Manifest (Next.js-nativ)
 │   │   ├── globals.css
 │   │   └── layout.tsx                # Root Layout
@@ -164,20 +168,32 @@ geotherm/
 │   │   │   │   ├── LocationInspectorPanel.tsx# KI-Analyse-Popup
 │   │   │   │   ├── GeoSpotsLayer.tsx         # Nummerierte Marker für KI-Suchergebnisse
 │   │   │   │   ├── SearchResultsPanel.tsx    # Tab Aktuell|Gespeichert
-│   │   │   │   └── SavedLocationsTab.tsx     # „Meine Orte"-Tab
+│   │   │   │   ├── SavedLocationsTab.tsx     # „Meine Orte"-Tab
+│   │   │   │   ├── ProjectsLayer.tsx         # Marker pro Projekt (Farbe nach Status)
+│   │   │   │   ├── ProjectDetailPanel.tsx    # Floating Panel für Projekt-Details
+│   │   │   │   └── ProjectsTab.tsx           # Dritter GPA-Tab „Projekte"
 │   │   │   ├── store/
 │   │   │   ├── data/
 │   │   │   └── index.tsx
 │   │   ├── deltat/
-│   │       ├── components/
-│   │       │   └── FormelTab.tsx             # Tab „Berechnung | Formelwerk"
-│   │       ├── calc/                         # Pure Logic + Unit-Tests
-│   │       │   ├── system.ts
-│   │       │   └── system.test.ts
-│   │       ├── store/
-│   │       └── index.tsx
+│   │   │   ├── components/
+│   │   │   │   └── FormelTab.tsx             # Tab „Berechnung | Formelwerk"
+│   │   │   ├── calc/                         # Pure Logic + Unit-Tests
+│   │   │   │   ├── system.ts
+│   │   │   │   └── system.test.ts
+│   │   │   ├── store/
+│   │   │   └── index.tsx
+│   │   ├── bohrkost/
+│   │   │   ├── components/
+│   │   │   │   ├── InputColumn.tsx           # Parameter-Inputs
+│   │   │   │   ├── ResultColumn.tsx          # KPI-Tiles, Ampeln, Projektkosten
+│   │   │   │   └── BohrkostFormelTab.tsx     # Formelwerk-Tab mit Quellenübersicht
+│   │   │   ├── calc/                         # Pure Logic + Unit-Tests
+│   │   │   │   ├── kosten.ts                 # Lukawski-Formel + Fallback + Förderung
+│   │   │   │   └── kosten.test.ts
+│   │   │   └── index.tsx
 │   │   └── dashboard/
-│   │       └── components/           # AiDialog.tsx (inkl. GeoSpots Tool-Result)
+│   │       └── components/           # AiDialog.tsx (inkl. GeoSpots + project-optimize)
 │   ├── core/
 │   │   ├── auth/                     # useAuth, RequireAuth
 │   │   ├── api/                      # REST-Client, GitHub-Sync-Helper
@@ -409,6 +425,10 @@ chore: Tailwind auf 4.2 aktualisiert
 | **IEA HPP Annex 35** | Reale COP vs. Carnot |
 | **VDI Wärmeatlas** (2019) | LMTD & U-Wert |
 | **DIN 4030** | Scaling-Bewertung |
+| **Lukawski et al. (2014)** | Bohrkosten-Formel (J. Pet. Sci. Eng. 118, 1–14) |
+| **Baujard et al. (2017)** | Gesteins-Korrekturfaktoren Bohrkosten (Stanford SGW) |
+| **GtV Bohrpreise (2024)** | Linearer Fallback < 500 m + Marktaufschlag |
+| **Stober & Bucher (2012)** | Komplettierungskosten Kap. 7; Förderhöhe Tauchpumpe |
 
 Vollständiger Review: `PLAUSI_CHECK.md`.
 

@@ -97,11 +97,89 @@ Quelle: Arpagaus et al. (2018), *Energy* 152, 1626–1646 — Abb. 8 + Gl. 7
 
 ---
 
+---
+
+## Bohrkostenrechner — Lukawski-Formel (Stand April 2026)
+
+> **Geprüft durch:** Formel-Recherche + Quellenabgleich  
+> **Modul:** `src/apps/bohrkost/calc/kosten.ts`  
+> **Status:** Deploybar als CAPEX-Orientierungsrechner mit Disclaimer.
+
+### Kernformel
+
+```
+C(d) = (1.72e-7 × d² + 2.3e-3 × d − 0.62) × 10⁶   [USD 2009]
+```
+Quelle: **Lukawski et al. (2014)**, *J. Pet. Sci. Eng.* 118, 1–14.  
+Gültig für: Geothermale Bohrungen 500–5000 m.
+
+**Angewandte Korrekturfaktoren:**
+
+| Faktor | Wert | Quelle |
+|---|---|---|
+| Währung USD₂₀₀₉ → EUR₂₀₂₆ | 1.20 | ECB Langzeitdurchschnitt + Inflation 2009–2026 |
+| Gestein Lockergestein | 0.70 | Baujard et al. (2017), Stanford SGW |
+| Gestein Festgestein_sed | 1.00 | Referenz |
+| Gestein Festgestein_kristallin | 1.30 | Baujard et al. (2017), Stanford SGW |
+| Region NDB | 0.95 | Marktabschätzung GtV / LIAG |
+| Region Molasse | 1.00 | Referenz |
+| Region Oberrheingraben | 1.05 | Marktabschätzung GtV / LIAG |
+| Durchmesser 7" | 0.85 | Branchenschätzung; Stober & Bucher (2012) |
+| Durchmesser 9 5/8" | 1.00 | Referenz |
+| Durchmesser 13 3/8" | 1.25 | Branchenschätzung; Stober & Bucher (2012) |
+| Deutscher Marktaufschlag | 1.40 | GtV Bundesverband Geothermie; LIAG Broschüre Tiefe Geothermie |
+
+### Linearer Fallback für d < 500 m
+
+Lukawski 2014 ist für Tiefen < 500 m nicht belastbar (Extrapolation). Stattdessen lineares Modell:
+
+```
+C_linear = LINEAR_PREIS_PRO_M × tiefe + MOBILISIERUNG
+```
+
+| Gesteinstyp | EUR/m | Mobilisierung | Quelle |
+|---|---|---|---|
+| Lockergestein | 300 | 75.000 | GtV Bohrpreise (2024); DVGW W 115 |
+| Festgestein_sed | 700 | 100.000 | GtV Bohrpreise (2024); DVGW W 115 |
+| Festgestein_kristallin | 1.200 | 150.000 | GtV Bohrpreise (2024); DVGW W 115 |
+
+### Bandbreite
+
+```
+bohrkosten_min = mid × 0.65
+bohrkosten_max = mid × 1.50
+```
+Begründung: ±35–50 % sind für CAPEX-Schätzungen auf Machbarkeitsebene (Feasibility) üblich (AACE Class 4–5, Faktor 0.5–2.0). Gewählte Bandbreite ist konservativ-realistisch.
+
+### MAP/KfW-Förderung
+
+```
+foerderung = min(375 EUR/m × min(tiefe, 2500 m), 2.500.000 EUR)
+```
+Quelle: **BEG / MAP-Programm KfW (2024)**. Gilt für Förderbohrung (eine Bohrung der Dublette).
+
+### Bekannte Vereinfachungen (für Disclaimer)
+
+| Punkt | Vereinfachung | Impact |
+|---|---|---|
+| Währungs-Faktor | Pauschal 1.20 — keine jährliche Aktualisierung | ±10 % |
+| Marktaufschlag | Pauschal 1.40 — regional stark variabel | ±20–30 % |
+| Komplettierungskosten | Pauschal-Formeln — keine Bohrtiefenabhängigkeit bei Pumpe | ±15 % |
+| Gesteins-Faktoren | Nur 3 Kategorien — heterogene Aquifere nicht abgebildet | ±25 % |
+
+**Disclaimer (muss im UI sichtbar sein):** Diese Berechnung liefert eine CAPEX-Schätzung auf Feasibility-Niveau (AACE Class 4–5). Für Investitionsentscheidungen ist ein detailliertes Bohrangebot von einem spezialisierten Bohrunternehmen einzuholen.
+
+---
+
 ## Primärquellen
 
 - **Gringarten & Sauty (1975)** — A theoretical study of heat extraction from aquifers with uniform regional flow. *J. Geophys. Res.* 80(35), 4956–4962. → Durchbruchszeit-Formel
 - **Arpagaus et al. (2018)** — High temperature heat pumps: Market overview, state of the art, research status. *Energy* 152, 1626–1646. → COP-Gütegrad 0.5
-- **Stober & Bucher (2012)** — *Geothermie*. Springer. Kap. 7.4. → Förderhöhe Tauchpumpe
+- **Stober & Bucher (2012)** — *Geothermie*. Springer. Kap. 7.4. → Förderhöhe Tauchpumpe; Komplettierungskosten
 - **VDI 4640 Blatt 2** (2001) — Thermische Nutzung des Untergrunds. → Transmissivität, Pumpenleistung
-- **DVGW W 115** — Bohrungen für Grundwassererschließung. → TDS-Grenzwerte, Material-Empfehlungen
+- **DVGW W 115** — Bohrungen für Grundwassererschließung. → TDS-Grenzwerte, Material-Empfehlungen; linearer Fallback < 500 m
 - **VDI Wärmeatlas (2019)** — Abschn. C1. → LMTD Gegenstrom
+- **Lukawski et al. (2014)** — Estimating drilling costs of U.S. geothermal wells. *J. Pet. Sci. Eng.* 118, 1–14. → Bohrkostenformel C(d)
+- **Baujard et al. (2017)** — Rock type drilling cost correction factors. Stanford Geothermal Workshop SGW-2017. → Gesteins-Korrekturfaktoren Bohrkostenrechner
+- **GtV Bundesverband Geothermie (2024)** — Bohrpreise & Marktdaten (intern). → Linearer Fallback-Preis < 500 m, Marktaufschlag Deutschland
+- **BEG / KfW MAP-Programm (2024)** — Bundesförderung Effiziente Gebäude. → Förderformel 375 EUR/m, max. 2.500.000 EUR

@@ -30,11 +30,13 @@ Geotherm ist keine monolithische App, sondern ein **App-Container**. Jede Teil-A
 
 ### 2.2 In-Apps zum Launch
 
-| Code | Name | Beschreibung |
-|---|---|---|
-| **Dashboard** | KI-Assistent + Übersicht | Post-Login-Startseite mit KI-Dialog (Projektparameter → DeltaT/GPA, KI-Standortsuche mit GeoSpots-Karte), App-Kacheln, letzte Projekte | — |
-| **GPA** | Geothermie-Potenzial-Atlas | Interaktive Karte mit Overlay für Lockergestein, Fernwärme-Städte, Industriewärmequellen; Map-Click Location Inspector (KI-Analyse per Klick); „Meine Orte"-Tab; KI-Suchergebnisse als nummerierte Marker (GeoSpotsLayer) |
-| **DeltaT** | Dubletten-Auslegungsrechner | Echtzeit-Rechner für geothermische Dubletten-Systeme mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk" |
+| Code | Name | Route | Beschreibung |
+|---|---|---|---|
+| **Dashboard** | KI-Assistent + Übersicht | `/dashboard` | Post-Login-Startseite mit KI-Dialog (Projektparameter → DeltaT/GPA, KI-Standortsuche mit GeoSpots-Karte), App-Kacheln, letzte Projekte |
+| **GPA** | Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Overlay für Lockergestein, Fernwärme-Städte, Industriewärmequellen; Map-Click Location Inspector (KI-Analyse per Klick); „Meine Orte"-Tab; Projekte-Tab (GPA-Layer); KI-Suchergebnisse als nummerierte Marker (GeoSpotsLayer) |
+| **DeltaT** | Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten-Systeme mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk"; Projekte laden/speichern |
+| **Bohrkost** | Bohrkostenrechner | `/bohrkost` | CAPEX-Schätzung für Geothermiebohrungen: Lukawski-Formel (≥ 500 m) + linearer Fallback (< 500 m), 3 Bohrungstypen, 3 Durchmesser, Min/Mid/Max-Bandbreite, MAP/KfW-Förderung (375 EUR/m, max. 2,5 Mio.), Formelwerk-Tab |
+| **Projekte** | Meine Projekte | `/projects` | Projektverwaltung mit Typ, Status, Geologie-Daten, GPA-Layer, KI-Optimierungsvorschlag (Haiku), DeltaT-Export |
 
 ### 2.3 Daten-Austausch zwischen Apps
 
@@ -52,7 +54,6 @@ Kern der Plattform: Die In-Apps können **Daten austauschen**, bleiben dabei abe
 
 ### 2.4 Roadmap für weitere In-Apps (ab Q3)
 
-- **Bohrkosten-Kalkulator** – CAPEX/OPEX pro Projekt
 - **Wirtschaftlichkeit (LCOH)** – Levelized Cost of Heat über 25 Jahre
 - **Genehmigungs-Guide** – Bundesland-spezifische Checklisten für WHG-Anträge
 - **Netzanschluss-Planer** – Distanz zu nächstem Fernwärmenetz + Anschlusskosten
@@ -252,7 +253,8 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 
 - [ ] 3 zahlende Enterprise-Kunden
 - [ ] 1 verkaufte Standalone-Lizenz (Whitelabel)
-- [ ] 3. In-App (Bohrkosten oder LCOH) live
+- [x] 3. In-App (Bohrkostenrechner `/bohrkost`) live *(April 2026)*
+- [ ] 4. In-App (LCOH) live
 - [ ] Integration mit QGIS (Plugin oder Export)
 - [ ] Erste Press-Coverage in Branchenmagazin
 
@@ -282,5 +284,6 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 | April 2026 | KI-Standortsuche: GeoSpots-Karte im Dashboard-Chat, SearchResultsPanel in GPA (Aktuell/Gespeichert), GeoSpotsLayer mit nummerierten Markern |
 | April 2026 | Map-Click Location Inspector in GPA: Klick auf Karte → KI-Analyse (Geologie/Hydrogeologie) + „Ort speichern" + „in DeltaT"-Workflow; „Meine Orte"-Tab im GPA-Header |
 | April 2026 | FormelTab in DeltaT, FW-Städte Marker-Fix, Favicon-Set, heat-abw Query erweitert, Vercel-Config + CI-Pipeline |
+| April 2026 | **Bohrkostenrechner** `/bohrkost` live: Lukawski-Formel, linearer Fallback < 500 m, MAP/KfW-Förderung, Formelwerk-Tab; **Meine Projekte** erweitert (Typ/Status/Geologie, GPA-Layer, KI-Optimierungsvorschlag, ProjectFormDialog, LoadProjectDialog) |
 | *geplant Q3 2026* | Geotherm Public Launch mit Pro-Tier |
-| *geplant Q4 2026* | 3. In-App live, erste Enterprise-Kunden |
+| *geplant Q4 2026* | LCOH-Modul, erste Enterprise-Kunden |

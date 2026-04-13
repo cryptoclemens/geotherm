@@ -8,6 +8,36 @@ import type { DeltaTInputs, DeltaTOutputs } from '@/apps/deltat/calc/system'
 import type { Json } from '@/types/supabase'
 import type { LocationPreset } from '@/core/store/useWorkspaceStore'
 
+export type ProjectType = 'Dublette' | 'Einzelbohrung' | 'Explorationsbohrung' | 'EGS'
+export type ProjectStatus = 'Idee' | 'Planung' | 'Aktiv' | 'Archiviert'
+
+export interface ProjectGeologicalData {
+  aquiferType?: string
+  formation?: string
+  tiefe_m?: number
+  tGW_celsius?: number
+  maechtig_m?: number
+  kf_ms?: number
+  tds_mgl?: number
+  potential?: string
+  notes?: string
+}
+
+export interface AiSuggestion {
+  id: string
+  projectId: string
+  createdAt: string
+  promptSummary: string
+  suggestions: Array<{
+    param: string
+    currentValue: number | string | null
+    suggestedValue: number | string
+    rationale: string
+    confidence: 'hoch' | 'mittel' | 'gering'
+  }>
+  generalNotes: string
+}
+
 export interface Project {
   id: string
   user_id: string
@@ -16,6 +46,10 @@ export interface Project {
   location: LocationPreset | null
   deltat_input: DeltaTInputs | null
   deltat_result: DeltaTOutputs | null
+  project_type?: ProjectType | null
+  status?: ProjectStatus | null
+  geological_data?: ProjectGeologicalData | null
+  notes?: string | null
   created_at: string
   updated_at: string
 }
@@ -26,6 +60,10 @@ export interface ProjectInsert {
   location?: LocationPreset
   deltat_input?: DeltaTInputs
   deltat_result?: DeltaTOutputs
+  project_type?: ProjectType | null
+  status?: ProjectStatus | null
+  geological_data?: ProjectGeologicalData | null
+  notes?: string | null
 }
 
 export interface ProjectUpdate {
@@ -34,6 +72,10 @@ export interface ProjectUpdate {
   location?: LocationPreset
   deltat_input?: DeltaTInputs
   deltat_result?: DeltaTOutputs
+  project_type?: ProjectType | null
+  status?: ProjectStatus | null
+  geological_data?: ProjectGeologicalData | null
+  notes?: string | null
 }
 
 /** Castet typsichere Domain-Objekte in Supabases Json-Typ für INSERT/UPDATE */
@@ -49,6 +91,10 @@ function rowToProject(row: {
   location: Json | null
   deltat_input: Json | null
   deltat_result: Json | null
+  project_type?: string | null
+  status?: string | null
+  geological_data?: Json | null
+  notes?: string | null
   created_at: string | null
   updated_at: string | null
 }): Project {
@@ -60,6 +106,10 @@ function rowToProject(row: {
     location: row.location as LocationPreset | null,
     deltat_input: row.deltat_input as DeltaTInputs | null,
     deltat_result: row.deltat_result as DeltaTOutputs | null,
+    project_type: (row.project_type as ProjectType | null) ?? null,
+    status: (row.status as ProjectStatus | null) ?? null,
+    geological_data: row.geological_data as ProjectGeologicalData | null,
+    notes: row.notes ?? null,
     created_at: row.created_at ?? '',
     updated_at: row.updated_at ?? '',
   }
@@ -90,6 +140,10 @@ export async function createProject(insert: ProjectInsert): Promise<Project> {
       location: insert.location != null ? toJson(insert.location) : null,
       deltat_input: insert.deltat_input != null ? toJson(insert.deltat_input) : null,
       deltat_result: insert.deltat_result != null ? toJson(insert.deltat_result) : null,
+      project_type: insert.project_type ?? null,
+      status: insert.status ?? null,
+      geological_data: insert.geological_data != null ? toJson(insert.geological_data) : null,
+      notes: insert.notes ?? null,
     })
     .select()
     .single()
@@ -108,6 +162,10 @@ export async function updateProject(id: string, update: ProjectUpdate): Promise<
       ...(update.location !== undefined && { location: toJson(update.location) }),
       ...(update.deltat_input !== undefined && { deltat_input: toJson(update.deltat_input) }),
       ...(update.deltat_result !== undefined && { deltat_result: toJson(update.deltat_result) }),
+      ...(update.project_type !== undefined && { project_type: update.project_type }),
+      ...(update.status !== undefined && { status: update.status }),
+      ...(update.geological_data !== undefined && { geological_data: update.geological_data != null ? toJson(update.geological_data) : null }),
+      ...(update.notes !== undefined && { notes: update.notes }),
     })
     .eq('id', id)
     .select()
