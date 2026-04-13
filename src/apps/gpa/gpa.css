@@ -539,7 +539,12 @@
   border:1px solid rgba(91,175,214,.3); border-radius:20px; padding:4px 14px;
   font-size:11px; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; }
 #welcome-title { font-size:22px; font-weight:700; color:var(--text); margin-bottom:10px; }
-#welcome-desc { font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:24px; }
+#welcome-desc { font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:12px; }
+#welcome-disclaimer {
+  font-size:11px; color:var(--muted); line-height:1.6;
+  background:rgba(232,168,87,.07); border:1px solid rgba(232,168,87,.25);
+  border-radius:8px; padding:10px 14px; margin-bottom:20px; opacity:.85;
+}
 #welcome-btns { display:flex; gap:12px; justify-content:center; }
 .welcome-btn-ok { background:rgba(91,175,214,.15); border:1px solid rgba(91,175,214,.4);
   border-radius:8px; padding:10px 22px; color:var(--text); font-size:13px;
