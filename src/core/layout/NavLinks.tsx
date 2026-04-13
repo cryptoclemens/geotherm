@@ -8,6 +8,7 @@ import { cn } from '@/core/ui/utils'
 const NAV_ITEMS = [
   { href: '/atlas', label: 'Atlas' },
   { href: '/deltat', label: 'DeltaT' },
+  { href: '/bohrkost', label: 'Bohrkosten' },
 ] as const
 
 export function NavLinks() {
