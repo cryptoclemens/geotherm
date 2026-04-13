@@ -5,9 +5,11 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import type { UIMessage } from 'ai'
 import { useRouter } from 'next/navigation'
-import { BotIcon, SendIcon } from 'lucide-react'
+import { BotIcon, SendIcon, Trash2Icon } from 'lucide-react'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
 import type { DeltaTInputs } from '@/apps/deltat/calc/system'
+
+const STORAGE_KEY = 'ai-dialog-history'
 
 // Starters — zeigen bevor der Nutzer schreibt
 const STARTERS = [
@@ -24,26 +26,47 @@ const TOOL_LABELS: Record<string, string> = {
   create_feedback:    '✓ Feedback gespeichert',
 }
 
-const INITIAL_MESSAGES: UIMessage[] = [
-  {
-    id: 'welcome',
-    role: 'assistant',
-    parts: [{
-      type: 'text',
-      text: 'Wie kann ich dir helfen? Nenn mir Standort oder Projektparameter — ich öffne den richtigen Rechner. Oder sag mir, welches Tool du dir noch wünschst.',
-    }],
-  },
-]
+const WELCOME_MESSAGE: UIMessage = {
+  id: 'welcome',
+  role: 'assistant',
+  parts: [{
+    type: 'text',
+    text: 'Wie kann ich dir helfen? Nenn mir Standort oder Projektparameter — ich öffne den richtigen Rechner. Oder sag mir, welches Tool du dir noch wünschst.',
+  }],
+}
+
+function loadHistory(): UIMessage[] {
+  if (typeof window === 'undefined') return [WELCOME_MESSAGE]
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return [WELCOME_MESSAGE]
+    const parsed = JSON.parse(raw) as UIMessage[]
+    return parsed.length > 0 ? parsed : [WELCOME_MESSAGE]
+  } catch {
+    return [WELCOME_MESSAGE]
+  }
+}
+
+function saveHistory(msgs: UIMessage[]) {
+  try {
+    // Nur Text-Messages speichern (keine laufenden Tool-Calls)
+    const toSave = msgs.filter(m =>
+      m.parts.every(p => p.type === 'text' || (p.type === 'tool-invocation' && (p as unknown as { state: string }).state === 'result'))
+    )
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave.slice(-50)))
+  } catch { /* QuotaExceededError ignorieren */ }
+}
 
 export function AiDialog() {
   const router = useRouter()
   const setInput = useDeltaTStore(s => s.setInput)
   const [text, setText] = useState('')
+  const [initialMessages] = useState<UIMessage[]>(loadHistory)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/ai/chat' }),
-    messages: INITIAL_MESSAGES,
+    messages: initialMessages,
     onToolCall: async ({ toolCall }) => {
       // Cast da UIMessage generisch ohne TOOLS-Param
       const tc = toolCall as unknown as {
@@ -67,10 +90,11 @@ export function AiDialog() {
     },
   })
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom + History speichern bei neuen Nachrichten
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (status !== 'streaming') saveHistory(messages)
+  }, [messages, status])
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -84,6 +108,11 @@ export function AiDialog() {
     sendMessage({ text: prompt })
   }
 
+  function clearHistory() {
+    localStorage.removeItem(STORAGE_KEY)
+    setMessages([WELCOME_MESSAGE])
+  }
+
   const isStreaming = status === 'streaming'
   const hasUserMessage = messages.some(m => m.role === 'user')
 
@@ -95,6 +124,16 @@ export function AiDialog() {
           <BotIcon className="w-3.5 h-3.5 text-[oklch(0.72_0.15_195)]" aria-hidden="true" />
         </div>
         <span className="text-sm font-medium text-white">Geotherm-Assistent</span>
+        {hasUserMessage && !isStreaming && (
+          <button
+            onClick={clearHistory}
+            title="Verlauf löschen"
+            className="ml-auto text-white/30 hover:text-white/60 transition-colors"
+            aria-label="Chat-Verlauf löschen"
+          >
+            <Trash2Icon className="w-3.5 h-3.5" />
+          </button>
+        )}
         {isStreaming && (
           <div className="ml-auto flex gap-1" role="status" aria-label="Antwort wird generiert" aria-live="polite">
             {[0, 150, 300].map(delay => (
