@@ -101,7 +101,7 @@ Quelle: Arpagaus et al. (2018), *Energy* 152, 1626–1646 — Abb. 8 + Gl. 7
 
 ## Bohrkostenrechner — Lukawski-Formel (Stand April 2026)
 
-> **Geprüft durch:** Formel-Recherche + Quellenabgleich  
+> **Geprüft durch:** Formel-Recherche + Quellenabgleich + Scientist-Agent (April 2026)  
 > **Modul:** `src/apps/bohrkost/calc/kosten.ts`  
 > **Status:** Deploybar als CAPEX-Orientierungsrechner mit Disclaimer.
 
@@ -111,13 +111,18 @@ Quelle: Arpagaus et al. (2018), *Energy* 152, 1626–1646 — Abb. 8 + Gl. 7
 C(d) = (1.72e-7 × d² + 2.3e-3 × d − 0.62) × 10⁶   [USD 2009]
 ```
 Quelle: **Lukawski et al. (2014)**, *J. Pet. Sci. Eng.* 118, 1–14.  
+Datenbasis: **146 US-Geothermiebohrungen** (hydrothermal + EGS; Produktions- **und** Injektionsbohrungen).  
+**Nicht geeignet für Erdwärmesonden (BHE/DBHE)** — diese haben grundlegend andere Bohrdurchmesser und -tiefen.  
 Gültig für: Geothermale Bohrungen 500–5000 m.
+
+**Dublette:** `Kosten_Dublette = 2 × Einzelbohrung` (konservativ; Injektionsbohrung real ~15 % günstiger,
+liegt jedoch innerhalb der ±35–50 %-Bandbreite der AACE-Class-5-Schätzung).
 
 **Angewandte Korrekturfaktoren:**
 
-| Faktor | Wert | Quelle |
+| Faktor | Wert | Quelle / Herleitung |
 |---|---|---|
-| Währung USD₂₀₀₉ → EUR₂₀₂₆ | 1.20 | ECB Langzeitdurchschnitt + Inflation 2009–2026 |
+| Währung USD₂₀₀₉ → EUR₂₀₂₆ | **1.34** | US CPI 2009–2026: ×1.54 (BLS); EUR/USD: 1.39→1.15 (ECB) → 1.54/(1.15/1.39) ≈ 1.34. Nächste Prüfung: April 2027 |
 | Gestein Lockergestein | 0.70 | Baujard et al. (2017), Stanford SGW |
 | Gestein Festgestein_sed | 1.00 | Referenz |
 | Gestein Festgestein_kristallin | 1.30 | Baujard et al. (2017), Stanford SGW |
@@ -162,7 +167,7 @@ Quelle: **BEG / MAP-Programm KfW (2024)**. Gilt für Förderbohrung (eine Bohrun
 
 | Punkt | Vereinfachung | Impact |
 |---|---|---|
-| Währungs-Faktor | Pauschal 1.20 — keine jährliche Aktualisierung | ±10 % |
+| Währungs-Faktor | 1.34 (aktualisiert April 2026) — keine automatische Jahres-Aktualisierung | ±8 % |
 | Marktaufschlag | Pauschal 1.40 — regional stark variabel | ±20–30 % |
 | Komplettierungskosten | Pauschal-Formeln — keine Bohrtiefenabhängigkeit bei Pumpe | ±15 % |
 | Gesteins-Faktoren | Nur 3 Kategorien — heterogene Aquifere nicht abgebildet | ±25 % |
