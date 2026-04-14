@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { PlusIcon, PencilIcon } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { PlusIcon, PencilIcon, SearchIcon, LoaderIcon } from 'lucide-react'
 import { Button } from '@/core/ui/button'
 import {
   Dialog,
@@ -73,6 +73,9 @@ export function ProjectFormDialog({ mode, project, trigger }: ProjectFormDialogP
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [geocoding, setGeocoding] = useState(false)
+  const [geocodeHint, setGeocodeHint] = useState<string | null>(null)
+  const geocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const createProject = useProjectStore((s) => s.createProject)
   const updateProject = useProjectStore((s) => s.updateProject)
   const deltaTInputs = useDeltaTStore((s) => s.inputs)
@@ -86,6 +89,39 @@ export function ProjectFormDialog({ mode, project, trigger }: ProjectFormDialogP
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  async function geocodeAddress(q: string) {
+    if (!q.trim()) return
+    setGeocoding(true)
+    setGeocodeHint(null)
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`)
+      const data = await res.json() as { lat?: number; lng?: number; display_name?: string; error?: string }
+      if (res.ok && data.lat != null && data.lng != null) {
+        setForm((prev) => ({
+          ...prev,
+          location_lat: data.lat!.toFixed(5),
+          location_lng: data.lng!.toFixed(5),
+        }))
+        setGeocodeHint(`✓ ${data.display_name ?? `${data.lat?.toFixed(4)}°N, ${data.lng?.toFixed(4)}°E`}`)
+      } else {
+        setGeocodeHint(`Nicht gefunden — bitte manuell eintragen`)
+      }
+    } catch {
+      setGeocodeHint('Fehler beim Geocoding')
+    } finally {
+      setGeocoding(false)
+    }
+  }
+
+  function handleLocationNameChange(value: string) {
+    setField('location_name', value)
+    setGeocodeHint(null)
+    if (geocodeTimerRef.current) clearTimeout(geocodeTimerRef.current)
+    if (value.trim().length > 3) {
+      geocodeTimerRef.current = setTimeout(() => geocodeAddress(value), 800)
+    }
   }
 
   function handleApplyDeltaT() {
@@ -226,24 +262,47 @@ export function ProjectFormDialog({ mode, project, trigger }: ProjectFormDialogP
 
           {/* Ort */}
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Ort</label>
-            <Input
-              placeholder="Ortsname (z. B. München)"
-              value={form.location_name}
-              onChange={(e) => setField('location_name', e.target.value)}
-            />
+            <label className="text-sm font-medium">Adresse / Ort</label>
+            <div className="flex gap-1.5">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="z. B. Freiburg im Breisgau oder genaue Adresse"
+                  value={form.location_name}
+                  onChange={(e) => handleLocationNameChange(e.target.value)}
+                />
+                {geocoding && (
+                  <LoaderIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => geocodeAddress(form.location_name)}
+                disabled={geocoding || !form.location_name.trim()}
+                aria-label="Koordinaten suchen"
+                title="Koordinaten aus Adresse ermitteln"
+              >
+                <SearchIcon className="w-4 h-4" />
+              </Button>
+            </div>
+            {geocodeHint && (
+              <p className={`text-[11px] ${geocodeHint.startsWith('✓') ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+                {geocodeHint}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2 mt-1">
               <Input
                 type="number"
                 step="any"
-                placeholder="Breitengrad"
+                placeholder="Breitengrad (auto)"
                 value={form.location_lat}
                 onChange={(e) => setField('location_lat', e.target.value)}
               />
               <Input
                 type="number"
                 step="any"
-                placeholder="Längengrad"
+                placeholder="Längengrad (auto)"
                 value={form.location_lng}
                 onChange={(e) => setField('location_lng', e.target.value)}
               />
