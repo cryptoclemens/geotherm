@@ -5,6 +5,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import type { DeltaTInputs, DeltaTOutputs } from '@/apps/deltat/calc/system'
+import type { BohrkostInputs, BohrkostOutputs } from '@/apps/bohrkost/calc/kosten'
 import type { Json } from '@/types/supabase'
 import type { LocationPreset } from '@/core/store/useWorkspaceStore'
 
@@ -46,6 +47,8 @@ export interface Project {
   location: LocationPreset | null
   deltat_input: DeltaTInputs | null
   deltat_result: DeltaTOutputs | null
+  bohrkost_input: BohrkostInputs | null
+  bohrkost_result: BohrkostOutputs | null
   project_type?: ProjectType | null
   status?: ProjectStatus | null
   geological_data?: ProjectGeologicalData | null
@@ -60,6 +63,8 @@ export interface ProjectInsert {
   location?: LocationPreset
   deltat_input?: DeltaTInputs
   deltat_result?: DeltaTOutputs
+  bohrkost_input?: BohrkostInputs
+  bohrkost_result?: BohrkostOutputs
   project_type?: ProjectType | null
   status?: ProjectStatus | null
   geological_data?: ProjectGeologicalData | null
@@ -72,6 +77,8 @@ export interface ProjectUpdate {
   location?: LocationPreset
   deltat_input?: DeltaTInputs
   deltat_result?: DeltaTOutputs
+  bohrkost_input?: BohrkostInputs | null
+  bohrkost_result?: BohrkostOutputs | null
   project_type?: ProjectType | null
   status?: ProjectStatus | null
   geological_data?: ProjectGeologicalData | null
@@ -91,6 +98,8 @@ function rowToProject(row: {
   location: Json | null
   deltat_input: Json | null
   deltat_result: Json | null
+  bohrkost_input?: Json | null
+  bohrkost_result?: Json | null
   project_type?: string | null
   status?: string | null
   geological_data?: Json | null
@@ -106,6 +115,8 @@ function rowToProject(row: {
     location: row.location as LocationPreset | null,
     deltat_input: row.deltat_input as DeltaTInputs | null,
     deltat_result: row.deltat_result as DeltaTOutputs | null,
+    bohrkost_input: (row.bohrkost_input ?? null) as BohrkostInputs | null,
+    bohrkost_result: (row.bohrkost_result ?? null) as BohrkostOutputs | null,
     project_type: (row.project_type as ProjectType | null) ?? null,
     status: (row.status as ProjectStatus | null) ?? null,
     geological_data: row.geological_data as ProjectGeologicalData | null,
@@ -162,6 +173,8 @@ export async function updateProject(id: string, update: ProjectUpdate): Promise<
       ...(update.location !== undefined && { location: toJson(update.location) }),
       ...(update.deltat_input !== undefined && { deltat_input: toJson(update.deltat_input) }),
       ...(update.deltat_result !== undefined && { deltat_result: toJson(update.deltat_result) }),
+      ...(update.bohrkost_input !== undefined && { bohrkost_input: update.bohrkost_input != null ? toJson(update.bohrkost_input) : null }),
+      ...(update.bohrkost_result !== undefined && { bohrkost_result: update.bohrkost_result != null ? toJson(update.bohrkost_result) : null }),
       ...(update.project_type !== undefined && { project_type: update.project_type }),
       ...(update.status !== undefined && { status: update.status }),
       ...(update.geological_data !== undefined && { geological_data: update.geological_data != null ? toJson(update.geological_data) : null }),
