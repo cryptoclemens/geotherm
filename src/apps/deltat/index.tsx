@@ -8,6 +8,7 @@ import { SecondaryColumn } from './components/SecondaryColumn'
 import { FormelTab } from './components/FormelTab'
 import { SaveProjectDialog } from './components/SaveProjectDialog'
 import { LoadProjectDialog } from './components/LoadProjectDialog'
+import { OptimizeDialog } from './components/OptimizeDialog'
 import { DeltaTTour } from './components/DeltaTTour'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { Button } from '@/core/ui/button'
@@ -89,6 +90,7 @@ export default function DeltaTApp() {
           </div>
         </div>
         <div className="flex items-center gap-2" data-print-hide>
+          {tab === 'berechnung' && <OptimizeDialog />}
           {tab === 'berechnung' && <LoadProjectDialog />}
           {tab === 'berechnung' && <SaveProjectDialog />}
           {tab === 'berechnung' && (

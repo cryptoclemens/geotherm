@@ -119,6 +119,9 @@ export interface DeltaTOutputs {
   qMinFoerderrate: number | null
   /** Tiefe für Direktnutzung ohne WP: T_GW ≥ T_VL [m] */
   tiefeMinDirekt: number
+  /** Hydraulisch maximal zulässige Förderrate [l/s] nach Thiem (1906), DVGW W 115 Abschn. 6.2
+   *  Q_max = 2π × T × s_zul / ln(R/r_w); s_zul = b/3; R=500m; r_w=0,15m */
+  qMaxHydraulisch: number
 }
 
 /**
@@ -283,6 +286,14 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // VDI 4640 Bl. 1, Abschn. 4.2
   const tiefeMinDirekt = Math.round((tVL - SURFACE_TEMP) / GEOTHERM_GRADIENT)
 
+  // Hydraulisch max. Förderrate (Thiem 1906, stationär) — DVGW W 115 Abschn. 6.2
+  // Q_max = 2π × T × s_zul / ln(R/r_w); s_zul = b/3 (zulässige Absenkung)
+  // R_einfluss = 500 m, r_brunnen = 0,15 m (Standard-Ausbaudurchmesser)
+  const sZul = maechtig / 3
+  const qMaxHydraulisch = Math.max(1,
+    (2 * Math.PI * transmissiv * sZul) / Math.log(500 / 0.15) * 1000,
+  )
+
   return {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,
     anzahlDubletten, gesamtFoerderrate, tauchpumpenLeistung,
@@ -295,6 +306,6 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     jahreswaerme, tHub,
     sHydraulik, sThermik, sDurchbruch, sCOP, sMaterial,
     wpAktiv,
-    qMinFoerderrate, tiefeMinDirekt,
+    qMinFoerderrate, tiefeMinDirekt, qMaxHydraulisch,
   }
 }
