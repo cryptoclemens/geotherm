@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import {
   DEFAULT_INPUTS, calculateSystem, calcDefaultFoerderhoehe, calcDefaultTGW,
 } from '../calc/system'
-import type { DeltaTInputs, DeltaTOutputs } from '../calc/system'
+import type { DeltaTInputs, DeltaTOutputs, RegionId } from '../calc/system'
 import type { LocationPreset } from '@/core/store/useWorkspaceStore'
 
 interface DeltaTState {
@@ -37,7 +37,14 @@ export const useDeltaTStore = create<DeltaTState>()(
             next = { ...next, foerderhoehe: calcDefaultFoerderhoehe(val as number) }
             // T_GW nur mitziehen wenn nicht manuell überschrieben
             if (!tGWManual) {
-              next = { ...next, tGW: calcDefaultTGW(val as number) }
+              next = { ...next, tGW: calcDefaultTGW(val as number, next.region) }
+            }
+          }
+
+          if (key === 'region') {
+            // Regionsänderung → T_GW-Kopplung neu berechnen (falls nicht manuell)
+            if (!tGWManual) {
+              next = { ...next, tGW: calcDefaultTGW(next.tiefe, val as RegionId) }
             }
           }
 
@@ -52,7 +59,7 @@ export const useDeltaTStore = create<DeltaTState>()(
         set({ inputs: DEFAULT_INPUTS, outputs: calculateSystem(DEFAULT_INPUTS), tGWManual: false }),
       resetTGWCoupling: () =>
         set((s) => {
-          const tGW = calcDefaultTGW(s.inputs.tiefe)
+          const tGW = calcDefaultTGW(s.inputs.tiefe, s.inputs.region)
           const next = { ...s.inputs, tGW }
           return { inputs: next, outputs: calculateSystem(next), tGWManual: false }
         }),
@@ -87,8 +94,9 @@ export const useDeltaTStore = create<DeltaTState>()(
     }),
     {
       name: 'deltat-inputs',
-      version: 1,
+      version: 2,
       // v0 → v1: porositaet + guetegradWP zu Inputs hinzugefügt; outputs-Shape erweitert.
+      // v1 → v2: region + injektionsdruck zu Inputs hinzugefügt; calcEtaPump + Sichardt Q_max.
       // migrate normalisiert alte Daten gegen DEFAULT_INPUTS und berechnet outputs neu.
       migrate: (persistedState, version) => {
         if (version < 1) {
@@ -99,6 +107,17 @@ export const useDeltaTStore = create<DeltaTState>()(
             inputs,
             outputs: calculateSystem(inputs),
             tGWManual: old?.tGWManual ?? false,
+          } as DeltaTState
+        }
+        if (version < 2) {
+          // v1 → v2: region + injektionsdruck fehlen in alten Daten → aus DEFAULT_INPUTS auffüllen
+          const old = persistedState as Partial<DeltaTState> | null
+          const oldInputs = (old?.inputs ?? {}) as Partial<DeltaTInputs>
+          const inputs: DeltaTInputs = { ...DEFAULT_INPUTS, ...oldInputs }
+          return {
+            ...(old ?? {}),
+            inputs,
+            outputs: calculateSystem(inputs),
           } as DeltaTState
         }
         return persistedState as DeltaTState

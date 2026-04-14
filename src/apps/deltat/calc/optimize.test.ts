@@ -34,12 +34,12 @@ describe('optimizeMinDoubletten', () => {
   })
 
   it('setzt Q korrekt auf hydraulisches Limit (schwache Transmissivität)', () => {
-    // kf=1e-5, b=20 → T=2e-4 m²/s → Q_max ≈ 0,5 l/s → Q_final = 1 l/s (Minimum)
-    const base = inputs({ kf: 1e-5, maechtig: 20, tGW: 25, Q: 50 })
+    // kf=1e-4, b=20 → T=2e-3 m²/s → Q_max (Sichardt) ≈ 4–6 l/s, stark < Q=50 l/s
+    const base = inputs({ kf: 1e-4, maechtig: 20, tGW: 25, Q: 50 })
     const result = optimizeMinDoubletten(base)
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.newInputs.Q ?? 100).toBeLessThanOrEqual(5)  // stark gedrosselt
+    expect(result.newInputs.Q ?? 100).toBeLessThanOrEqual(10)  // stark gedrosselt
   })
 
   it('schlägt fehl wenn tGW ≤ TR_MIN (2 °C)', () => {
@@ -91,13 +91,13 @@ describe('optimizeMaxSPF', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
-    // Neuer SPF besser als alter
+    // Neuer SPF besser als alter — SPF = qDelivered / (n × (P_prod + P_inj) + P_WP_el)
     const before = calculateSystem(base)
-    const pPumpVorher = (before.anzahlDubletten ?? 0) * 2 * before.tauchpumpenLeistung
+    const pPumpVorher = (before.anzahlDubletten ?? 0) * (before.tauchpumpenLeistung + before.injektionsPumpenLeistung)
     const spfVorher = before.qDelivered / (pPumpVorher + before.elLeistungWP || 1)
 
     const after = calculateSystem({ ...base, ...result.newInputs })
-    const pPumpNachher = (after.anzahlDubletten ?? 0) * 2 * after.tauchpumpenLeistung
+    const pPumpNachher = (after.anzahlDubletten ?? 0) * (after.tauchpumpenLeistung + after.injektionsPumpenLeistung)
     const spfNachher = after.qDelivered / (pPumpNachher + after.elLeistungWP || 1)
 
     expect(spfNachher).toBeGreaterThanOrEqual(spfVorher - 0.01)  // ±0,01 Toleranz
