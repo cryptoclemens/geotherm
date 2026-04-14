@@ -161,7 +161,7 @@ export default function ProjectDetailPanel() {
             {project.deltat_result && (
               <div className="proj-param">
                 <span className="proj-param-label">Leistung</span>
-                <span className="proj-param-value">{project.deltat_result.qDelivered.toFixed(0)} kW</span>
+                <span className="proj-param-value">{(project.deltat_result.qDelivered ?? 0).toFixed(0)} kW</span>
               </div>
             )}
           </div>

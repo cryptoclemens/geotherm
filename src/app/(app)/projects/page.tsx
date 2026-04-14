@@ -220,7 +220,7 @@ function ProjectCard({ project, onClick }: ProjectCardProps) {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
                 <span className="text-muted-foreground">DeltaT:</span>
                 <span className="font-medium text-foreground">
-                  {project.deltat_result.qDelivered.toFixed(0)} kW
+                  {(project.deltat_result.qDelivered ?? 0).toFixed(0)} kW
                   {project.deltat_result.anzahlDubletten != null && ` · ${project.deltat_result.anzahlDubletten}× Dublette`}
                 </span>
               </div>

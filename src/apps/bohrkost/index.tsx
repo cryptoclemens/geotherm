@@ -117,8 +117,16 @@ export default function BohrkostApp() {
       // Überlappende Felder in deltat_input synchronisieren (nur wenn DeltaT-Daten vorhanden)
       const currentProject = storeProjects.find(p => p.id === currentProjectId)
       const existingDeltaT = currentProject?.deltat_input ?? null
+      // tReinjektion nur übernehmen wenn physikalisch sinnvoll (T_R < T_GW),
+      // sonst bleibt der DeltaT-Wert unverändert → verhindert T_R > T_GW-Datenkorrpution
       const mergedDeltaT = existingDeltaT != null
-        ? { ...existingDeltaT, tiefe: inputs.tiefe, Q: inputs.foerderrate, tGW: inputs.tGW, tR: inputs.tReinjektion }
+        ? {
+            ...existingDeltaT,
+            tiefe: inputs.tiefe,
+            Q: inputs.foerderrate,
+            tGW: inputs.tGW,
+            ...(inputs.tReinjektion < inputs.tGW && { tR: inputs.tReinjektion }),
+          }
         : null
 
       await storeUpdateProject(currentProjectId, {

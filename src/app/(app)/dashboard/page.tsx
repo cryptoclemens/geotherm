@@ -213,7 +213,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {project.deltat_input && `${project.deltat_input.tiefe} m · ${project.deltat_input.tGW} °C`}
-                    {project.deltat_result && ` · ${project.deltat_result.qDelivered.toFixed(0)} kW`}
+                    {project.deltat_result?.qDelivered != null && ` · ${project.deltat_result.qDelivered.toFixed(0)} kW`}
                     {' · '}{formatDate(project.created_at)}
                   </p>
                 </div>
