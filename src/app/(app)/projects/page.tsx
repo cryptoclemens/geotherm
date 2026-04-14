@@ -212,36 +212,50 @@ function ProjectCard({ project, onClick }: ProjectCardProps) {
           </dl>
         )}
 
-        {/* Berechnungsstatus */}
-        <div className="flex flex-col gap-1">
+        {/* ── Berechnungsstatus ─────────────────────────────────── */}
+        <div className="mt-3 flex flex-col gap-1.5 border-t border-border/50 pt-3">
           {showDeltaT && (
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${project.deltat_result ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
-              <span className="text-muted-foreground">DeltaT:</span>
-              {project.deltat_result ? (
+            project.deltat_result ? (
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span className="text-muted-foreground">DeltaT:</span>
                 <span className="font-medium text-foreground">
                   {project.deltat_result.qDelivered.toFixed(0)} kW
-                  {' · '}{project.deltat_result.anzahlDoubletten}× Dublette
+                  {project.deltat_result.anzahlDoubletten != null && ` · ${project.deltat_result.anzahlDoubletten}× Dublette`}
                 </span>
-              ) : (
-                <span className="text-muted-foreground/60 italic">ausstehend</span>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 italic">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+                DeltaT-Berechnung steht noch aus
+              </div>
+            )
           )}
-          <div className="flex items-center gap-1.5 text-[11px]">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${project.bohrkost_result ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
-            <span className="text-muted-foreground">Bohrkost:</span>
-            {project.bohrkost_result ? (
+          {project.bohrkost_result ? (
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+              <span className="text-muted-foreground">Bohrkost:</span>
               <span className="font-medium text-foreground font-mono">
                 {project.bohrkost_result.projektkosten_mid >= 1_000_000
-                  ? `${(project.bohrkost_result.projektkosten_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} Mio. EUR`
+                  ? `${(project.bohrkost_result.projektkosten_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio. EUR`
                   : `${(project.bohrkost_result.projektkosten_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T EUR`
                 }
+                {project.bohrkost_result.foerderung_betrag > 0 && (
+                  <span className="text-green-600 dark:text-green-400 ml-1 font-normal">
+                    (nach Förderung: {project.bohrkost_result.projektkosten_netto_mid >= 1_000_000
+                      ? `${(project.bohrkost_result.projektkosten_netto_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio.`
+                      : `${(project.bohrkost_result.projektkosten_netto_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T`
+                    })
+                  </span>
+                )}
               </span>
-            ) : (
-              <span className="text-muted-foreground/60 italic">ausstehend</span>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 italic">
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+              Bohrkostenberechnung steht noch aus
+            </div>
+          )}
         </div>
 
         <p className="text-[10px] text-muted-foreground/40 mt-2">{formatDate(project.created_at)}</p>
@@ -345,6 +359,7 @@ export default function ProjectsPage() {
       : project.project_type === 'Einzelbohrung'       ? 'Einzelbohrung'
       : project.project_type === 'Explorationsbohrung' ? 'Explorationsbohrung'
       : 'Dublette'
+    // Wenn bohrkost_input bereits gespeichert: direkt laden
     const partial: Partial<BohrkostInputs> = project.bohrkost_input
       ? project.bohrkost_input
       : {
