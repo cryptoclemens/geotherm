@@ -82,6 +82,15 @@ export const useDeltaTStore = create<DeltaTState>()(
       applyFullProject: (inputs) =>
         set({ inputs, outputs: calculateSystem(inputs), tGWManual: true }),
     }),
-    { name: 'deltat-inputs' },
+    {
+      name: 'deltat-inputs',
+      // Neue Felder (porositaet, guetegradWP) sind nicht in alten gespeicherten Daten vorhanden.
+      // merge: persistierte Inputs mit DEFAULT_INPUTS zusammenführen, damit alle Felder belegt sind.
+      merge: (persisted, current) => {
+        const p = persisted as DeltaTState
+        const mergedInputs: DeltaTInputs = { ...current.inputs, ...p.inputs }
+        return { ...current, ...p, inputs: mergedInputs, outputs: calculateSystem(mergedInputs) }
+      },
+    },
   ),
 )

@@ -49,6 +49,15 @@ export const useBohrkostStore = create<BohrkostState>()(
       clearProject: () =>
         set({ currentProjectId: null, currentProjectName: null }),
     }),
-    { name: 'bohrkost-inputs' },
+    {
+      name: 'bohrkost-inputs',
+      // Neue Felder (anzahlDubletten) sind nicht in alten gespeicherten Daten vorhanden.
+      // merge: persistierte Inputs mit DEFAULT_INPUTS zusammenführen, damit alle Felder belegt sind.
+      merge: (persisted, current) => {
+        const p = persisted as BohrkostState
+        const mergedInputs = { ...current.inputs, ...p.inputs }
+        return { ...current, ...p, inputs: mergedInputs, outputs: berechneBohrkosten(mergedInputs) }
+      },
+    },
   ),
 )
