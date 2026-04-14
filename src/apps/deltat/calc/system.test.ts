@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateSystem, DEFAULT_INPUTS } from './system'
+import { calculateSystem, DEFAULT_INPUTS, calcDefaultFoerderhoehe } from './system'
 import type { DeltaTInputs } from './system'
 
 // ─── Helper ────────────────────────────────────────────────────────────────
@@ -240,6 +240,25 @@ describe('wpAktiv', () => {
   it('false wenn tVL ≤ tGW', () => {
     const r = calculateSystem(inp({ tVL: 20, tGW: 25 }))
     expect(r.wpAktiv).toBe(false)
+  })
+})
+
+// ─── calcDefaultFoerderhoehe ─────────────────────────────────────────────────
+describe('calcDefaultFoerderhoehe', () => {
+  it('Flachwasser 35 m → ~33 m (nicht 150 m)', () => {
+    expect(calcDefaultFoerderhoehe(35)).toBe(33)
+  })
+  it('Standard 500 m → 265 m', () => {
+    expect(calcDefaultFoerderhoehe(500)).toBe(265)
+  })
+  it('Tiefe 1000 m → capped 300 m', () => {
+    expect(calcDefaultFoerderhoehe(1000)).toBe(300)
+  })
+  it('Minimum 10 m → capped 25 m', () => {
+    expect(calcDefaultFoerderhoehe(10)).toBe(25)
+  })
+  it('DEFAULT_INPUTS.foerderhoehe entspricht Formel für tiefe=500', () => {
+    expect(DEFAULT_INPUTS.foerderhoehe).toBe(calcDefaultFoerderhoehe(500))
   })
 })
 

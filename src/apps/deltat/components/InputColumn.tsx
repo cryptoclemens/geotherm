@@ -25,9 +25,14 @@ export function InputColumn() {
         <ParamSlider label="Bohrtiefe" value={inputs.tiefe} min={50} max={3000} step={50} unit="m"
           onChange={v => setInput('tiefe', v)}
           info="Tiefe der Förder- und Injektionsbohrung. Bestimmt maßgeblich die erreichbare Grundwassertemperatur (geothermischer Gradient ≈ 3 °C/100 m)." />
-        <ParamSlider label="Förderhöhe Tauchpumpe" value={inputs.foerderhoehe} min={50} max={500} step={10} unit="m"
+        <ParamSlider label="Förderhöhe Tauchpumpe" value={inputs.foerderhoehe} min={20} max={500} step={5} unit="m"
           onChange={v => setInput('foerderhoehe', v)}
-          info="Statische Förderhöhe der Unterwasserpumpe. Beeinflusst den Pumpenenergieverbrauch:\nP_Pumpe = ρ·g·H·Q / η [W]\n(VDI 4640 Bl. 2)" />
+          info="Dynamische Förderhöhe der Tauchpumpe (Absenkung + Rohrreibung + Systemdruck).\nP_Pumpe = ρ·g·H·Q / η [W]\nFaustregel: H ≈ 0,5 × Bohrtiefe + 15 m\n(VDI 4640 Bl. 2; Stober & Bucher 2012 Kap. 7.4)" />
+        {inputs.foerderhoehe > inputs.tiefe + 20 && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug">
+            Förderhöhe {inputs.foerderhoehe} m unrealistisch für {inputs.tiefe} m Bohrtiefe — empfohlen: ≤ {inputs.tiefe + 20} m
+          </p>
+        )}
         <ParamSlider label="Aquifer-Mächtigkeit" value={inputs.maechtig} min={5} max={500} step={5} unit="m"
           onChange={v => setInput('maechtig', v)}
           info="Vertikale Ausdehnung des wasserführenden Horizonts.\nTransmissivität: T = k_f × b [m²/s]\n(Darcy; DVGW W 115)" />

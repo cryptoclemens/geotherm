@@ -108,6 +108,19 @@ export interface DeltaTOutputs {
   wpAktiv: boolean
 }
 
+/**
+ * Tiefenabhängiger Default für Förderhöhe der Tauchpumpe.
+ * H = clamp(0,5 × tiefe + 15, 25, 300)
+ *
+ * Quellen: Stober & Bucher (2012) Tab. 7.3; VDI 4640 Bl. 2 Abschn. 5.6
+ *   < 100 m Tiefe  → H ≈ 20–60 m
+ *   100–500 m      → H ≈ 60–265 m
+ *   > 1000 m       → H ≈ 200–300 m (capped)
+ */
+export function calcDefaultFoerderhoehe(tiefe: number): number {
+  return Math.min(300, Math.max(25, Math.round(0.5 * tiefe + 15)))
+}
+
 export const DEFAULT_INPUTS: DeltaTInputs = {
   tiefe: 500,
   maechtig: 40,
@@ -121,7 +134,7 @@ export const DEFAULT_INPUTS: DeltaTInputs = {
   tVL: 90,
   tRL: 55,
   laufstunden: 2000,
-  foerderhoehe: 150,
+  foerderhoehe: calcDefaultFoerderhoehe(500), // 265 m für Standardtiefe 500 m
 }
 
 export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {

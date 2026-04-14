@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { DEFAULT_INPUTS, calculateSystem } from '../calc/system'
+import { DEFAULT_INPUTS, calculateSystem, calcDefaultFoerderhoehe } from '../calc/system'
 import type { DeltaTInputs, DeltaTOutputs } from '../calc/system'
 import type { LocationPreset } from '@/core/store/useWorkspaceStore'
 
@@ -29,9 +29,11 @@ export const useDeltaTStore = create<DeltaTState>()(
         set({ inputs: DEFAULT_INPUTS, outputs: calculateSystem(DEFAULT_INPUTS) }),
       applyPreset: (preset) =>
         set((s) => {
+          const tiefe = preset.aquifer?.tiefe
           const next: DeltaTInputs = {
             ...s.inputs,
-            ...(preset.aquifer?.tiefe    !== undefined && { tiefe:    preset.aquifer.tiefe }),
+            // Förderhöhe wird zusammen mit tiefe neu berechnet (Stober & Bucher 2012 Tab. 7.3)
+            ...(tiefe    !== undefined && { tiefe, foerderhoehe: calcDefaultFoerderhoehe(tiefe) }),
             ...(preset.aquifer?.maechtig !== undefined && { maechtig: preset.aquifer.maechtig }),
             ...(preset.aquifer?.kf       !== undefined && { kf:       preset.aquifer.kf }),
             ...(preset.aquifer?.tGW      !== undefined && { tGW:      preset.aquifer.tGW }),
