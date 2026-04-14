@@ -459,12 +459,12 @@ export function ProjectDetailDialog({
                     </p>
                     <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-xs">
                       {(([
-                        { label: 'Gelieferte Wärme', value: `${fmt(project.deltat_result.qDelivered, 0)} kW`, strong: true },
+                        { label: 'Gelieferte Wärme', value: `${fmt(project.deltat_result.qDelivered ?? 0, 0)} kW`, strong: true },
                         { label: 'Anzahl Dubletten', value: `${project.deltat_result.anzahlDubletten ?? '–'}×` },
-                        { label: 'COP', value: fmt(project.deltat_result.cop, 2) },
-                        { label: 'Jahreswärmemenge', value: `${fmt(project.deltat_result.jahreswaerme, 0)} MWh/a` },
-                        { label: 'Durchbruchszeit', value: `${fmt(project.deltat_result.tBreak, 1)} Jahre` },
-                        { label: 'Tauchpumpenleistung', value: `${fmt(project.deltat_result.tauchpumpenLeistung, 1)} kW` },
+                        { label: 'COP', value: fmt(project.deltat_result.cop ?? 0, 2) },
+                        { label: 'Jahreswärmemenge', value: `${fmt(project.deltat_result.jahreswaerme ?? 0, 0)} MWh/a` },
+                        { label: 'Durchbruchszeit', value: `${fmt(project.deltat_result.tBreak ?? 0, 1)} Jahre` },
+                        { label: 'Tauchpumpenleistung', value: `${fmt(project.deltat_result.tauchpumpenLeistung ?? 0, 1)} kW` },
                       ]) as Array<{ label: string; value: string; strong?: boolean }>).map(({ label, value, strong }) => (
                         <div key={label}>
                           <dt className="text-muted-foreground/70 mb-0.5">{label}</dt>
