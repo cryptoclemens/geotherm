@@ -374,7 +374,7 @@ npm run test:e2e              # Playwright E2E (ab M7)
 ```
 
 **Wichtige Suites:**
-- `src/apps/deltat/calc/system.test.ts` — 46 Testfälle, Scientist-Agent validiert (PLAUSI_CHECK.md)
+- `src/apps/deltat/calc/system.test.ts` — 77 Testfälle gesamt (3 Suites), Scientist-Agent validiert (PLAUSI_CHECK.md)
 - `src/core/auth/useAuth.test.ts` — Auth-Flows
 - `src/lib/feedback/parser.test.ts` — Feedback.md Parsing
 

@@ -218,7 +218,7 @@ Nur für `role = 'admin'`:
 Aus `delta-t.html` → `src/apps/deltat/calc/system.ts` mit TypeScript-Types.
 
 ### 4.2 Unit-Tests ⭐
-`src/apps/deltat/calc/system.test.ts` mit **41 Testfällen** (Stand April 2026):
+`src/apps/deltat/calc/system.test.ts` mit **77 Testfällen gesamt** (Stand April 2026):
 - Thermische Leistung: Default-Werte, Edge Cases (ΔT=0, negative ΔT)
 - Tauchpumpe: Q=15 l/s, H=500m → ~122.6 kW
 - Drost: d=500m, Q=15 l/s, b=40m → ~4 Jahre
@@ -365,7 +365,7 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] 📦 Version-Badge im Header (NEXT_PUBLIC_GIT_SHA, Vercel auto-inject)
 - [x] 📦 Plausi-Fixes A+B: foerderhoehe-Input, jahreswaerme=qDelivered (Scientist-Agent)
 - [x] 📦 Accessibility-Basis: Skip-to-content Link, aria-label auf Navigation (WCAG 2.1)
-- [x] 📦 46 Unit-Tests grün (System-Kern vollständig abgedeckt)
+- [x] 📦 77 Unit-Tests grün (System-Kern vollständig abgedeckt — Stand April 2026 nach Plausi-Check II)
 - [x] 📦 Accessibility-Vollaudit (WCAG 2.1 AA — FeedbackModal, NavLinks, UserNav, MapView, InfoPanel, DeltaTTour, AiDialog, LayerGroup, PrintDialog, prefers-reduced-motion)
 - [x] 📦 Performance-Audit (next.config: poweredByHeader, compress, AVIF/WebP; OG-Metadata, robots.ts, sitemap.ts, PWA-Icons)
 - [ ] 📦 Mobile-Testing (iOS Safari, Android Chrome — v.a. GPA/Atlas)
@@ -423,6 +423,30 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] ⭐ `/projects`-Seite: „Neues Projekt"-Button, Edit-Dialog pro Karte, Typ/Status-Badges
 
 **DoD M7.5:** Bohrkostenrechner unter `/bohrkost` live; Meine Projekte mit vollständigem CRUD, GPA-Layer und KI-Optimierungsvorschlag; NavLinks: Atlas · DeltaT · Bohrkosten · Projekte.
+
+---
+
+## Milestone 7.6 – Scientist-Plausi-Check II & Qualitätssicherung *(April 2026)* ✅ ERLEDIGT
+
+### 7.6.1 Zweiter Scientist-Plausi-Check (Cross-App-Dependency-Review) ✅
+- [x] 📦 Zweiter Scientist-Plausi-Check: Cross-App-Dependency-Check (DeltaT/Bohrkost/GPA), 8 Befunde umgesetzt
+
+### 7.6.2 DeltaT-Verbesserungen ✅
+- [x] 📦 Rename: anzahlDoubletten → anzahlDubletten (konsistente Schreibweise)
+- [x] 📦 Neuer DeltaT-Input: Effektive Porosität n (0.01–0.40) — war hardcoded 0.25
+- [x] 📦 Neuer DeltaT-Input: Gütegrad WP η_Carnot (0.30–0.65) — war hardcoded 0.50
+- [x] 📦 COP-Berechnung DRY — cop einmal berechnet, _copEst-Duplikat entfernt
+
+### 7.6.3 Bohrkost-Verbesserungen ✅
+- [x] 📦 Bohrkost 500m-Sprung eliminiert: Blend-Zone 400–600m (linear→Lukawski)
+
+### 7.6.4 Cross-App-Synchronisation ✅
+- [x] 📦 anzahlDubletten-Sync: DeltaT → Bohrkost via Projekte-Seite + ProjectDetailDialog
+
+### 7.6.5 Stabilitäts-Fixes ✅
+- [x] 📦 Persist-Migration v0→v1 (DeltaT + Bohrkost Stores) — Produktions-Crash-Fix
+
+**DoD M7.6:** Alle 8 Scientist-Befunde aus dem Cross-App-Review umgesetzt; anzahlDubletten konsistent; DeltaT mit Porosität- und Gütegrad-Input; Bohrkost-Blend-Zone; Persist-Migration verhindert Produktions-Crash.
 
 ---
 

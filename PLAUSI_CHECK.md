@@ -91,11 +91,38 @@ Quelle: Arpagaus et al. (2018), *Energy* 152, 1626–1646 — Abb. 8 + Gl. 7
 
 ## Offene Fragen für nächste Plausi-Runde
 
-1. **Gütegrad 0.5** im COP — soll user-einstellbar sein? (0.4 HT-WP, 0.55 Standard)  
-2. **Porosität n=0.25** ist hardcoded — sollte Input werden (NDB Malm ~0.08, Molasse ~0.2)
-3. **Wärmekapazitäts-Ratio** — fester Default 0.7 oder als Input `rhoCpRatio` exponieren?
+1. **Gütegrad 0.5** im COP — ✅ umgesetzt als User-Input `guetegradWP` (0.30–0.65) in Plausi-Check II (April 2026)
+2. **Porosität n=0.25** ist hardcoded — ✅ umgesetzt als User-Input `porositaet` (0.01–0.40) in Plausi-Check II (April 2026)
+3. **Wärmekapazitäts-Ratio** — fester Default 0.7 oder als Input `rhoCpRatio` exponieren? (offen)
 
 ---
+
+---
+
+## DeltaT + Bohrkost — Zweiter Plausi-Check & Cross-App-Dependency-Review (April 2026)
+
+> **Geprüft von:** Scientist-Agent (Claude Opus 4.6)  
+> **Datum:** 2026-04-14  
+> **Status:** BESTANDEN — 8 Befunde, alle umgesetzt  
+> **Scope:** DeltaT-Interna, Bohrkost-Interna, Cross-App-Abhängigkeiten
+
+### Befunde und Umsetzung
+
+| # | Schweregrad | Befund | Maßnahme | Status |
+|---|---|---|---|---|
+| 1 | 🟡 | KfW/BEG-EW 2026: Förderung für 1 oder 2 Bohrungen je Dublette? | Manuell verifizieren (kein Code) | Offen — manuell |
+| 2 | 🟡 | Porosität n=0.25 hardcoded — regional stark abweichend (Malm 0.08, Molasse 0.20) | Neuer User-Input `porositaet` (0.01–0.40, Default 0.25) in DeltaT | ✅ Umgesetzt |
+| 3 | 🟡 | Gütegrad WP η=0.50 hardcoded — keine Unterscheidung Standard/HT-WP | Neuer User-Input `guetegradWP` (0.30–0.65, Default 0.50) in DeltaT | ✅ Umgesetzt |
+| 4 | 🟡 | Bohrkost: harter Sprung bei 500m (linear→Lukawski) — Kostensprung ~20–40 % | Blend-Zone 400–600m: `basiskosten = linear*(1-t) + lukawski*t` | ✅ Umgesetzt |
+| 5 | 🟢 | Kristallin-Faktor 1.30 am unteren Rand der Literatur (1.5–2.5) | Kommentar in kosten.ts ergänzt | ✅ Umgesetzt |
+| 6 | 🟢 | COP zweimal berechnet (`cop` + `_copEst`) — inkonsistenz-Risiko | DRY: cop einmal berechnen, `_copEst` entfernt | ✅ Umgesetzt |
+| 7 | 🟡 | DeltaT-Dubletten-Anzahl fließt nicht in Bohrkost ein | `handleLoadBohrkost()` + `resolveOverwrite()` übertragen `anzahlDubletten` (max 8) | ✅ Umgesetzt |
+| 8 | 🟢 | Old localStorage-State crasht mit `TypeError: toFixed(undefined)` | Persist `version: 1` + `migrate()` in DeltaT- und Bohrkost-Store | ✅ Umgesetzt |
+
+### Offene Fragen (verbleibend nach diesem Review)
+
+1. **KfW/BEG-EW 2026** — Wird die Förderung für eine oder beide Bohrungen je Dublette gewährt? Code-Annahme: 1 Bohrung. Manuell verifizieren bei BEG-Programm 2026.
+2. **Wärmekapazitäts-Ratio** — rhoCpAquifer/rhoCpWater = 0.7 (fest) oder als User-Input `rhoCpRatio`?
 
 ---
 

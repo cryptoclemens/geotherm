@@ -34,7 +34,7 @@ Geotherm ist keine monolithische App, sondern ein **App-Container**. Jede Teil-A
 |---|---|---|---|
 | **Dashboard** | KI-Assistent + Übersicht | `/dashboard` | Post-Login-Startseite mit KI-Dialog (Projektparameter → DeltaT/GPA, KI-Standortsuche mit GeoSpots-Karte), App-Kacheln, letzte Projekte |
 | **GPA** | Geothermie-Potenzial-Atlas | `/atlas` | Interaktive Karte mit Overlay für Lockergestein, Fernwärme-Städte, Industriewärmequellen; Map-Click Location Inspector (KI-Analyse per Klick); „Meine Orte"-Tab; Projekte-Tab (GPA-Layer); KI-Suchergebnisse als nummerierte Marker (GeoSpotsLayer) |
-| **DeltaT** | Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten-Systeme mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk"; Projekte laden/speichern |
+| **DeltaT** | Dubletten-Auslegungsrechner | `/deltat` | Echtzeit-Rechner für geothermische Dubletten-Systeme mit WP-Dimensionierung; Tab-Switcher „Berechnung | Formelwerk"; Projekte laden/speichern; Effektive Porosität n + Gütegrad WP η als User-Inputs (April 2026) |
 | **Bohrkost** | Bohrkostenrechner | `/bohrkost` | CAPEX-Schätzung für Geothermiebohrungen: Lukawski-Formel (≥ 500 m) + linearer Fallback (< 500 m), 3 Bohrungstypen, 3 Durchmesser, Min/Mid/Max-Bandbreite, MAP/KfW-Förderung (375 EUR/m, max. 2,5 Mio.), Formelwerk-Tab |
 | **Projekte** | Meine Projekte | `/projects` | Projektverwaltung mit Typ, Status, Geologie-Daten, GPA-Layer, KI-Optimierungsvorschlag (Haiku), DeltaT-Export |
 
@@ -285,5 +285,6 @@ Dieser Disclaimer muss auf jeder Rechner-Seite prominent sichtbar sein.
 | April 2026 | Map-Click Location Inspector in GPA: Klick auf Karte → KI-Analyse (Geologie/Hydrogeologie) + „Ort speichern" + „in DeltaT"-Workflow; „Meine Orte"-Tab im GPA-Header |
 | April 2026 | FormelTab in DeltaT, FW-Städte Marker-Fix, Favicon-Set, heat-abw Query erweitert, Vercel-Config + CI-Pipeline |
 | April 2026 | **Bohrkostenrechner** `/bohrkost` live: Lukawski-Formel, linearer Fallback < 500 m, MAP/KfW-Förderung, Formelwerk-Tab; **Meine Projekte** erweitert (Typ/Status/Geologie, GPA-Layer, KI-Optimierungsvorschlag, ProjectFormDialog, LoadProjectDialog) |
+| April 2026 | Zweiter Scientist-Plausi-Check (Cross-App): Porositäts-Input, Gütegrad-WP-Input, Bohrkost-Blend-Zone 400–600 m, DeltaT↔Bohrkost-Sync für anzahlDubletten, Persist-Migration v1 (Crash-Fix) |
 | *geplant Q3 2026* | Geotherm Public Launch mit Pro-Tier |
 | *geplant Q4 2026* | LCOH-Modul, erste Enterprise-Kunden |
