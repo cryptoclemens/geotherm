@@ -79,10 +79,11 @@ describe('Tauchpumpenleistung', () => {
 
 // ─── Durchbruchszeit ─────────────────────────────────────────────────────────
 describe('Durchbruchszeit (Gringarten & Sauty 1975)', () => {
-  it('t = π·n·b·d²/(3·Q) × HC-Ratio 0.7 in Jahren (Gringarten & Sauty 1975)', () => {
-    // n=0.25, maechtig=40, abstand=500, Q=15 l/s=0.015 m³/s, hcRatio=0.7
+  it('t = π·n·b·d²/(3·Q) × HC-Ratio 0.55 in Jahren (Gringarten & Sauty 1975)', () => {
+    // n=0.25, maechtig=40, abstand=500, Q=15 l/s=0.015 m³/s
+    // hcRatio=0.55 (Sandstein gesättigt: ρc≈2,3 MJ/m³K / 4,18 MJ/m³K) — VDI 4640 Bl. 1 Tab. B1
     const r = calculateSystem(inp())
-    const expected = (Math.PI * 0.25 * 40 * 500 * 500) / (3 * 0.015) * 0.7 / (365 * 24 * 3600)
+    const expected = (Math.PI * 0.25 * 40 * 500 * 500) / (3 * 0.015) * 0.55 / (365 * 24 * 3600)
     expect(r.tBreak).toBeCloseTo(expected, 2)
   })
   it('Ampel grün wenn t_break > 25 Jahre', () => {
