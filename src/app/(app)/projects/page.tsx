@@ -14,7 +14,9 @@ import {
   type ProjectStatus,
 } from '@/core/api/projects'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
+import { useBohrkostStore } from '@/apps/bohrkost/store/useBohrkostStore'
 import { useProjectStore } from '@/core/store/useProjectStore'
+import type { BohrkostInputs, Bohrungszweck } from '@/apps/bohrkost/calc/kosten'
 import { ProjectFormDialog } from './ProjectFormDialog'
 import {
   Card,
@@ -137,11 +139,12 @@ const TYPE_COLOR: Record<ProjectType, string> = {
 interface ProjectCardProps {
   project: Project
   onLoad: (project: Project) => void
+  onLoadBohrkost: (project: Project) => void
   onDelete: (id: string) => void
   deleting: boolean
 }
 
-function ProjectCard({ project, onLoad, onDelete, deleting }: ProjectCardProps) {
+function ProjectCard({ project, onLoad, onLoadBohrkost, onDelete, deleting }: ProjectCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   return (
@@ -208,11 +211,19 @@ function ProjectCard({ project, onLoad, onDelete, deleting }: ProjectCardProps) 
           <dd>{formatDate(project.created_at)}</dd>
         </dl>
       </CardContent>
-      <CardFooter className="gap-2">
-        <Button size="sm" onClick={() => onLoad(project)}>
-          <ArrowRightIcon />
-          In DeltaT laden
-        </Button>
+      <CardFooter className="flex-wrap gap-2">
+        {project.deltat_input && (
+          <Button size="sm" onClick={() => onLoad(project)}>
+            <ArrowRightIcon />
+            In DeltaT laden
+          </Button>
+        )}
+        {project.deltat_input && (
+          <Button size="sm" variant="outline" onClick={() => onLoadBohrkost(project)}>
+            <ArrowRightIcon />
+            In Bohrkost laden
+          </Button>
+        )}
         <ProjectFormDialog mode="edit" project={project} />
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogTrigger render={
@@ -256,6 +267,7 @@ export default function ProjectsPage() {
   const deltaTInputs = useDeltaTStore((s) => s.inputs)
   const deltaTOutputs = useDeltaTStore((s) => s.outputs)
   const applyFullProject = useDeltaTStore((s) => s.applyFullProject)
+  const applyBohrkostFromProject = useBohrkostStore((s) => s.applyFromProject)
   const selectProject = useProjectStore((s) => s.selectProject)
 
   const [projects, setProjects] = useState<Project[]>([])
@@ -320,6 +332,24 @@ export default function ProjectsPage() {
     applyFullProject(project.deltat_input)
     selectProject(project.id)
     router.push('/deltat')
+  }
+
+  function handleLoadBohrkost(project: Project) {
+    if (!project.deltat_input) return
+    const zweck: Bohrungszweck =
+      project.project_type === 'Dublette'            ? 'Dublette'
+      : project.project_type === 'Einzelbohrung'     ? 'Einzelbohrung'
+      : project.project_type === 'Explorationsbohrung' ? 'Explorationsbohrung'
+      : 'Dublette'
+    const partial: Partial<BohrkostInputs> = {
+      tiefe:          project.deltat_input.tiefe,
+      tGW:            project.deltat_input.tGW,
+      foerderrate:    project.deltat_input.Q,
+      tReinjektion:   project.deltat_input.tR,
+      zweck,
+    }
+    applyBohrkostFromProject(partial)
+    router.push('/bohrkost')
   }
 
   if (authLoading) {
@@ -404,6 +434,7 @@ export default function ProjectsPage() {
               key={project.id}
               project={project}
               onLoad={handleLoad}
+              onLoadBohrkost={handleLoadBohrkost}
               onDelete={handleDelete}
               deleting={deletingId === project.id}
             />

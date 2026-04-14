@@ -1,13 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { PrinterIcon, XIcon } from 'lucide-react'
 import { Button } from '@/core/ui/button'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
 import { BohrkostFormelTab } from './components/BohrkostFormelTab'
-import { berechneBohrkosten, DEFAULT_INPUTS } from './calc/kosten'
+import { useBohrkostStore } from './store/useBohrkostStore'
 import type { BohrkostInputs } from './calc/kosten'
 
 type TabId = 'berechnung' | 'formeln'
@@ -89,17 +89,19 @@ function StatusItem({ label, color, value }: { label: string; color: 'green' | '
 
 export default function BohrkostApp() {
   const [tab, setTab] = useState<TabId>('berechnung')
-  const [inputs, setInputs] = useState<BohrkostInputs>(DEFAULT_INPUTS)
   const [lukawskiOpen, setLukawskiOpen] = useState(false)
 
-  const outputs = useMemo(() => berechneBohrkosten(inputs), [inputs])
+  const inputs = useBohrkostStore(s => s.inputs)
+  const outputs = useBohrkostStore(s => s.outputs)
+  const setInput = useBohrkostStore(s => s.setInput)
+  const reset = useBohrkostStore(s => s.reset)
 
   function handleChange<K extends keyof BohrkostInputs>(key: K, value: BohrkostInputs[K]) {
-    setInputs(prev => ({ ...prev, [key]: value }))
+    setInput(key, value)
   }
 
   function handleReset() {
-    setInputs(DEFAULT_INPUTS)
+    reset()
   }
 
   return (
