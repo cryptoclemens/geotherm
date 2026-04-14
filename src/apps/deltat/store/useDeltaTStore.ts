@@ -79,8 +79,11 @@ export const useDeltaTStore = create<DeltaTState>()(
             tGWManual: presetHasTGW, // GPA-Wert gilt als "manuell gesetzt"
           }
         }),
-      applyFullProject: (inputs) =>
-        set({ inputs, outputs: calculateSystem(inputs), tGWManual: true }),
+      applyFullProject: (inputs) => {
+        // Merge mit DEFAULT_INPUTS damit alte Projekte ohne porositaet/guetegradWP nicht crashen
+        const normalized: DeltaTInputs = { ...DEFAULT_INPUTS, ...inputs }
+        set({ inputs: normalized, outputs: calculateSystem(normalized), tGWManual: true })
+      },
     }),
     {
       name: 'deltat-inputs',
