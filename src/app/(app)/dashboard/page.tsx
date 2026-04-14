@@ -1,14 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { MapIcon, ThermometerIcon, FolderOpenIcon, ArrowRightIcon, HardHatIcon } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
-import { listProjects, type Project } from '@/core/api/projects'
 import { useDeltaTStore } from '@/apps/deltat/store/useDeltaTStore'
-import { Button } from '@/core/ui/button'
+import { useBohrkostStore } from '@/apps/bohrkost/store/useBohrkostStore'
+import { useProjectStore } from '@/core/store/useProjectStore'
 import { AiDialog } from '@/apps/dashboard/components/AiDialog'
+import { ProjectDetailDialog } from '../projects/ProjectDetailDialog'
+import type { Project, ProjectUpdate } from '@/core/api/projects'
+import type { BohrkostInputs, Bohrungszweck } from '@/apps/bohrkost/calc/kosten'
 
 const APPS = [
   {
@@ -62,20 +65,77 @@ function greeting(): string {
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const router = useRouter()
-  const applyFullProject = useDeltaTStore(s => s.applyFullProject)
-  const [recentProjects, setRecentProjects] = useState<Project[]>([])
+  const router   = useRouter()
+
+  const applyFullProject         = useDeltaTStore(s => s.applyFullProject)
+  const applyBohrkostFromProject = useBohrkostStore(s => s.applyFromProject)
+  const selectProject            = useProjectStore(s => s.selectProject)
+
+  const projects      = useProjectStore(s => s.projects)
+  const fetchProjects = useProjectStore(s => s.fetchProjects)
+  const storeUpdate   = useProjectStore(s => s.updateProject)
+  const storeDelete   = useProjectStore(s => s.deleteProject)
+
+  const recentProjects = projects.slice(0, 3)
+
+  // Detail popup state
+  const [detailProjectId, setDetailProjectId] = useState<string | null>(null)
+  const [detailOpen, setDetailOpen]           = useState(false)
+  const [deletingId, setDeletingId]           = useState<string | null>(null)
+
+  const detailProject = detailProjectId
+    ? (projects.find(p => p.id === detailProjectId) ?? null)
+    : null
+
+  const stableFetchProjects = useCallback(fetchProjects, [fetchProjects])
 
   useEffect(() => {
-    listProjects()
-      .then(projects => setRecentProjects(projects.slice(0, 3)))
-      .catch(err => console.error('Projekte laden fehlgeschlagen:', err))
-  }, [])
+    if (user) stableFetchProjects()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
-  function loadProject(project: Project) {
+  function openDetail(project: Project) {
+    setDetailProjectId(project.id)
+    setDetailOpen(true)
+  }
+
+  async function handleUpdate(id: string, updates: ProjectUpdate) {
+    await storeUpdate(id, updates)
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id)
+    try {
+      await storeDelete(id)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  function handleLoad(project: Project) {
     if (!project.deltat_input) return
     applyFullProject(project.deltat_input)
+    selectProject(project.id)
     router.push('/deltat')
+  }
+
+  function handleLoadBohrkost(project: Project) {
+    const zweck: Bohrungszweck =
+      project.project_type === 'Dublette'              ? 'Dublette'
+      : project.project_type === 'Einzelbohrung'       ? 'Einzelbohrung'
+      : project.project_type === 'Explorationsbohrung' ? 'Explorationsbohrung'
+      : 'Dublette'
+    const partial: Partial<BohrkostInputs> = project.bohrkost_input
+      ? project.bohrkost_input
+      : {
+          tiefe:        project.deltat_input?.tiefe ?? 700,
+          tGW:          project.deltat_input?.tGW   ?? 35,
+          foerderrate:  project.deltat_input?.Q      ?? 15,
+          tReinjektion: project.deltat_input?.tR     ?? 15,
+          zweck,
+        }
+    applyBohrkostFromProject(partial, project.id, project.name)
+    router.push('/bohrkost')
   }
 
   const name = user?.email?.split('@')[0] ?? ''
@@ -142,9 +202,12 @@ export default function DashboardPage() {
           </div>
           <div className="glass-card rounded-2xl overflow-hidden divide-y divide-border">
             {recentProjects.map(project => (
-              <div
+              <button
                 key={project.id}
-                className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 dark:hover:bg-white/[0.04] transition-colors"
+                type="button"
+                onClick={() => openDetail(project)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 dark:hover:bg-white/[0.04] transition-colors text-left"
+                aria-label={`Projekt ${project.name} öffnen`}
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
@@ -154,19 +217,25 @@ export default function DashboardPage() {
                     {' · '}{formatDate(project.created_at)}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="shrink-0 ml-4 text-primary hover:bg-primary/10"
-                  onClick={() => loadProject(project)}
-                >
-                  In DeltaT laden
-                  <ArrowRightIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                </Button>
-              </div>
+                <ArrowRightIcon className="w-4 h-4 text-muted-foreground/40 shrink-0 ml-4" aria-hidden="true" />
+              </button>
             ))}
           </div>
         </section>
+      )}
+
+      {/* Detail-Popup */}
+      {detailProject && (
+        <ProjectDetailDialog
+          project={detailProject}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          onLoad={handleLoad}
+          onLoadBohrkost={handleLoadBohrkost}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          deleting={deletingId === detailProject.id}
+        />
       )}
     </div>
   )
