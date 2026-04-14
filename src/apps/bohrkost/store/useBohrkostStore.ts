@@ -51,12 +51,28 @@ export const useBohrkostStore = create<BohrkostState>()(
     }),
     {
       name: 'bohrkost-inputs',
-      // Neue Felder (anzahlDubletten) sind nicht in alten gespeicherten Daten vorhanden.
-      // merge: persistierte Inputs mit DEFAULT_INPUTS zusammenführen, damit alle Felder belegt sind.
+      version: 1,
+      // v0 → v1: anzahlDubletten zu Inputs hinzugefügt.
+      // migrate normalisiert alte Daten gegen DEFAULT_INPUTS und berechnet outputs neu.
+      migrate: (persistedState, version) => {
+        if (version < 1) {
+          const old = persistedState as Partial<BohrkostState> | null
+          const oldInputs = (old?.inputs ?? {}) as Partial<BohrkostInputs>
+          const inputs: BohrkostInputs = { ...DEFAULT_INPUTS, ...oldInputs }
+          return {
+            inputs,
+            outputs: berechneBohrkosten(inputs),
+            currentProjectId: old?.currentProjectId ?? null,
+            currentProjectName: old?.currentProjectName ?? null,
+          } as BohrkostState
+        }
+        return persistedState as BohrkostState
+      },
+      // Zusätzliche Absicherung: outputs nach Rehydration immer neu berechnen.
       merge: (persisted, current) => {
         const p = persisted as BohrkostState
-        const mergedInputs = { ...current.inputs, ...p.inputs }
-        return { ...current, ...p, inputs: mergedInputs, outputs: berechneBohrkosten(mergedInputs) }
+        const inputs: BohrkostInputs = { ...current.inputs, ...p.inputs }
+        return { ...current, ...p, inputs, outputs: berechneBohrkosten(inputs) }
       },
     },
   ),

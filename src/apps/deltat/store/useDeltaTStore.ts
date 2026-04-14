@@ -84,12 +84,28 @@ export const useDeltaTStore = create<DeltaTState>()(
     }),
     {
       name: 'deltat-inputs',
-      // Neue Felder (porositaet, guetegradWP) sind nicht in alten gespeicherten Daten vorhanden.
-      // merge: persistierte Inputs mit DEFAULT_INPUTS zusammenführen, damit alle Felder belegt sind.
+      version: 1,
+      // v0 → v1: porositaet + guetegradWP zu Inputs hinzugefügt; outputs-Shape erweitert.
+      // migrate normalisiert alte Daten gegen DEFAULT_INPUTS und berechnet outputs neu.
+      migrate: (persistedState, version) => {
+        if (version < 1) {
+          const old = persistedState as Partial<DeltaTState> | null
+          const oldInputs = (old?.inputs ?? {}) as Partial<DeltaTInputs>
+          const inputs: DeltaTInputs = { ...DEFAULT_INPUTS, ...oldInputs }
+          return {
+            inputs,
+            outputs: calculateSystem(inputs),
+            tGWManual: old?.tGWManual ?? false,
+          } as DeltaTState
+        }
+        return persistedState as DeltaTState
+      },
+      // Zusätzliche Absicherung: outputs nach Rehydration immer neu berechnen
+      // (falls outputs-Shape sich erweitert hat ohne Versionsbump).
       merge: (persisted, current) => {
         const p = persisted as DeltaTState
-        const mergedInputs: DeltaTInputs = { ...current.inputs, ...p.inputs }
-        return { ...current, ...p, inputs: mergedInputs, outputs: calculateSystem(mergedInputs) }
+        const inputs: DeltaTInputs = { ...current.inputs, ...p.inputs }
+        return { ...current, ...p, inputs, outputs: calculateSystem(inputs) }
       },
     },
   ),
