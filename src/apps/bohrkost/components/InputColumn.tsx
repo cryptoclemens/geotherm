@@ -242,7 +242,7 @@ function OverheadEditor({
       {OVERHEAD_FIELDS.map(({ key, label, quelle }) => (
         <div key={key} className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-2">
-            <label className="text-xs text-foreground/80 shrink-0">{label}</label>
+            <label className="text-xs text-foreground/80 min-w-0">{label}</label>
             <div className="flex items-center gap-1">
               <input
                 type="text"
