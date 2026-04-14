@@ -23,8 +23,9 @@ export default function SearchResultsPanel() {
   const savedSearches     = useWorkspaceStore(s => s.savedSearches)
 
   const [expandedIdx, setExpandedIdx] = useState(null)
-  const [tab, setTab] = useState('current')  // 'current' | 'saved'
-  const [saved, setSaved]   = useState(false) // kurzfristiges Feedback nach Speichern
+  const [tab, setTab]       = useState('current')  // 'current' | 'saved'
+  const [saved, setSaved]   = useState(false)      // kurzfristiges Feedback nach Speichern
+  const [collapsed, setCollapsed] = useState(false)
 
   const hasCurrent = geoSpots && geoSpots.length > 0
 
@@ -50,18 +51,18 @@ export default function SearchResultsPanel() {
   }
 
   return (
-    <div id="geo-spots-panel">
+    <div id="geo-spots-panel" className={collapsed ? 'collapsed' : ''}>
       {/* Header */}
-      <div id="geo-spots-hdr">
+      <div id="geo-spots-hdr" onClick={() => setCollapsed(c => !c)} style={{ cursor: 'pointer' }}>
         <div id="geo-spots-hdr-text">
           <div id="geo-spots-title">🔍 KI-Standortsuche</div>
-          {tab === 'current' && hasCurrent && (
+          {!collapsed && tab === 'current' && hasCurrent && (
             <div id="geo-spots-context">{queryContext}</div>
           )}
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'6px' }} onClick={e => e.stopPropagation()}>
           {/* Speichern-Button (nur wenn aktuelle Ergebnisse) */}
-          {tab === 'current' && hasCurrent && (
+          {!collapsed && tab === 'current' && hasCurrent && (
             <button
               className="geo-spots-save-btn"
               onClick={handleSave}
@@ -71,10 +72,9 @@ export default function SearchResultsPanel() {
               {saved ? '✓' : '⭐'}
             </button>
           )}
-          <button id="geo-spots-close"
-            onClick={() => { clearGeoSpots(); setExpandedIdx(null) }}
-            title="Ergebnisse schließen"
-          >×</button>
+          <span id="geo-spots-toggle" title={collapsed ? 'Aufklappen' : 'Einklappen'}>
+            {collapsed ? '▸' : '▾'}
+          </span>
         </div>
       </div>
 
