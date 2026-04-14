@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateSystem, DEFAULT_INPUTS } from './system'
+import { calculateSystem, DEFAULT_INPUTS, calcDefaultFoerderhoehe } from './system'
 import type { DeltaTInputs } from './system'
 
 // ─── Helper ────────────────────────────────────────────────────────────────
@@ -38,18 +38,22 @@ describe('Wärmeleistung Q_th', () => {
     const r = calculateSystem(inp({ tGW: 25, tR: 10, tVL: 20 }))
     expect(r.deltaT).toBe(15)
   })
-  it('Mindestleistung 0.01 kW wenn deltaT ≤ 0', () => {
-    // tR = tGW → ΔT = 0 → clamp
+  it('qThPerDoublet = 0 wenn deltaT ≤ 0 (unphysikalisch)', () => {
+    // tR = tGW → kein Wärmeentzug möglich
     const r = calculateSystem(inp({ tGW: 10, tR: 10 }))
-    expect(r.qThPerDoublet).toBe(0.01)
+    expect(r.qThPerDoublet).toBe(0)
   })
   it('Anzahl Dubletten ≥ 1', () => {
     const r = calculateSystem(inp({ Q: 50, tGW: 30, tR: 5, zielLeistung: 100 }))
     expect(r.anzahlDoubletten).toBeGreaterThanOrEqual(1)
   })
-  it('anzahlDoubletten = 999 wenn deltaT ≤ 0', () => {
+  it('anzahlDoubletten = null wenn deltaT ≤ 0 (unphysikalisch)', () => {
     const r = calculateSystem(inp({ tGW: 10, tR: 10 }))
-    expect(r.anzahlDoubletten).toBe(999)
+    expect(r.anzahlDoubletten).toBeNull()
+  })
+  it('anzahlDoubletten = null wenn tR > tGW', () => {
+    const r = calculateSystem(inp({ tGW: 11.5, tR: 12 }))
+    expect(r.anzahlDoubletten).toBeNull()
   })
 })
 
@@ -243,6 +247,25 @@ describe('wpAktiv', () => {
   })
 })
 
+// ─── calcDefaultFoerderhoehe ─────────────────────────────────────────────────
+describe('calcDefaultFoerderhoehe', () => {
+  it('Flachwasser 35 m → ~33 m (nicht 150 m)', () => {
+    expect(calcDefaultFoerderhoehe(35)).toBe(33)
+  })
+  it('Standard 500 m → 265 m', () => {
+    expect(calcDefaultFoerderhoehe(500)).toBe(265)
+  })
+  it('Tiefe 1000 m → capped 300 m', () => {
+    expect(calcDefaultFoerderhoehe(1000)).toBe(300)
+  })
+  it('Minimum 10 m → capped 25 m', () => {
+    expect(calcDefaultFoerderhoehe(10)).toBe(25)
+  })
+  it('DEFAULT_INPUTS.foerderhoehe entspricht Formel für tiefe=500', () => {
+    expect(DEFAULT_INPUTS.foerderhoehe).toBe(calcDefaultFoerderhoehe(500))
+  })
+})
+
 // ─── DEFAULT_INPUTS Smoke-Test ────────────────────────────────────────────────
 describe('Default-Inputs Smoke-Test', () => {
   it('läuft ohne Fehler durch', () => {
@@ -251,7 +274,7 @@ describe('Default-Inputs Smoke-Test', () => {
   it('liefert alle Output-Felder', () => {
     const r = calculateSystem(DEFAULT_INPUTS)
     expect(r.transmissiv).toBeTypeOf('number')
-    expect(r.anzahlDoubletten).toBeTypeOf('number')
+    expect(r.anzahlDoubletten).toBeGreaterThanOrEqual(1)
     expect(r.cop).toBeTypeOf('number')
     expect(r.sHydraulik).toMatch(/green|yellow|red/)
     expect(r.sThermik).toMatch(/green|yellow|red/)

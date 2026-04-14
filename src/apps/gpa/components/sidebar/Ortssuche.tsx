@@ -6,6 +6,13 @@ import { getMapInstance } from '../../lib/mapInstance'
 
 let searchMarker = null
 
+/** Entfernt den Such-Marker von der Karte (z.B. bei neuem Karten-Klick) */
+export function clearSearchMarker() {
+  if (!searchMarker) return
+  try { searchMarker.remove() } catch { /* ignore */ }
+  searchMarker = null
+}
+
 async function fetchPlaces(q) {
   if (!q || q.length < 2) return []
   const url = 'https://nominatim.openstreetmap.org/search'

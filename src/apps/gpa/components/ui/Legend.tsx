@@ -60,6 +60,24 @@ const LEGEND = [
   { type:'row', keys:['geo-huek250'],
     sw:{ background:'rgba(214,91,91,.25)', border:'1px solid #b05050' },
     label:'Festgestein >1.000 m' },
+  // ── WMS Farblegende (GetLegendGraphic) ──────────────────────────────────────
+  { type:'section', keys:['geo-egdi','geo-bgr','geo-huek250','waerme-wms','waerme-bbsr'],
+    label:'WMS Farblegende' },
+  { type:'wms-legend', keys:['geo-egdi'],
+    url:'https://services.bgr.de/wms/geologie/igme5000/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=3',
+    label:'Geologie Europa (IGME5000)' },
+  { type:'wms-legend', keys:['geo-bgr'],
+    url:'https://services.bgr.de/wms/geologie/guek250/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=0',
+    label:'Geologie Oberfläche (GÜK250)' },
+  { type:'wms-legend', keys:['geo-huek250'],
+    url:'https://services.bgr.de/wms/grundwasser/huek250/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=0',
+    label:'Hydrogeologie (HÜK250)' },
+  { type:'wms-legend', keys:['waerme-wms'],
+    url:'https://www.gis-idmz.nrw.de/arcgis/services/stba/zensusatlas_energie_100m/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=0',
+    label:'Zensus: Heizungsart' },
+  { type:'wms-legend', keys:['waerme-bbsr'],
+    url:'https://www.gis-idmz.nrw.de/arcgis/services/stba/zensusatlas_energie_100m/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=1',
+    label:'Zensus: Energieträger' },
   // ── KWP: TG-Potenzial Raster ───────────────────────────────────────────────
   { type:'section', keys:['kwp-energietraeger'], label:'TG-Potenzial Raster (LANUK)' },
   { type:'scale', keys:['kwp-energietraeger'], items:[
@@ -106,6 +124,20 @@ export default function Legend() {
                     <span>{item.label}</span>
                   </div>
                 ))}
+              </div>
+            )
+          }
+          if (e.type === 'wms-legend') {
+            return (
+              <div key={i} className="leg-wms-block">
+                <div className="leg-wms-title">{e.label}</div>
+                <img
+                  className="leg-wms-img"
+                  src={e.url}
+                  alt={`Legende: ${e.label}`}
+                  loading="lazy"
+                  onError={ev => { (ev.target as HTMLImageElement).style.display = 'none' }}
+                />
               </div>
             )
           }

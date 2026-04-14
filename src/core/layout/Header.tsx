@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { UserNav } from './UserNav'
 import { NavLinks } from './NavLinks'
 import { ThemeToggle } from '@/core/ui/ThemeToggle'
+import { MobileMenu } from './MobileMenu'
 
 // Semver aus package.json (manuell für Major/Minor-Bumps)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -22,26 +23,38 @@ export function Header() {
       </a>
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-baseline gap-2">
-          <Link href="/" className="font-semibold text-lg tracking-tight">
-            Geotherm
-          </Link>
           <a
             href="https://www.vencly.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground font-normal text-sm hover:text-foreground transition-colors"
+            className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
+            aria-label="Vencly – Website öffnen"
           >
-            by Vencly
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logovencly.svg"
+              alt="Vencly"
+              className="h-4 w-auto"
+            />
           </a>
+          <Link href="/" className="font-semibold text-lg tracking-tight">
+            Geotherm
+          </Link>
           <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
             {buildLabel}
           </span>
         </div>
-        <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
+        {/* Desktop-Navigation (ab md) */}
+        <nav aria-label="Hauptnavigation" className="hidden md:flex items-center gap-2">
           <NavLinks />
           <ThemeToggle />
           <UserNav />
         </nav>
+
+        {/* Mobile-Navigation (bis md) */}
+        <div className="flex items-center md:hidden">
+          <MobileMenu />
+        </div>
       </div>
     </header>
   )

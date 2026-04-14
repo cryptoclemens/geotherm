@@ -2,14 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { FolderOpenIcon, PlusIcon, Trash2Icon, ArrowRightIcon, SaveIcon, DownloadIcon } from 'lucide-react'
+import { FolderOpenIcon, PlusIcon, SaveIcon, DownloadIcon } from 'lucide-react'
 import { exportProjectsToCsv } from '@/core/lib/exportCsv'
 import { useAuth } from '@/core/auth/useAuth'
 import {
-  listProjects,
   createProject,
-  updateProject,
-  deleteProject,
   type Project,
   type ProjectUpdate,
   type ProjectType,
@@ -20,13 +17,13 @@ import { useBohrkostStore } from '@/apps/bohrkost/store/useBohrkostStore'
 import { useProjectStore } from '@/core/store/useProjectStore'
 import type { BohrkostInputs, Bohrungszweck } from '@/apps/bohrkost/calc/kosten'
 import { ProjectFormDialog } from './ProjectFormDialog'
+import { ProjectDetailDialog } from './ProjectDetailDialog'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/core/ui/card'
 import {
   Dialog,
@@ -41,6 +38,8 @@ import {
 import { Button } from '@/core/ui/button'
 import { Input } from '@/core/ui/input'
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 function formatDate(iso: string): string {
   if (!iso) return '–'
   return new Intl.DateTimeFormat('de-DE', {
@@ -51,6 +50,22 @@ function formatDate(iso: string): string {
     minute: '2-digit',
   }).format(new Date(iso))
 }
+
+const STATUS_COLOR: Record<ProjectStatus, string> = {
+  Idee:       '#94a3b8',
+  Planung:    '#3b82f6',
+  Aktiv:      '#16a34a',
+  Archiviert: '#64748b',
+}
+
+const TYPE_COLOR: Record<ProjectType, string> = {
+  Dublette:            '#5bafd6',
+  Einzelbohrung:       '#a8d4e6',
+  Explorationsbohrung: '#e8a857',
+  EGS:                 '#a87cd6',
+}
+
+// ── SaveProjectDialog ────────────────────────────────────────────────────────
 
 interface SaveDialogProps {
   onSave: (name: string, description: string) => Promise<void>
@@ -124,119 +139,29 @@ function SaveProjectDialog({ onSave, saving }: SaveDialogProps) {
   )
 }
 
-const STATUS_COLOR: Record<ProjectStatus, string> = {
-  Idee: '#94a3b8',
-  Planung: '#3b82f6',
-  Aktiv: '#16a34a',
-  Archiviert: '#64748b',
-}
-
-const TYPE_COLOR: Record<ProjectType, string> = {
-  Dublette: '#5bafd6',
-  Einzelbohrung: '#a8d4e6',
-  Explorationsbohrung: '#e8a857',
-  EGS: '#a87cd6',
-}
-
-/** Geothermischer Gradient: T_GW ≈ 10 °C + tiefe × 0,03 °C/m (VDI 4640 Bl. 1) */
-const GEO_GRADIENT = 0.03
-const GEO_SURFACE  = 10
-
-function tiefeToTgw(tiefe: number): number {
-  return Math.round((GEO_SURFACE + tiefe * GEO_GRADIENT) * 10) / 10
-}
-function tgwToTiefe(tGW: number): number {
-  return Math.max(0, Math.round((tGW - GEO_SURFACE) / GEO_GRADIENT))
-}
-
-interface InlineEditFieldProps {
-  value: number
-  unit: string
-  min?: number
-  max?: number
-  step?: number
-  onSave: (v: number) => void
-}
-
-function InlineEditField({ value, unit, min, max, step = 1, onSave }: InlineEditFieldProps) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(String(value))
-
-  function commit() {
-    const parsed = parseFloat(draft)
-    if (!isNaN(parsed)) onSave(parsed)
-    setEditing(false)
-  }
-
-  if (editing) {
-    return (
-      <span className="flex items-center gap-1">
-        <input
-          type="number"
-          value={draft}
-          min={min}
-          max={max}
-          step={step}
-          onChange={e => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={e => {
-            if (e.key === 'Enter') commit()
-            if (e.key === 'Escape') { setDraft(String(value)); setEditing(false) }
-          }}
-          className="w-20 text-right text-xs font-mono font-medium bg-background border border-primary/50 rounded px-1.5 py-0.5 outline-none"
-          autoFocus
-        />
-        <span className="text-muted-foreground">{unit}</span>
-      </span>
-    )
-  }
-
-  return (
-    <button
-      onClick={() => { setDraft(String(value)); setEditing(true) }}
-      className="font-medium text-foreground hover:text-primary hover:underline underline-offset-2 decoration-dotted transition-colors text-left"
-      title="Klicken zum Bearbeiten"
-    >
-      {value} {unit}
-    </button>
-  )
-}
+// ── ProjectCard (vereinfacht, vollständig anklickbar) ────────────────────────
 
 interface ProjectCardProps {
   project: Project
-  onLoad: (project: Project) => void
-  onLoadBohrkost: (project: Project) => void
-  onUpdate: (id: string, updates: ProjectUpdate) => void
-  onDelete: (id: string) => void
-  deleting: boolean
+  onClick: () => void
 }
 
-function ProjectCard({ project, onLoad, onLoadBohrkost, onUpdate, onDelete, deleting }: ProjectCardProps) {
-  const [confirmOpen, setConfirmOpen] = useState(false)
-
-  function saveField(field: 'tiefe' | 'tGW' | 'Q', raw: number) {
-    if (!project.deltat_input) return
-    const next = { ...project.deltat_input }
-
-    if (field === 'tiefe') {
-      next.tiefe = raw
-      next.tGW   = tiefeToTgw(raw)    // Gradient-Kopplung
-    } else if (field === 'tGW') {
-      next.tGW   = raw
-      next.tiefe = tgwToTiefe(raw)    // Gradient-Kopplung
-    } else {
-      next.Q = raw
-    }
-
-    onUpdate(project.id, { deltat_input: next })
-  }
+function ProjectCard({ project, onClick }: ProjectCardProps) {
+  const showDeltaT = project.project_type === 'Dublette' || project.deltat_input != null
 
   return (
-    <Card>
-      <CardHeader>
+    <Card
+      className="cursor-pointer hover:shadow-md hover:ring-1 hover:ring-primary/20 transition-all duration-150 select-none"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`Projekt ${project.name} öffnen`}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
+    >
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="flex-1 min-w-0">{project.name}</CardTitle>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <CardTitle className="flex-1 min-w-0 text-sm leading-snug">{project.name}</CardTitle>
+          <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
             {project.project_type && (
               <span
                 className="text-[10px] font-semibold px-1.5 py-0.5 rounded border"
@@ -262,69 +187,41 @@ function ProjectCard({ project, onLoad, onLoadBohrkost, onUpdate, onDelete, dele
           </div>
         </div>
         {project.description && (
-          <CardDescription>{project.description}</CardDescription>
+          <CardDescription className="line-clamp-1 text-xs mt-0.5">
+            {project.description}
+          </CardDescription>
         )}
       </CardHeader>
-      <CardContent>
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          {project.deltat_input && (
-            <>
-              <dt className="self-center">Tiefe</dt>
-              <dd>
-                <InlineEditField
-                  value={project.deltat_input.tiefe}
-                  unit="m"
-                  min={50} max={5000} step={50}
-                  onSave={v => saveField('tiefe', v)}
-                />
-              </dd>
-              <dt className="self-center">Förderrate</dt>
-              <dd>
-                <InlineEditField
-                  value={project.deltat_input.Q}
-                  unit="l/s"
-                  min={1} max={200} step={1}
-                  onSave={v => saveField('Q', v)}
-                />
-              </dd>
-              <dt className="self-center">GW-Temp.</dt>
-              <dd>
-                <InlineEditField
-                  value={project.deltat_input.tGW}
-                  unit="°C"
-                  min={5} max={120} step={0.5}
-                  onSave={v => saveField('tGW', v)}
-                />
-              </dd>
-            </>
-          )}
-          {project.deltat_result && (
-            <>
-              <dt>Thermische Leistung</dt>
-              <dd className="font-medium text-foreground">
-                {project.deltat_result.qDelivered.toFixed(0)} kW
-              </dd>
-            </>
-          )}
-          <dt>Gespeichert</dt>
-          <dd>{formatDate(project.created_at)}</dd>
-        </dl>
+
+      <CardContent className="pt-0">
+        {/* Schnellübersicht: Kernparameter */}
         {project.deltat_input && (
-          <p className="text-[10px] text-muted-foreground/50 mt-2 italic">
-            Tiefe ↔ GW-Temp. gekoppelt (∇T = 0,03 °C/m · VDI 4640)
-          </p>
+          <dl className="grid grid-cols-3 gap-1 text-xs mb-3">
+            <div>
+              <dt className="text-muted-foreground/70">Tiefe</dt>
+              <dd className="font-mono font-medium">{project.deltat_input.tiefe} m</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground/70">GW-Temp.</dt>
+              <dd className="font-mono font-medium">{project.deltat_input.tGW} °C</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground/70">Q</dt>
+              <dd className="font-mono font-medium">{project.deltat_input.Q} l/s</dd>
+            </div>
+          </dl>
         )}
 
         {/* ── Berechnungsstatus ─────────────────────────────────── */}
         <div className="mt-3 flex flex-col gap-1.5 border-t border-border/50 pt-3">
-          {/* DeltaT — nur bei Dublette relevant */}
-          {project.project_type === 'Dublette' || (!project.project_type && project.deltat_input) ? (
+          {showDeltaT && (
             project.deltat_result ? (
               <div className="flex items-center gap-1.5 text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
                 <span className="text-muted-foreground">DeltaT:</span>
                 <span className="font-medium text-foreground">
-                  {project.deltat_result.qDelivered.toFixed(0)} kW · {project.deltat_result.anzahlDoubletten}× Dublette
+                  {project.deltat_result.qDelivered.toFixed(0)} kW
+                  {project.deltat_result.anzahlDoubletten != null && ` · ${project.deltat_result.anzahlDoubletten}× Dublette`}
                 </span>
               </div>
             ) : (
@@ -333,9 +230,7 @@ function ProjectCard({ project, onLoad, onLoadBohrkost, onUpdate, onDelete, dele
                 DeltaT-Berechnung steht noch aus
               </div>
             )
-          ) : null}
-
-          {/* Bohrkost */}
+          )}
           {project.bohrkost_result ? (
             <div className="flex items-center gap-1.5 text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
@@ -362,102 +257,69 @@ function ProjectCard({ project, onLoad, onLoadBohrkost, onUpdate, onDelete, dele
             </div>
           )}
         </div>
+
+        <p className="text-[10px] text-muted-foreground/40 mt-2">{formatDate(project.created_at)}</p>
       </CardContent>
-      <CardFooter className="flex-wrap gap-2">
-        {(project.deltat_input || project.project_type === 'Dublette') && (
-          <Button size="sm" onClick={() => onLoad(project)}>
-            <ArrowRightIcon />
-            In DeltaT laden
-          </Button>
-        )}
-        <Button size="sm" variant="outline" onClick={() => onLoadBohrkost(project)}>
-          <ArrowRightIcon />
-          In Bohrkost laden
-        </Button>
-        <ProjectFormDialog mode="edit" project={project} />
-        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <DialogTrigger render={
-            <Button variant="ghost" size="icon-sm">
-              <Trash2Icon />
-              <span className="sr-only">Löschen</span>
-            </Button>
-          } />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Projekt löschen?</DialogTitle>
-              <DialogDescription>
-                &bdquo;{project.name}&ldquo; wird unwiderruflich gelöscht.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose render={<Button variant="outline" type="button" />}>
-                Abbrechen
-              </DialogClose>
-              <Button
-                variant="destructive"
-                disabled={deleting}
-                onClick={() => {
-                  onDelete(project.id)
-                  setConfirmOpen(false)
-                }}
-              >
-                {deleting ? 'Löschen…' : 'Löschen'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardFooter>
     </Card>
   )
 }
 
+// ── Main Page ────────────────────────────────────────────────────────────────
+
 export default function ProjectsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const deltaTInputs = useDeltaTStore((s) => s.inputs)
+
+  const deltaTInputs  = useDeltaTStore((s) => s.inputs)
   const deltaTOutputs = useDeltaTStore((s) => s.outputs)
-  const applyFullProject = useDeltaTStore((s) => s.applyFullProject)
+  const applyFullProject       = useDeltaTStore((s) => s.applyFullProject)
   const applyBohrkostFromProject = useBohrkostStore((s) => s.applyFromProject)
   const selectProject = useProjectStore((s) => s.selectProject)
 
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loadingProjects, setLoadingProjects] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  // Project store
+  const projects          = useProjectStore((s) => s.projects)
+  const loadingProjects   = useProjectStore((s) => s.loading)
+  const fetchProjects     = useProjectStore((s) => s.fetchProjects)
+  const storeUpdate       = useProjectStore((s) => s.updateProject)
+  const storeDelete       = useProjectStore((s) => s.deleteProject)
 
-  const fetchProjects = useCallback(async () => {
-    try {
-      setLoadingProjects(true)
-      setError(null)
-      const data = await listProjects()
-      setProjects(data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
-    } finally {
-      setLoadingProjects(false)
-    }
-  }, [])
+  // Local UI state
+  const [saving, setSaving]         = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [error, setError]           = useState<string | null>(null)
+
+  // Detail popup
+  const [detailProjectId, setDetailProjectId] = useState<string | null>(null)
+  const [detailOpen, setDetailOpen]           = useState(false)
+
+  // Derives the current (possibly updated) project from the store
+  const detailProject = detailProjectId
+    ? (projects.find(p => p.id === detailProjectId) ?? null)
+    : null
+
+  const stableFetchProjects = useCallback(fetchProjects, [fetchProjects])
 
   useEffect(() => {
-    if (!authLoading && user) {
-      fetchProjects()
-    }
-    if (!authLoading && !user) {
-      setLoadingProjects(false)
-    }
-  }, [authLoading, user, fetchProjects])
+    if (!authLoading && user) stableFetchProjects()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user])
+
+  function openDetail(project: Project) {
+    setDetailProjectId(project.id)
+    setDetailOpen(true)
+  }
 
   async function handleSave(name: string, description: string) {
     setSaving(true)
     try {
-      const newProject = await createProject({
+      await createProject({
         name,
         description,
         deltat_input: deltaTInputs,
         deltat_result: deltaTOutputs,
       })
-      setProjects((prev) => [newProject, ...prev])
+      // Refresh store so new project appears
+      await stableFetchProjects()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen')
     } finally {
@@ -467,8 +329,7 @@ export default function ProjectsPage() {
 
   async function handleUpdate(id: string, updates: ProjectUpdate) {
     try {
-      const updated = await updateProject(id, updates)
-      setProjects(prev => prev.map(p => p.id === id ? updated : p))
+      await storeUpdate(id, updates)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Aktualisierung fehlgeschlagen')
     }
@@ -477,8 +338,7 @@ export default function ProjectsPage() {
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {
-      await deleteProject(id)
-      setProjects((prev) => prev.filter((p) => p.id !== id))
+      await storeDelete(id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Löschen fehlgeschlagen')
     } finally {
@@ -495,8 +355,8 @@ export default function ProjectsPage() {
 
   function handleLoadBohrkost(project: Project) {
     const zweck: Bohrungszweck =
-      project.project_type === 'Dublette'            ? 'Dublette'
-      : project.project_type === 'Einzelbohrung'     ? 'Einzelbohrung'
+      project.project_type === 'Dublette'              ? 'Dublette'
+      : project.project_type === 'Einzelbohrung'       ? 'Einzelbohrung'
       : project.project_type === 'Explorationsbohrung' ? 'Explorationsbohrung'
       : 'Dublette'
     // Wenn bohrkost_input bereits gespeichert: direkt laden
@@ -512,6 +372,8 @@ export default function ProjectsPage() {
     applyBohrkostFromProject(partial, project.id, project.name)
     router.push('/bohrkost')
   }
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   if (authLoading) {
     return (
@@ -529,9 +391,7 @@ export default function ProjectsPage() {
         <p className="text-muted-foreground max-w-md">
           Melde dich an, um DeltaT-Berechnungen als Projekte zu speichern und später wieder zu laden.
         </p>
-        <Button onClick={() => router.push('/login')}>
-          Anmelden
-        </Button>
+        <Button onClick={() => router.push('/login')}>Anmelden</Button>
       </div>
     )
   }
@@ -542,7 +402,7 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold">Meine Projekte</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gespeicherte DeltaT-Berechnungen
+            Klick auf eine Karte für Details, Berechnung und Navigation
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -594,14 +454,24 @@ export default function ProjectsPage() {
             <ProjectCard
               key={project.id}
               project={project}
-              onLoad={handleLoad}
-              onLoadBohrkost={handleLoadBohrkost}
-              onUpdate={handleUpdate}
-              onDelete={handleDelete}
-              deleting={deletingId === project.id}
+              onClick={() => openDetail(project)}
             />
           ))}
         </div>
+      )}
+
+      {/* Detail-Popup */}
+      {detailProject && (
+        <ProjectDetailDialog
+          project={detailProject}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          onLoad={handleLoad}
+          onLoadBohrkost={handleLoadBohrkost}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          deleting={deletingId === detailProject.id}
+        />
       )}
     </div>
   )

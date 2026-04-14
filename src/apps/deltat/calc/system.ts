@@ -58,8 +58,8 @@ export interface DeltaTOutputs {
   qDelivered: number
   /** Benötigte geothermische Leistung [kW] */
   qGeoBenoetigt: number
-  /** Anzahl Dubletten */
-  anzahlDoubletten: number
+  /** Anzahl Dubletten — null wenn ΔT ≤ 0 (unphysikalisch) */
+  anzahlDoubletten: number | null
   /** Gesamtförderrate [l/s] */
   gesamtFoerderrate: number
   /** Tauchpumpenleistung pro Bohrung [kW] */
@@ -106,6 +106,38 @@ export interface DeltaTOutputs {
   sMaterial: TrafficLight
   /** WP aktiv? */
   wpAktiv: boolean
+  /** Mindest-Förderrate für Zielleistung mit 1 Dublette bei aktuellem ΔT [l/s] — null wenn ΔT ≤ 0 */
+  qMinFoerderrate: number | null
+  /** Tiefe für Direktnutzung ohne WP: T_GW ≥ T_VL [m] */
+  tiefeMinDirekt: number
+}
+
+/**
+ * Tiefenabhängiger Default für Förderhöhe der Tauchpumpe.
+ * H = clamp(0,5 × tiefe + 15, 25, 300)
+ *
+ * Quellen: Stober & Bucher (2012) Tab. 7.3; VDI 4640 Bl. 2 Abschn. 5.6
+ *   < 100 m Tiefe  → H ≈ 20–60 m
+ *   100–500 m      → H ≈ 60–265 m
+ *   > 1000 m       → H ≈ 200–300 m (capped)
+ */
+export function calcDefaultFoerderhoehe(tiefe: number): number {
+  return Math.min(300, Math.max(25, Math.round(0.5 * tiefe + 15)))
+}
+
+/**
+ * Tiefenabhängige Grundwassertemperatur nach geothermischem Gradienten.
+ * T_GW = T_Oberfläche + Gradient × Tiefe
+ *
+ * Quellen: VDI 4640 Bl. 1 (2010), Abschn. 4.2; BGR/LIAG Untergrundtemperaturkarte
+ *   Deutschland-Mittel: 0,028–0,033 K/m → Default 0,03 K/m
+ *   Oberflächentemperatur (neutrale Zone ~15 m): 10 °C (Jahresmittel)
+ */
+export const GEOTHERM_GRADIENT = 0.03  // K/m, VDI 4640 Bl. 1
+export const SURFACE_TEMP      = 10    // °C, Jahresmittel neutrale Zone
+
+export function calcDefaultTGW(tiefe: number): number {
+  return Math.round((SURFACE_TEMP + GEOTHERM_GRADIENT * tiefe) * 2) / 2
 }
 
 export const DEFAULT_INPUTS: DeltaTInputs = {
@@ -121,7 +153,7 @@ export const DEFAULT_INPUTS: DeltaTInputs = {
   tVL: 90,
   tRL: 55,
   laufstunden: 2000,
-  foerderhoehe: 150,
+  foerderhoehe: calcDefaultFoerderhoehe(500), // 265 m für Standardtiefe 500 m
 }
 
 export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
@@ -130,7 +162,8 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   const transmissiv = kf * maechtig
   const deltaT = tGW - tR
   // Q_th = Q[l/s = kg/s] × c_p[kJ/kg·K] × ΔT[K] — kW
-  const qThPerDoublet = Math.max(0.01, Q * deltaT * 4.18)
+  // Wenn ΔT ≤ 0 → kein Wärmeentzug möglich (Reinjektion ≥ Grundwassertemp.) — VDI 4640 Bl. 2, Abschn. 5.4
+  const qThPerDoublet = deltaT > 0 ? Q * deltaT * 4.18 : 0
 
   // Vorab-COP für WP-Beitragsrechnung — T_R (Reinjektionstemperatur) als Quellen-Temp
   // Arpagaus et al. 2018, Energy 152, Gl. 7
@@ -144,13 +177,17 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     ? zielLeistung * (_copEst - 1) / _copEst  // WP addiert W_el → weniger Q_geo nötig
     : zielLeistung
 
-  const anzahlDoubletten = deltaT > 0 ? Math.max(1, Math.ceil(qGeoBenoetigt / qThPerDoublet)) : 999
-  const qThGesamt = anzahlDoubletten * qThPerDoublet
+  // null wenn ΔT ≤ 0 (unphysikalisch für Wärmeentzug) — kein Sentinel-999 mehr
+  const anzahlDoubletten: number | null = deltaT > 0 && qThPerDoublet > 0
+    ? Math.max(1, Math.ceil(qGeoBenoetigt / qThPerDoublet))
+    : null
+  const _anzahl = anzahlDoubletten ?? 0
+  const qThGesamt = _anzahl * qThPerDoublet
   const qDelivered = wpAktiv && _copEst < 90
     ? qThGesamt * _copEst / (_copEst - 1)
     : qThGesamt
 
-  const gesamtFoerderrate = anzahlDoubletten * Q
+  const gesamtFoerderrate = _anzahl * Q
   // P_pump = Q[m³/s] × ρ[kg/m³] × g[m/s²] × H[m] / η — VDI 4640, Stober & Bucher (2012) Kap. 7.4
   // H = foerderhoehe (dynamischer Spiegel + Rohrreibung), NICHT Bohrtiefe — Faktor 2-5 Unterschied!
   const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * foerderhoehe / (0.6 * 1000)
@@ -232,6 +269,15 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // Jahreswärmemenge [MWh/a] — gesamte ans Netz gelieferte Wärme (inkl. WP-Beitrag)
   const jahreswaerme = qDelivered * (laufstunden || 2000) / 1000
 
+  // Optimierungshinweise — kein Auto-Adjust, nur informativ
+  // Mindest-Q für Zielleistung mit 1 Dublette: Q = P_geo / (ΔT × c_p)
+  const qMinFoerderrate = deltaT > 0
+    ? Math.ceil(qGeoBenoetigt / (deltaT * 4.18))
+    : null
+  // Tiefe für Direktnutzung (ohne WP, T_GW ≥ T_VL): z = (T_VL − T_0) / Gradient
+  // VDI 4640 Bl. 1, Abschn. 4.2
+  const tiefeMinDirekt = Math.round((tVL - SURFACE_TEMP) / GEOTHERM_GRADIENT)
+
   return {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,
     anzahlDoubletten, gesamtFoerderrate, tauchpumpenLeistung,
@@ -244,5 +290,6 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     jahreswaerme, tHub,
     sHydraulik, sThermik, sDurchbruch, sCOP, sMaterial,
     wpAktiv,
+    qMinFoerderrate, tiefeMinDirekt,
   }
 }

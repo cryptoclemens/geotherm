@@ -45,6 +45,8 @@ export default function LocationInspectorPanel() {
   const [placeName, setPlaceName] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [savingMode, setSavingMode] = useState(false)
+  const [saveName, setSaveName] = useState('')
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function LocationInspectorPanel() {
     setDetails(null)
     setPlaceName('')
     setSaved(false)
+    setSavingMode(false)
     setLoading(true)
 
     // Abort vorherige Anfrage
@@ -112,10 +115,15 @@ export default function LocationInspectorPanel() {
 
   const { lat, lng } = clickedPoint
 
-  function handleSave() {
-    if (!details) return
+  function handleSaveClick() {
+    setSaveName(placeName || `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`)
+    setSavingMode(true)
+  }
+
+  function handleSaveConfirm() {
+    if (!details || !saveName.trim()) return
     saveLocation({
-      name: placeName || `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`,
+      name: saveName.trim(),
       lat,
       lng,
       aquiferType: details.aquiferType,
@@ -128,6 +136,7 @@ export default function LocationInspectorPanel() {
       erlaeuterung: details.erlaeuterung,
     })
     setSaved(true)
+    setSavingMode(false)
   }
 
   function handleDeltaT() {
@@ -218,21 +227,41 @@ export default function LocationInspectorPanel() {
           </div>
 
           {/* Aktionen */}
-          <div id="loc-inspector-actions">
-            <button
-              className="loc-action-btn loc-action-save"
-              onClick={handleSave}
-              disabled={saved}
-            >
-              {saved ? '✓ Gespeichert' : '📌 Ort speichern'}
-            </button>
-            <button
-              className="loc-action-btn loc-action-deltat"
-              onClick={handleDeltaT}
-            >
-              ⟶ DeltaT
-            </button>
-          </div>
+          {savingMode ? (
+            <div id="loc-inspector-savename">
+              <input
+                className="loc-name-input"
+                value={saveName}
+                onChange={e => setSaveName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSaveConfirm()
+                  if (e.key === 'Escape') setSavingMode(false)
+                }}
+                placeholder="Name für diesen Ort…"
+                autoFocus
+              />
+              <button className="loc-name-confirm" onClick={handleSaveConfirm} disabled={!saveName.trim()}>
+                Speichern
+              </button>
+              <button className="loc-name-cancel" onClick={() => setSavingMode(false)}>✕</button>
+            </div>
+          ) : (
+            <div id="loc-inspector-actions">
+              <button
+                className="loc-action-btn loc-action-save"
+                onClick={handleSaveClick}
+                disabled={saved}
+              >
+                {saved ? '✓ Gespeichert' : '📌 Ort speichern'}
+              </button>
+              <button
+                className="loc-action-btn loc-action-deltat"
+                onClick={handleDeltaT}
+              >
+                ⟶ DeltaT
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

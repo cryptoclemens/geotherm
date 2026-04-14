@@ -27,19 +27,19 @@ export default function LandingPage() {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden geo-bg flex-1 flex items-center justify-center px-4 py-24 md:py-36">
-        {/* Dekorative Orbs */}
+        {/* Dekorative Orbs — auf Mobile ausgeblendet (CPU-intensiv) */}
         <div
-          className="geo-orb w-[500px] h-[500px] bg-[oklch(0.62_0.14_195/0.18)] -top-32 -left-32"
+          className="hidden sm:block geo-orb w-[500px] h-[500px] bg-[oklch(0.62_0.14_195/0.18)] -top-32 -left-32"
           style={{ animationDelay: '0s' }}
           aria-hidden="true"
         />
         <div
-          className="geo-orb w-[400px] h-[400px] bg-[oklch(0.72_0.14_60/0.15)] bottom-0 right-0"
+          className="hidden sm:block geo-orb w-[400px] h-[400px] bg-[oklch(0.72_0.14_60/0.15)] bottom-0 right-0"
           style={{ animationDelay: '5s' }}
           aria-hidden="true"
         />
         <div
-          className="geo-orb w-72 h-72 bg-[oklch(0.55_0.16_160/0.12)] top-1/3 right-1/4"
+          className="hidden sm:block geo-orb w-72 h-72 bg-[oklch(0.55_0.16_160/0.12)] top-1/3 right-1/4"
           style={{ animationDelay: '9s' }}
           aria-hidden="true"
         />
@@ -51,7 +51,7 @@ export default function LandingPage() {
             Geothermie-Suite · jetzt verfügbar
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
             Wo bohren.{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[oklch(0.72_0.15_195)] to-[oklch(0.72_0.14_60)]">
               Wie auslegen.
@@ -103,7 +103,7 @@ export default function LandingPage() {
             Projektentwicklung von Nah- und Fernwärmeprojekten via Aquifer-Geothermie.
           </p>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Karte */}
             <div className="glass-card rounded-2xl p-6">
               <div className="w-8 h-8 rounded-lg bg-[oklch(0.62_0.14_195/0.2)] flex items-center justify-center mb-4">

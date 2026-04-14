@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useMapEvents } from 'react-leaflet'
 import { useGpaStore } from '../../store/useGpaStore'
+import { clearSearchMarker } from '../sidebar/Ortssuche'
 
 /**
  * Unsichtbare Karte-Klick-Komponente.
@@ -13,6 +14,7 @@ export default function MapClickLayer() {
   useMapEvents({
     click(e) {
       // Klicks auf Marker (CircleMarker/DivIcon) propagieren nicht — nur echte Karten-Klicks
+      clearSearchMarker()   // Such-Nadel entfernen wenn User neuen Punkt wählt
       setClickedPoint({ lat: e.latlng.lat, lng: e.latlng.lng })
     },
   })

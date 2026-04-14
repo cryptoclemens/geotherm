@@ -4,9 +4,12 @@ import { ParamSlider } from '@/core/ui/ParamSlider'
 import { useDeltaTStore } from '../store/useDeltaTStore'
 
 export function InputColumn() {
-  const inputs  = useDeltaTStore(s => s.inputs)
-  const setInput = useDeltaTStore(s => s.setInput)
-  const reset   = useDeltaTStore(s => s.resetInputs)
+  const inputs           = useDeltaTStore(s => s.inputs)
+  const outputs          = useDeltaTStore(s => s.outputs)
+  const tGWManual        = useDeltaTStore(s => s.tGWManual)
+  const setInput         = useDeltaTStore(s => s.setInput)
+  const reset            = useDeltaTStore(s => s.resetInputs)
+  const resetTGWCoupling = useDeltaTStore(s => s.resetTGWCoupling)
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border">
@@ -25,9 +28,14 @@ export function InputColumn() {
         <ParamSlider label="Bohrtiefe" value={inputs.tiefe} min={50} max={3000} step={50} unit="m"
           onChange={v => setInput('tiefe', v)}
           info="Tiefe der Förder- und Injektionsbohrung. Bestimmt maßgeblich die erreichbare Grundwassertemperatur (geothermischer Gradient ≈ 3 °C/100 m)." />
-        <ParamSlider label="Förderhöhe Tauchpumpe" value={inputs.foerderhoehe} min={50} max={500} step={10} unit="m"
+        <ParamSlider label="Förderhöhe Tauchpumpe" value={inputs.foerderhoehe} min={20} max={500} step={5} unit="m"
           onChange={v => setInput('foerderhoehe', v)}
-          info="Statische Förderhöhe der Unterwasserpumpe. Beeinflusst den Pumpenenergieverbrauch:\nP_Pumpe = ρ·g·H·Q / η [W]\n(VDI 4640 Bl. 2)" />
+          info="Dynamische Förderhöhe der Tauchpumpe (Absenkung + Rohrreibung + Systemdruck).\nP_Pumpe = ρ·g·H·Q / η [W]\nFaustregel: H ≈ 0,5 × Bohrtiefe + 15 m\n(VDI 4640 Bl. 2; Stober & Bucher 2012 Kap. 7.4)" />
+        {inputs.foerderhoehe > inputs.tiefe + 20 && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug">
+            Förderhöhe {inputs.foerderhoehe} m unrealistisch für {inputs.tiefe} m Bohrtiefe — empfohlen: ≤ {inputs.tiefe + 20} m
+          </p>
+        )}
         <ParamSlider label="Aquifer-Mächtigkeit" value={inputs.maechtig} min={5} max={500} step={5} unit="m"
           onChange={v => setInput('maechtig', v)}
           info="Vertikale Ausdehnung des wasserführenden Horizonts.\nTransmissivität: T = k_f × b [m²/s]\n(Darcy; DVGW W 115)" />
@@ -50,12 +58,37 @@ export function InputColumn() {
 
       <fieldset className="flex flex-col gap-3">
         <legend className="text-xs font-medium text-primary/80 mb-1">Thermik</legend>
-        <ParamSlider label="Grundwassertemperatur" value={inputs.tGW} min={5} max={60} step={0.5} unit="°C"
-          onChange={v => setInput('tGW', v)}
-          info="Temperatur des geförderten Grundwassers [°C].\nFaustformel: T_GW ≈ 10 °C + Tiefe × 0,03 °C/m\n(geothermischer Gradient, mittlere Deutschland-Werte nach VDI 4640)" />
+
+        {/* T_GW mit Tiefen-Kopplung */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground">
+              {tGWManual
+                ? '✏️ T_GW manuell — Tiefenkopplung aufgehoben'
+                : `🔗 T_GW an Tiefe gekoppelt (0,03 °C/m)`}
+            </span>
+            {tGWManual && (
+              <button
+                onClick={resetTGWCoupling}
+                className="text-[10px] text-primary/70 hover:text-primary underline underline-offset-2 leading-none"
+              >
+                ↩ koppeln
+              </button>
+            )}
+          </div>
+          <ParamSlider label="Grundwassertemperatur" value={inputs.tGW} min={5} max={120} step={0.5} unit="°C"
+            onChange={v => setInput('tGW', v)}
+            info="Temperatur des geförderten Grundwassers [°C].\nFaustformel: T_GW ≈ 10 °C + Tiefe × 0,03 °C/m\n(geothermischer Gradient, Deutschland-Mittel nach VDI 4640 Bl. 1, Abschn. 4.2)\nRegional abweichend: Oberrheingraben bis 0,05 K/m, Harz ~0,02 K/m" />
+        </div>
+
         <ParamSlider label="Reinjektionstemperatur" value={inputs.tR} min={2} max={40} step={0.5} unit="°C"
           onChange={v => setInput('tR', v)}
           info="Temperatur des rückgeführten Wassers nach Wärmeentzug.\nΔT = T_GW − T_R → thermische Leistung.\nMuss > 2 °C bleiben (Frostschutz, Ökologie)." />
+        {inputs.tR >= inputs.tGW && (
+          <p className="text-xs text-red-600 dark:text-red-400 -mt-1 leading-snug">
+            Reinjektion ({inputs.tR} °C) ≥ Grundwasser ({inputs.tGW} °C) — kein Wärmeentzug möglich (VDI 4640 Bl. 2)
+          </p>
+        )}
         <ParamSlider label="Mineralisation TDS" value={inputs.tds} min={50} max={50000} step={50} unit="mg/l"
           onChange={v => setInput('tds', v)}
           info="Gesamtmineralisation des Thermalwassers [mg/l].\nBestimmt Materialklasse nach DVGW W 115:\n< 1.000 mg/l → Stahl möglich\n1.000–10.000 mg/l → hochwertiger Stahl\n> 10.000 mg/l → Duplex / Titan erforderlich" />
@@ -65,7 +98,24 @@ export function InputColumn() {
         <legend className="text-xs font-medium text-primary/80 mb-1">Wärmenetz</legend>
         <ParamSlider label="Ziel-Wärmeleistung" value={inputs.zielLeistung} min={100} max={50000} step={100} unit="kW"
           onChange={v => setInput('zielLeistung', v)}
-          info="Benötigte Wärmeleistung des Netzes [kW].\nBestimmt die Anzahl der Doubletten:\nn = ⌈P_Ziel / P_Doublette⌉" />
+          info="Benötigte Wärmeleistung des Netzes [kW].\nBestimmt die Anzahl der Doubletten:\nn = ⌈P_Ziel / P_Doublette⌉\nHinweis: Förderrate & Tiefe anpassen um weniger Doubletten zu benötigen." />
+        {/* Optimierungshinweis: benötigte Q für 1 Doublette */}
+        {outputs.anzahlDoubletten !== null && outputs.anzahlDoubletten > 1 && outputs.qMinFoerderrate !== null && (
+          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-3 py-2 text-xs">
+            <span className="text-blue-700 dark:text-blue-300 font-medium">Hinweis:</span>
+            <span className="text-blue-600 dark:text-blue-400">
+              {' '}1 Doublette würde bei Q = {outputs.qMinFoerderrate} l/s reichen
+            </span>
+            {outputs.qMinFoerderrate <= 100 && (
+              <button
+                onClick={() => setInput('Q', outputs.qMinFoerderrate!)}
+                className="ml-2 underline underline-offset-2 text-blue-700 dark:text-blue-300 hover:text-blue-900"
+              >
+                übernehmen
+              </button>
+            )}
+          </div>
+        )}
         <ParamSlider label="Vorlauftemperatur" value={inputs.tVL} min={30} max={140} step={1} unit="°C"
           onChange={v => setInput('tVL', v)}
           info="Vorlauftemperatur des Wärmenetzes [°C].\nBestimmt den Temperaturhub der Wärmepumpe:\nΔT_Hub = T_VL − T_GW\nGroßer Hub → schlechterer COP (Arpagaus et al. 2018)" />
