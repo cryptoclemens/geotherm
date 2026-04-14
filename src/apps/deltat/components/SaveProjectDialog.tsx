@@ -13,6 +13,7 @@ import {
 import { Input } from '@/core/ui/input'
 import { createProject } from '@/core/api/projects'
 import { useDeltaTStore } from '../store/useDeltaTStore'
+import { useProjectStore } from '@/core/store/useProjectStore'
 
 type Status = 'idle' | 'saving' | 'success' | 'error'
 
@@ -20,14 +21,22 @@ export function SaveProjectDialog() {
   const inputs  = useDeltaTStore(s => s.inputs)
   const outputs = useDeltaTStore(s => s.outputs)
 
+  const selectedProjectId = useProjectStore(s => s.selectedProjectId)
+  const selectedProject   = useProjectStore(s => s.projects.find(p => p.id === s.selectedProjectId))
+  const storeUpdate       = useProjectStore(s => s.updateProject)
+
+  const isUpdate = selectedProjectId != null
+
   const [open, setOpen]     = useState(false)
   const [name, setName]     = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [errMsg, setErrMsg] = useState('')
 
   function handleOpen() {
-    // Vorschlag: erste Kennzahlen als Projektname
-    const suggestion = `${inputs.tiefe} m · ${inputs.tGW} °C · ${outputs.qDelivered.toFixed(0)} kW`
+    // Bei Update: bestehenden Projektnamen vorbelegen; bei Neu: Kennzahlen
+    const suggestion = isUpdate && selectedProject
+      ? selectedProject.name
+      : `${inputs.tiefe} m · ${inputs.tGW} °C · ${outputs.qDelivered.toFixed(0)} kW`
     setName(suggestion)
     setStatus('idle')
     setErrMsg('')
@@ -38,11 +47,19 @@ export function SaveProjectDialog() {
     if (!name.trim()) return
     setStatus('saving')
     try {
-      await createProject({
-        name: name.trim(),
-        deltat_input:  inputs,
-        deltat_result: outputs,
-      })
+      if (isUpdate && selectedProjectId) {
+        await storeUpdate(selectedProjectId, {
+          name:          name.trim(),
+          deltat_input:  inputs,
+          deltat_result: outputs,
+        })
+      } else {
+        await createProject({
+          name:          name.trim(),
+          deltat_input:  inputs,
+          deltat_result: outputs,
+        })
+      }
       setStatus('success')
       setTimeout(() => setOpen(false), 1200)
     } catch (e) {
@@ -62,16 +79,16 @@ export function SaveProjectDialog() {
         size="sm"
         data-print-hide
         onClick={handleOpen}
-        aria-label="Projekt speichern"
+        aria-label={isUpdate ? 'Projekt aktualisieren' : 'Projekt speichern'}
       >
         <SaveIcon />
-        Speichern
+        {isUpdate ? 'Aktualisieren' : 'Speichern'}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Projekt speichern</DialogTitle>
+            <DialogTitle>{isUpdate ? 'Projekt aktualisieren' : 'Projekt speichern'}</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 py-2">
@@ -89,7 +106,7 @@ export function SaveProjectDialog() {
             />
             {/* Vorschau der gespeicherten Kennzahlen */}
             <p className="text-xs text-muted-foreground">
-              Gespeichert werden: alle Parameter + Ergebnisse
+              {isUpdate ? 'Aktualisiert werden' : 'Gespeichert werden'}: alle Parameter + Ergebnisse
               ({inputs.tiefe} m · {inputs.tGW} °C · {outputs.qDelivered.toFixed(0)} kW · {outputs.anzahlDoubletten} Dobl.)
             </p>
             {status === 'error' && (
@@ -112,7 +129,9 @@ export function SaveProjectDialog() {
               onClick={handleSave}
               disabled={!name.trim() || status === 'saving' || status === 'success'}
             >
-              {status === 'saving' ? 'Speichern…' : 'Speichern'}
+              {status === 'saving'
+                ? (isUpdate ? 'Aktualisieren…' : 'Speichern…')
+                : (isUpdate ? 'Aktualisieren' : 'Speichern')}
             </Button>
           </DialogFooter>
         </DialogContent>

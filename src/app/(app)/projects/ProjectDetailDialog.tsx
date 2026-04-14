@@ -193,34 +193,48 @@ export function ProjectDetailDialog({
     onDelete(project.id)
   }
 
-  // Prüft ob Wert-Konflikte zwischen DeltaT und Bohrkost vorliegen; zeigt ggf. Auswahl-Panel
+  // Prüft ob Wert-Konflikte zwischen DeltaT und Bohrkost vorliegen; zeigt ggf. Auswahl-Panel.
+  // WICHTIG: onOpenChange(false) wird NICHT hier aufgerufen — Dialog bleibt offen wenn Konflikt.
   function handleClickLoadDeltaT() {
-    if (!project.deltat_input || !project.bohrkost_input) { onLoad(project); return }
+    if (!project.deltat_input || !project.bohrkost_input) {
+      onOpenChange(false); onLoad(project); return
+    }
     const conflicts = getConflictingFields(project.deltat_input, project.bohrkost_input)
-    if (conflicts.length === 0) { onLoad(project); return }
+    if (conflicts.length === 0) {
+      onOpenChange(false); onLoad(project); return
+    }
     setSyncConflict({ direction: 'to-deltat', conflicts })
+    // Dialog bleibt geöffnet → Konflikt-Panel erscheint
   }
 
   function handleClickLoadBohrkost() {
-    if (!project.deltat_input || !project.bohrkost_input) { onLoadBohrkost(project); return }
+    if (!project.deltat_input || !project.bohrkost_input) {
+      onOpenChange(false); onLoadBohrkost(project); return
+    }
     const conflicts = getConflictingFields(project.deltat_input, project.bohrkost_input)
-    if (conflicts.length === 0) { onLoadBohrkost(project); return }
+    if (conflicts.length === 0) {
+      onOpenChange(false); onLoadBohrkost(project); return
+    }
     setSyncConflict({ direction: 'to-bohrkost', conflicts })
   }
 
   // Konflikt auflösen: Ziel-App-Werte behalten (kein Überschreiben)
   function resolveKeep() {
     if (!syncConflict) return
+    const dir = syncConflict.direction
     setSyncConflict(null)
-    if (syncConflict.direction === 'to-deltat') onLoad(project)
+    onOpenChange(false)
+    if (dir === 'to-deltat') onLoad(project)
     else onLoadBohrkost(project)
   }
 
   // Konflikt auflösen: Werte der anderen App übernehmen
   function resolveOverwrite() {
     if (!syncConflict || !project.deltat_input || !project.bohrkost_input) return
+    const dir = syncConflict.direction
     setSyncConflict(null)
-    if (syncConflict.direction === 'to-deltat') {
+    onOpenChange(false)
+    if (dir === 'to-deltat') {
       const b = project.bohrkost_input
       const merged: DeltaTInputs = {
         ...project.deltat_input,
@@ -463,7 +477,7 @@ export function ProjectDetailDialog({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => { onOpenChange(false); onLoad(project) }}
+                    onClick={() => handleClickLoadDeltaT()}
                     className="w-fit"
                   >
                     <ArrowRightIcon className="w-3.5 h-3.5" />
@@ -580,10 +594,10 @@ export function ProjectDetailDialog({
               ))}
             </div>
             <div className="flex items-center gap-2 pl-6 flex-wrap">
-              <Button size="sm" variant="outline" onClick={() => { onOpenChange(false); resolveKeep() }}>
+              <Button size="sm" variant="outline" onClick={resolveKeep}>
                 {syncConflict.direction === 'to-deltat' ? 'DeltaT-Werte behalten' : 'Bohrkost-Werte behalten'}
               </Button>
-              <Button size="sm" onClick={() => { onOpenChange(false); resolveOverwrite() }}>
+              <Button size="sm" onClick={resolveOverwrite}>
                 {syncConflict.direction === 'to-deltat' ? 'Bohrkost-Werte übernehmen' : 'DeltaT-Werte übernehmen'}
               </Button>
               <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSyncConflict(null)}>
@@ -597,7 +611,7 @@ export function ProjectDetailDialog({
           {showDeltaT && (
             <Button
               size="sm"
-              onClick={() => { onOpenChange(false); handleClickLoadDeltaT() }}
+              onClick={handleClickLoadDeltaT}
               disabled={!project.deltat_input}
             >
               <ArrowRightIcon />
@@ -607,7 +621,7 @@ export function ProjectDetailDialog({
           <Button
             size="sm"
             variant={showDeltaT ? 'outline' : 'default'}
-            onClick={() => { onOpenChange(false); handleClickLoadBohrkost() }}
+            onClick={handleClickLoadBohrkost}
           >
             <ArrowRightIcon />
             In Bohrkost laden
