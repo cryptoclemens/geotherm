@@ -3,8 +3,11 @@
  *
  * Quellen:
  *   - Bohrkosten:    Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
+ *                   (146 hydrothermal/EGS-Bohrungen; gilt für Produktions- +
+ *                    Injektionsbohrungen — NICHT für Erdwärmesonden/BHE)
  *   - Linearer Fallback: GtV Bohrpreise (2024); DVGW W 115
  *   - Gestein-Faktoren: Baujard et al. (2017), Stanford SGW
+ *   - Währungsfaktor: BLS CPI 2009–2026 (×1.54) + ECB EUR/USD → f_waehrung=1.34
  *   - Marktaufschlag: GtV Bundesverband Geothermie; LIAG Broschüre Tiefe Geothermie
  *   - Komplettierung: DVGW W 115; Stober & Bucher (2012) Kap. 7
  *   - Förderung:     BEG / MAP-Programm KfW 2024
@@ -144,7 +147,12 @@ const LINEAR_MOBILISIERUNG: Record<Gesteinstyp, number> = {
 
 /**
  * Bohrkosten für EINE Bohrung (Mittelpunkt, ohne Bandbreite)
- * Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
+ *
+ * Formel-Basis: Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
+ * Datenbasis: 146 US-Geothermiebohrungen (hydrothermal + EGS; Produktions- &
+ *   Injektionsbohrungen) — NICHT für Erdwärmesonden/BHE/DBHE geeignet.
+ * Für Dublette: Kosten = 2 × Einzelbohrung (konservativ; Injektionsbohrung
+ *   real ca. 15 % günstiger — liegt in ±35–50 %-Bandbreite, AACE Class 5).
  */
 function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const { tiefe, gesteinstyp, durchmesser, region } = inp
@@ -160,7 +168,12 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
     const c_usd_2009 = (1.72e-7 * tiefe * tiefe + 2.3e-3 * tiefe - 0.62) * 1e6
 
     // Korrekturfaktoren
-    const f_waehrung     = 1.20  // USD₂₀₀₉ → EUR₂₀₂₆; ECB Langzeitdurchschnitt + Inflation 2009–2026
+    // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
+    //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
+    //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
+    //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
+    //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
+    const f_waehrung     = 1.34
     const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
     const f_region       = REGION_FAKTOR[region]
     const f_durchmesser  = DURCHMESSER_FAKTOR[durchmesser]
