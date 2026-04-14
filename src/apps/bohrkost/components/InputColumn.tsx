@@ -1,7 +1,7 @@
 'use client'
 
 import { ParamSlider } from '@/core/ui/ParamSlider'
-import type { BohrkostInputs, Gesteinstyp, Bohrungszweck, Produktionsdurchmesser, Region } from '../calc/kosten'
+import type { BohrkostInputs, Gesteinstyp, Bohrungszweck, Produktionsdurchmesser, Region, OverheadInputs } from '../calc/kosten'
 
 interface InputColumnProps {
   inputs: BohrkostInputs
@@ -190,6 +190,73 @@ export function InputColumn({ inputs, onChange, onReset }: InputColumnProps) {
           info={'Zuschlag für Fündigkeitsrisiko-Versicherung [%].\nVersicherungskosten = Bohrkosten_mid × (Risiko/100).\n(Branchenschätzung; GtV)'}
         />
       </fieldset>
+
+      {/* ── Sektion: Overhead ────────────────────────────────────────────── */}
+      <fieldset className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <legend className="text-xs font-medium text-primary/80">Projektkosten (Overhead)</legend>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={inputs.overheadAktiv}
+            onClick={() => onChange('overheadAktiv', !inputs.overheadAktiv)}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              inputs.overheadAktiv ? 'bg-primary' : 'bg-muted-foreground/30'
+            }`}
+          >
+            <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${inputs.overheadAktiv ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {inputs.overheadAktiv && <OverheadEditor overhead={inputs.overhead} onChange={oh => onChange('overhead', oh)} />}
+      </fieldset>
+    </div>
+  )
+}
+
+const OVERHEAD_FIELDS: Array<{
+  key: keyof OverheadInputs
+  label: string
+  quelle: string
+}> = [
+  { key: 'projektmanagement',      label: 'Projektmanagement',           quelle: 'HOAI §§ 53–56; ca. 8 % der Investitionskosten (VDI 4640 Bl. 1)' },
+  { key: 'hydrogeologie',          label: 'Hydrogeolog. Begleitung',      quelle: 'DVGW W 115; Stober & Bucher (2012)' },
+  { key: 'bauueberwachung',        label: 'Bauüberwachung',               quelle: 'HOAI Leistungsphase 8' },
+  { key: 'rechtsberatung',         label: 'Rechtsberatung / Genehmigung', quelle: 'Branchenschätzung; GtV Tiefe Geothermie' },
+  { key: 'oeffentlichkeitsarbeit', label: 'Öffentlichkeitsarbeit',        quelle: 'Projektabhängig (0–50.000 EUR)' },
+]
+
+function OverheadEditor({
+  overhead,
+  onChange,
+}: {
+  overhead: OverheadInputs
+  onChange: (oh: OverheadInputs) => void
+}) {
+  function set(key: keyof OverheadInputs, raw: string) {
+    const v = parseInt(raw.replace(/\D/g, ''), 10)
+    onChange({ ...overhead, [key]: isNaN(v) ? 0 : v })
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-muted/30 p-3">
+      {OVERHEAD_FIELDS.map(({ key, label, quelle }) => (
+        <div key={key} className="flex flex-col gap-0.5">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-xs text-foreground/80 shrink-0">{label}</label>
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={overhead[key].toLocaleString('de-DE')}
+                onChange={e => set(key, e.target.value)}
+                className="w-28 text-right text-xs bg-background border border-input rounded px-2 py-1 text-foreground outline-none focus:border-primary/50 font-mono"
+              />
+              <span className="text-[10px] text-muted-foreground shrink-0">EUR</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 leading-snug">{quelle}</p>
+        </div>
+      ))}
     </div>
   )
 }
