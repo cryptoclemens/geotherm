@@ -12,6 +12,7 @@ import {
   Trash2Icon,
   PencilIcon,
   CalendarIcon,
+  AlertTriangleIcon,
 } from 'lucide-react'
 import {
   Dialog,
@@ -23,6 +24,8 @@ import { Button } from '@/core/ui/button'
 import { Separator } from '@/core/ui/separator'
 import { ProjectFormDialog } from './ProjectFormDialog'
 import type { Project, ProjectUpdate, ProjectType, ProjectStatus } from '@/core/api/projects'
+import type { DeltaTInputs } from '@/apps/deltat/calc/system'
+import type { BohrkostInputs } from '@/apps/bohrkost/calc/kosten'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -64,6 +67,27 @@ function formatDate(iso: string): string {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   }).format(new Date(iso))
+}
+
+// ── Sync-Konflikt-Helpers ────────────────────────────────────────────────────
+
+interface ConflictField {
+  label: string
+  deltaTValue: string
+  bohrkostValue: string
+}
+
+function getConflictingFields(d: DeltaTInputs, b: BohrkostInputs): ConflictField[] {
+  const fields: ConflictField[] = []
+  if (d.tiefe !== b.tiefe)
+    fields.push({ label: 'Bohrtiefe', deltaTValue: `${d.tiefe} m`, bohrkostValue: `${b.tiefe} m` })
+  if (Math.abs(d.Q - b.foerderrate) > 0.01)
+    fields.push({ label: 'Förderrate', deltaTValue: `${d.Q} l/s`, bohrkostValue: `${b.foerderrate} l/s` })
+  if (Math.abs(d.tGW - b.tGW) > 0.01)
+    fields.push({ label: 'GW-Temp.', deltaTValue: `${d.tGW} °C`, bohrkostValue: `${b.tGW} °C` })
+  if (Math.abs(d.tR - b.tReinjektion) > 0.01)
+    fields.push({ label: 'Reinjektionstemp.', deltaTValue: `${d.tR} °C`, bohrkostValue: `${b.tReinjektion} °C` })
+  return fields
 }
 
 // ── InlineEditField ──────────────────────────────────────────────────────────
@@ -148,6 +172,10 @@ export function ProjectDetailDialog({
 }: ProjectDetailDialogProps) {
   const [showExtended, setShowExtended] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [syncConflict, setSyncConflict] = useState<{
+    direction: 'to-deltat' | 'to-bohrkost'
+    conflicts: ConflictField[]
+  } | null>(null)
 
   const showDeltaT = project.project_type === 'Dublette' || project.deltat_input != null
 
@@ -163,6 +191,56 @@ export function ProjectDetailDialog({
   function handleDelete() {
     onOpenChange(false)
     onDelete(project.id)
+  }
+
+  // Prüft ob Wert-Konflikte zwischen DeltaT und Bohrkost vorliegen; zeigt ggf. Auswahl-Panel
+  function handleClickLoadDeltaT() {
+    if (!project.deltat_input || !project.bohrkost_input) { onLoad(project); return }
+    const conflicts = getConflictingFields(project.deltat_input, project.bohrkost_input)
+    if (conflicts.length === 0) { onLoad(project); return }
+    setSyncConflict({ direction: 'to-deltat', conflicts })
+  }
+
+  function handleClickLoadBohrkost() {
+    if (!project.deltat_input || !project.bohrkost_input) { onLoadBohrkost(project); return }
+    const conflicts = getConflictingFields(project.deltat_input, project.bohrkost_input)
+    if (conflicts.length === 0) { onLoadBohrkost(project); return }
+    setSyncConflict({ direction: 'to-bohrkost', conflicts })
+  }
+
+  // Konflikt auflösen: Ziel-App-Werte behalten (kein Überschreiben)
+  function resolveKeep() {
+    if (!syncConflict) return
+    setSyncConflict(null)
+    if (syncConflict.direction === 'to-deltat') onLoad(project)
+    else onLoadBohrkost(project)
+  }
+
+  // Konflikt auflösen: Werte der anderen App übernehmen
+  function resolveOverwrite() {
+    if (!syncConflict || !project.deltat_input || !project.bohrkost_input) return
+    setSyncConflict(null)
+    if (syncConflict.direction === 'to-deltat') {
+      const b = project.bohrkost_input
+      const merged: DeltaTInputs = {
+        ...project.deltat_input,
+        tiefe: b.tiefe,
+        Q:     b.foerderrate,
+        tGW:   b.tGW,
+        tR:    b.tReinjektion,
+      }
+      onLoad({ ...project, deltat_input: merged })
+    } else {
+      const d = project.deltat_input
+      const merged: BohrkostInputs = {
+        ...project.bohrkost_input,
+        tiefe:        d.tiefe,
+        foerderrate:  d.Q,
+        tGW:          d.tGW,
+        tReinjektion: d.tR,
+      }
+      onLoadBohrkost({ ...project, bohrkost_input: merged })
+    }
   }
 
   return (
@@ -478,12 +556,48 @@ export function ProjectDetailDialog({
         </div>
 
         {/* ── Footer ── */}
+        {syncConflict ? (
+          /* Konflikt-Auflösung */
+          <div className="px-5 py-4 border-t bg-amber-50/60 dark:bg-amber-950/20 flex flex-col gap-3 shrink-0">
+            <div className="flex items-start gap-2">
+              <AlertTriangleIcon className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                {syncConflict.direction === 'to-deltat'
+                  ? 'Welche Werte in DeltaT laden?'
+                  : 'Welche Werte in Bohrkost laden?'}
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-1 text-[11px] pl-6">
+              <span className="text-muted-foreground/60 font-medium">Feld</span>
+              <span className="text-muted-foreground/60 font-medium">DeltaT</span>
+              <span className="text-muted-foreground/60 font-medium">Bohrkost</span>
+              {syncConflict.conflicts.map(c => (
+                <>
+                  <span key={`${c.label}-l`} className="text-muted-foreground">{c.label}</span>
+                  <span key={`${c.label}-d`} className={`font-mono font-medium ${syncConflict.direction === 'to-deltat' ? 'text-foreground' : 'text-muted-foreground/50 line-through'}`}>{c.deltaTValue}</span>
+                  <span key={`${c.label}-b`} className={`font-mono font-medium ${syncConflict.direction === 'to-bohrkost' ? 'text-foreground' : 'text-muted-foreground/50 line-through'}`}>{c.bohrkostValue}</span>
+                </>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 pl-6 flex-wrap">
+              <Button size="sm" variant="outline" onClick={() => { onOpenChange(false); resolveKeep() }}>
+                {syncConflict.direction === 'to-deltat' ? 'DeltaT-Werte behalten' : 'Bohrkost-Werte behalten'}
+              </Button>
+              <Button size="sm" onClick={() => { onOpenChange(false); resolveOverwrite() }}>
+                {syncConflict.direction === 'to-deltat' ? 'Bohrkost-Werte übernehmen' : 'DeltaT-Werte übernehmen'}
+              </Button>
+              <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSyncConflict(null)}>
+                Abbrechen
+              </Button>
+            </div>
+          </div>
+        ) : (
         <div className="px-6 py-3.5 border-t bg-muted/30 flex items-center gap-2 flex-wrap shrink-0">
           {/* Navigations-Aktionen */}
           {showDeltaT && (
             <Button
               size="sm"
-              onClick={() => { onOpenChange(false); onLoad(project) }}
+              onClick={() => { onOpenChange(false); handleClickLoadDeltaT() }}
               disabled={!project.deltat_input}
             >
               <ArrowRightIcon />
@@ -493,7 +607,7 @@ export function ProjectDetailDialog({
           <Button
             size="sm"
             variant={showDeltaT ? 'outline' : 'default'}
-            onClick={() => { onOpenChange(false); onLoadBohrkost(project) }}
+            onClick={() => { onOpenChange(false); handleClickLoadBohrkost() }}
           >
             <ArrowRightIcon />
             In Bohrkost laden
@@ -538,6 +652,7 @@ export function ProjectDetailDialog({
             )}
           </div>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   )
