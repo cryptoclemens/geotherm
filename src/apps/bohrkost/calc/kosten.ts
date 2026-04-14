@@ -16,6 +16,23 @@ export type Bohrungszweck = 'Dublette' | 'Einzelbohrung' | 'Explorationsbohrung'
 export type Produktionsdurchmesser = '7"' | '9 5/8"' | '13 3/8"'
 export type Region = 'NDB' | 'Molasse' | 'Oberrheingraben' | 'Sonstiges'
 
+/** Projektkosten außerhalb der Bohrbaustelle [EUR] */
+export interface OverheadInputs {
+  projektmanagement: number
+  hydrogeologie: number
+  bauueberwachung: number
+  rechtsberatung: number
+  oeffentlichkeitsarbeit: number
+}
+
+export const DEFAULT_OVERHEAD: OverheadInputs = {
+  projektmanagement:     80_000,  // ≈ 8 % von 1 Mio. EUR Investition; HOAI §§ 53–56
+  hydrogeologie:         50_000,  // DVGW W 115; Stober & Bucher (2012)
+  bauueberwachung:       35_000,  // HOAI Leistungsphase 8
+  rechtsberatung:        25_000,  // Branchenschätzung; GtV Tiefe Geothermie
+  oeffentlichkeitsarbeit: 0,      // Projektabhängig
+}
+
 export interface BohrkostInputs {
   /** Bohrtiefe [m], 100–3000 */
   tiefe: number
@@ -37,6 +54,10 @@ export interface BohrkostInputs {
   foerderungAktiv: boolean
   /** Fündigkeitsrisiko [%], 0–30 */
   fuendigkeitsRisiko: number
+  /** Overhead-Kostenstellen aktiv */
+  overheadAktiv: boolean
+  /** Projektkosten außerhalb Bohrbaustelle */
+  overhead: OverheadInputs
 }
 
 export interface BohrkostOutputs {
@@ -59,6 +80,10 @@ export interface BohrkostOutputs {
   kosten_pro_kw_netto_mid: number
   /** Bohrkosten einer Bohrung / Tiefe [EUR/m] */
   bohrkosten_pro_m: number
+  // Overhead
+  overhead_gesamt: number
+  projektkosten_inkl_overhead_mid: number
+  projektkosten_netto_inkl_overhead_mid: number
   // Ampeln
   ampel_kosten: 'green' | 'yellow' | 'red'
   ampel_risiko: 'green' | 'yellow' | 'red'
@@ -78,6 +103,8 @@ export const DEFAULT_INPUTS: BohrkostInputs = {
   tReinjektion: 15,
   foerderungAktiv: true,
   fuendigkeitsRisiko: 10,
+  overheadAktiv: false,
+  overhead: { ...DEFAULT_OVERHEAD },
 }
 
 // ── Korrekturfaktoren ────────────────────────────────────────────────────────
@@ -240,6 +267,15 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
   // Bohrkosten pro Meter [EUR/m] — eine Bohrung, Mittelpunkt
   const bohrkosten_pro_m = basisMid / inputs.tiefe
 
+  // Overhead — Projektkosten außerhalb Bohrbaustelle
+  const oh = inputs.overhead
+  const overhead_gesamt = inputs.overheadAktiv
+    ? oh.projektmanagement + oh.hydrogeologie + oh.bauueberwachung + oh.rechtsberatung + oh.oeffentlichkeitsarbeit
+    : 0
+  // Overhead wird nicht durch MAP/KfW gefördert → addiert sich auf Nettobasis
+  const projektkosten_inkl_overhead_mid       = projektkosten_mid + overhead_gesamt
+  const projektkosten_netto_inkl_overhead_mid = projektkosten_netto_mid + overhead_gesamt
+
   // Ampeln
   const ampel_kosten: BohrkostOutputs['ampel_kosten'] =
     kosten_pro_kw_mid <= 0     ? 'green'
@@ -272,6 +308,9 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     kosten_pro_kw_mid,
     kosten_pro_kw_netto_mid,
     bohrkosten_pro_m,
+    overhead_gesamt,
+    projektkosten_inkl_overhead_mid,
+    projektkosten_netto_inkl_overhead_mid,
     ampel_kosten,
     ampel_risiko,
     ampel_tiefe,

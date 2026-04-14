@@ -146,6 +146,32 @@ export function ResultColumn({ inputs, outputs: r }: ResultColumnProps) {
             />
           </>
         )}
+        {r.overhead_gesamt > 0 && (
+          <>
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <span className="text-xs text-amber-700 dark:text-amber-300">Overhead (Projektkosten außerhalb Baustelle)</span>
+              <span className="text-xs font-mono font-semibold text-amber-700 dark:text-amber-300">
+                + {fmtEur(r.overhead_gesamt)}
+              </span>
+            </div>
+            <div className={`rounded-lg border p-3 flex flex-col gap-1.5 border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20`}>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                Gesamtinvestition inkl. Overhead
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-bold font-mono text-foreground tabular-nums">
+                  {fmtEur(r.projektkosten_inkl_overhead_mid)}
+                </span>
+                <span className="text-xs text-muted-foreground">(Mittelpunkt)</span>
+              </div>
+              {r.foerderung_betrag > 0 && (
+                <div className="text-[11px] text-green-600 dark:text-green-400">
+                  Nach Förderung: {fmtEur(r.projektkosten_netto_inkl_overhead_mid)}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── Spezifische Kennzahlen ────────────────────────────────────────── */}
