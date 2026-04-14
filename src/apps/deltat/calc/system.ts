@@ -106,6 +106,10 @@ export interface DeltaTOutputs {
   sMaterial: TrafficLight
   /** WP aktiv? */
   wpAktiv: boolean
+  /** Mindest-Förderrate für Zielleistung mit 1 Dublette bei aktuellem ΔT [l/s] — null wenn ΔT ≤ 0 */
+  qMinFoerderrate: number | null
+  /** Tiefe für Direktnutzung ohne WP: T_GW ≥ T_VL [m] */
+  tiefeMinDirekt: number
 }
 
 /**
@@ -119,6 +123,21 @@ export interface DeltaTOutputs {
  */
 export function calcDefaultFoerderhoehe(tiefe: number): number {
   return Math.min(300, Math.max(25, Math.round(0.5 * tiefe + 15)))
+}
+
+/**
+ * Tiefenabhängige Grundwassertemperatur nach geothermischem Gradienten.
+ * T_GW = T_Oberfläche + Gradient × Tiefe
+ *
+ * Quellen: VDI 4640 Bl. 1 (2010), Abschn. 4.2; BGR/LIAG Untergrundtemperaturkarte
+ *   Deutschland-Mittel: 0,028–0,033 K/m → Default 0,03 K/m
+ *   Oberflächentemperatur (neutrale Zone ~15 m): 10 °C (Jahresmittel)
+ */
+export const GEOTHERM_GRADIENT = 0.03  // K/m, VDI 4640 Bl. 1
+export const SURFACE_TEMP      = 10    // °C, Jahresmittel neutrale Zone
+
+export function calcDefaultTGW(tiefe: number): number {
+  return Math.round((SURFACE_TEMP + GEOTHERM_GRADIENT * tiefe) * 2) / 2
 }
 
 export const DEFAULT_INPUTS: DeltaTInputs = {
@@ -250,6 +269,15 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // Jahreswärmemenge [MWh/a] — gesamte ans Netz gelieferte Wärme (inkl. WP-Beitrag)
   const jahreswaerme = qDelivered * (laufstunden || 2000) / 1000
 
+  // Optimierungshinweise — kein Auto-Adjust, nur informativ
+  // Mindest-Q für Zielleistung mit 1 Dublette: Q = P_geo / (ΔT × c_p)
+  const qMinFoerderrate = deltaT > 0
+    ? Math.ceil(qGeoBenoetigt / (deltaT * 4.18))
+    : null
+  // Tiefe für Direktnutzung (ohne WP, T_GW ≥ T_VL): z = (T_VL − T_0) / Gradient
+  // VDI 4640 Bl. 1, Abschn. 4.2
+  const tiefeMinDirekt = Math.round((tVL - SURFACE_TEMP) / GEOTHERM_GRADIENT)
+
   return {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,
     anzahlDoubletten, gesamtFoerderrate, tauchpumpenLeistung,
@@ -262,5 +290,6 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     jahreswaerme, tHub,
     sHydraulik, sThermik, sDurchbruch, sCOP, sMaterial,
     wpAktiv,
+    qMinFoerderrate, tiefeMinDirekt,
   }
 }
