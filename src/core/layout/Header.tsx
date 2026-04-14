@@ -23,9 +23,6 @@ export function Header() {
       </a>
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         <div className="flex items-baseline gap-2">
-          <Link href="/" className="font-semibold text-lg tracking-tight">
-            Geotherm
-          </Link>
           <a
             href="https://www.vencly.com"
             target="_blank"
@@ -40,6 +37,9 @@ export function Header() {
               className="h-4 w-auto"
             />
           </a>
+          <Link href="/" className="font-semibold text-lg tracking-tight">
+            Geotherm
+          </Link>
           <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
             {buildLabel}
           </span>
