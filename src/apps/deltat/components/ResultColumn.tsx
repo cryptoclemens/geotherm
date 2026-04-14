@@ -27,7 +27,7 @@ export function ResultColumn() {
   const inputs = useDeltaTStore(s => s.inputs)
   const [detailsOpen, setDetailsOpen] = useState(false)
 
-  const _anzahl = r.anzahlDoubletten ?? 0
+  const _anzahl = r.anzahlDubletten ?? 0
   const gesamtBohrtiefe = _anzahl * inputs.tiefe * 2
   const pumpEigenverbrauch = _anzahl * r.tauchpumpenLeistung * 2
 
@@ -72,12 +72,12 @@ export function ResultColumn() {
             info={'Jährliche Wärmemenge:\nE = P_ges × Laufstunden / 1.000 [MWh/a]\nBasis: geothermische Nettoleistung aller Doubletten'} />
           <KpiTile
             label="Doubletten"
-            value={r.anzahlDoubletten === null ? '–' : r.anzahlDoubletten}
-            unit={r.anzahlDoubletten === null ? '' : 'Stk.'}
-            color={r.anzahlDoubletten === null ? 'red' : r.anzahlDoubletten > 20 ? 'yellow' : 'navy'}
-            sub={r.anzahlDoubletten === null
+            value={r.anzahlDubletten == null ? '–' : r.anzahlDubletten}
+            unit={r.anzahlDubletten == null ? '' : 'Stk.'}
+            color={r.anzahlDubletten == null ? 'red' : r.anzahlDubletten > 20 ? 'yellow' : 'navy'}
+            sub={r.anzahlDubletten == null
               ? 'T_R ≥ T_GW — kein Wärmeentzug möglich'
-              : r.anzahlDoubletten > 20
+              : r.anzahlDubletten > 20
                 ? '> 20 Dobl. nicht wirtschaftlich'
                 : undefined}
             info={'Anzahl benötigter Förder-/Injektionsbohrpaare:\nn = ⌈P_Ziel / P_Doublette⌉\nAufrunden, da Teildoubletten nicht sinnvoll\nnull = ΔT ≤ 0 (unphysikalisch)'}

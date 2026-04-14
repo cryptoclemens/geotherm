@@ -120,6 +120,8 @@ export const DEFAULT_INPUTS: BohrkostInputs = {
 
 const GESTEINS_FAKTOR: Record<Gesteinstyp, number> = {
   // Abgeleitet aus ROP-Verhältnissen; Baujard et al. (2017), Stanford SGW
+  // Kristallin 1.30 am unteren Rand der Literatur (real 1.5–2.5 möglich je nach Mineralogie);
+  // AACE Class 5 ±35–50 % deckt erhöhte Unsicherheit ab.
   'Lockergestein':          0.70,
   'Festgestein_sed':        1.00,
   'Festgestein_kristallin': 1.30,
@@ -163,29 +165,39 @@ const LINEAR_MOBILISIERUNG: Record<Gesteinstyp, number> = {
 function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const { tiefe, gesteinstyp, durchmesser, region } = inp
 
+  // Korrekturfaktoren (für beide Formeln benötigt)
+  // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
+  //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
+  //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
+  //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
+  //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
+  const f_waehrung     = 1.34
+  const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
+  const f_region       = REGION_FAKTOR[region]
+  const f_durchmesser  = DURCHMESSER_FAKTOR[durchmesser]
+  const f_markt        = 1.40  // Deutscher Marktaufschlag; GtV / LIAG Broschüre Tiefe Geothermie
+  const f_gesamt       = f_waehrung * f_gestein * f_region * f_durchmesser * f_markt
+
+  // Lukawski-Formel: C(d) = (1.72e-7 × d² + 2.3e-3 × d − 0.62) × 10⁶ [USD 2009]
+  // Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
+  const c_usd_2009 = (1.72e-7 * tiefe * tiefe + 2.3e-3 * tiefe - 0.62) * 1e6
+  const lukawski = c_usd_2009 * f_gesamt
+
+  // Linearer Fallback — GtV Bohrpreise (2024); DVGW W 115
+  const linear = LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+
   let basiskosten: number
-
-  if (tiefe < 500) {
-    // Linearer Fallback — GtV Bohrpreise (2024); DVGW W 115
-    basiskosten = LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+  if (tiefe <= 400) {
+    // Unterhalb 400 m: lineares Modell (Lukawski nicht valide für flache Bohrungen)
+    basiskosten = linear
+  } else if (tiefe < 600) {
+    // Übergangsbereich 400–600 m: linearer Blend — vermeidet Unstetigkeit bei 500 m
+    // (Scientist-Review 2026-04-14: harter Sprung ~140 % ohne Blend)
+    const blend = (tiefe - 400) / 200
+    basiskosten = linear * (1 - blend) + lukawski * blend
   } else {
-    // Lukawski-Formel: C(d) = (1.72e-7 × d² + 2.3e-3 × d − 0.62) × 10⁶ [USD 2009]
-    // Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
-    const c_usd_2009 = (1.72e-7 * tiefe * tiefe + 2.3e-3 * tiefe - 0.62) * 1e6
-
-    // Korrekturfaktoren
-    // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
-    //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
-    //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
-    //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
-    //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
-    const f_waehrung     = 1.34
-    const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
-    const f_region       = REGION_FAKTOR[region]
-    const f_durchmesser  = DURCHMESSER_FAKTOR[durchmesser]
-    const f_markt        = 1.40  // Deutscher Marktaufschlag; GtV / LIAG Broschüre Tiefe Geothermie
-
-    basiskosten = c_usd_2009 * f_waehrung * f_gestein * f_region * f_durchmesser * f_markt
+    // ≥ 600 m: Lukawski-Formel
+    basiskosten = lukawski
   }
 
   // Explorationsbohrung: +15 % Aufschlag (höhere Unsicherheit)

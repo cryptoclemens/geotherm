@@ -45,15 +45,15 @@ describe('Wärmeleistung Q_th', () => {
   })
   it('Anzahl Dubletten ≥ 1', () => {
     const r = calculateSystem(inp({ Q: 50, tGW: 30, tR: 5, zielLeistung: 100 }))
-    expect(r.anzahlDoubletten).toBeGreaterThanOrEqual(1)
+    expect(r.anzahlDubletten).toBeGreaterThanOrEqual(1)
   })
-  it('anzahlDoubletten = null wenn deltaT ≤ 0 (unphysikalisch)', () => {
+  it('anzahlDubletten = null wenn deltaT ≤ 0 (unphysikalisch)', () => {
     const r = calculateSystem(inp({ tGW: 10, tR: 10 }))
-    expect(r.anzahlDoubletten).toBeNull()
+    expect(r.anzahlDubletten).toBeNull()
   })
-  it('anzahlDoubletten = null wenn tR > tGW', () => {
+  it('anzahlDubletten = null wenn tR > tGW', () => {
     const r = calculateSystem(inp({ tGW: 11.5, tR: 12 }))
-    expect(r.anzahlDoubletten).toBeNull()
+    expect(r.anzahlDubletten).toBeNull()
   })
 })
 
@@ -274,7 +274,7 @@ describe('Default-Inputs Smoke-Test', () => {
   it('liefert alle Output-Felder', () => {
     const r = calculateSystem(DEFAULT_INPUTS)
     expect(r.transmissiv).toBeTypeOf('number')
-    expect(r.anzahlDoubletten).toBeGreaterThanOrEqual(1)
+    expect(r.anzahlDubletten).toBeGreaterThanOrEqual(1)
     expect(r.cop).toBeTypeOf('number')
     expect(r.sHydraulik).toMatch(/green|yellow|red/)
     expect(r.sThermik).toMatch(/green|yellow|red/)

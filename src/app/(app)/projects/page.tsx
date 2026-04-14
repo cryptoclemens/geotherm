@@ -221,7 +221,7 @@ function ProjectCard({ project, onClick }: ProjectCardProps) {
                 <span className="text-muted-foreground">DeltaT:</span>
                 <span className="font-medium text-foreground">
                   {project.deltat_result.qDelivered.toFixed(0)} kW
-                  {project.deltat_result.anzahlDoubletten != null && ` · ${project.deltat_result.anzahlDoubletten}× Dublette`}
+                  {project.deltat_result.anzahlDubletten != null && ` · ${project.deltat_result.anzahlDubletten}× Dublette`}
                 </span>
               </div>
             ) : (
@@ -360,7 +360,7 @@ export default function ProjectsPage() {
       : project.project_type === 'Explorationsbohrung' ? 'Explorationsbohrung'
       : 'Dublette'
     // Wenn bohrkost_input bereits gespeichert: direkt laden
-    const deltaTAnzahl = project.deltat_result?.anzahlDoubletten ?? null
+    const deltaTAnzahl = project.deltat_result?.anzahlDubletten ?? null
     const partial: Partial<BohrkostInputs> = project.bohrkost_input
       ? project.bohrkost_input
       : {

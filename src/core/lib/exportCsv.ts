@@ -21,7 +21,7 @@ const INPUT_LABELS: Record<string, string> = {
 }
 
 const RESULT_LABELS: Record<string, string> = {
-  anzahlDoubletten: 'Anzahl Dubletten',
+  anzahlDubletten: 'Anzahl Dubletten',
   qDelivered: 'Gelieferte Wärmeleistung [kW]',
   qThGesamt: 'Geothermische Leistung [kW]',
   cop: 'COP',

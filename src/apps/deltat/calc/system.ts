@@ -41,6 +41,15 @@ export interface DeltaTInputs {
   laufstunden: number
   /** Förderhöhe Tauchpumpe [m] — dynamischer Spiegel + Rohrreibung; typ. 100–250 m — Stober & Bucher (2012) Kap. 7.4 */
   foerderhoehe: number
+  /** Effektive Porosität Aquifer [-], 0.01–0.40
+   *  Bestimmt Durchbruchszeit (Gringarten & Sauty 1975, Water Resources Research).
+   *  Sandstein: 0,20–0,35 | Kalkstein: 0,05–0,20 | Kluftgestein: 0,01–0,10
+   *  Default 0,25 (mittl. Sandstein) — konservativ für sedimentäre Aquifere. */
+  porositaet: number
+  /** Gütegrad Wärmepumpe [-] = COP_real / COP_Carnot, 0.30–0.65
+   *  Standard-WP: 0,45–0,55 | Hochtemperatur-WP: 0,35–0,45
+   *  (IEA HPP Annex 35, Arpagaus et al. 2018, Energy 152) */
+  guetegradWP: number
 }
 
 export type TrafficLight = 'green' | 'yellow' | 'red'
@@ -59,7 +68,7 @@ export interface DeltaTOutputs {
   /** Benötigte geothermische Leistung [kW] */
   qGeoBenoetigt: number
   /** Anzahl Dubletten — null wenn ΔT ≤ 0 (unphysikalisch) */
-  anzahlDoubletten: number | null
+  anzahlDubletten: number | null
   /** Gesamtförderrate [l/s] */
   gesamtFoerderrate: number
   /** Tauchpumpenleistung pro Bohrung [kW] */
@@ -154,10 +163,12 @@ export const DEFAULT_INPUTS: DeltaTInputs = {
   tRL: 55,
   laufstunden: 2000,
   foerderhoehe: calcDefaultFoerderhoehe(500), // 265 m für Standardtiefe 500 m
+  porositaet:   0.25,  // mittlerer Sandstein-Aquifer (Gringarten & Sauty 1975)
+  guetegradWP:  0.50,  // Standard-WP-Gütegrad (Arpagaus et al. 2018)
 }
 
 export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
-  const { tiefe, maechtig, kf, tGW, tds, Q, tR, abstand, zielLeistung, tVL, tRL, laufstunden, foerderhoehe } = inp
+  const { tiefe, maechtig, kf, tGW, tds, Q, tR, abstand, zielLeistung, tVL, tRL, laufstunden, foerderhoehe, porositaet, guetegradWP } = inp
 
   const transmissiv = kf * maechtig
   const deltaT = tGW - tR
@@ -165,26 +176,27 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // Wenn ΔT ≤ 0 → kein Wärmeentzug möglich (Reinjektion ≥ Grundwassertemp.) — VDI 4640 Bl. 2, Abschn. 5.4
   const qThPerDoublet = deltaT > 0 ? Q * deltaT * 4.18 : 0
 
-  // Vorab-COP für WP-Beitragsrechnung — T_R (Reinjektionstemperatur) als Quellen-Temp
-  // Arpagaus et al. 2018, Energy 152, Gl. 7
-  const _tVL_K = tVL + 273.15
-  const _tR_K = tR + 273.15
-  const _tDiff = _tVL_K - _tR_K
-  const _copEst = _tDiff > 0.5 ? (_tVL_K / _tDiff) * 0.5 : 99
+  // COP real — einmalig berechnen (kein _copEst-Duplikat)
+  // COP_real = (T_VL_K / (T_VL_K − T_R_K)) × guetegradWP
+  // T_R = Verdampfer-Austrittstemperatur (Quellen-Seite) — Arpagaus et al. 2018, Energy 152, Gl. 7
+  const tVL_K = tVL + 273.15
+  const tR_K = tR + 273.15
+  const tDiff_K = tVL_K - tR_K
+  const cop = tDiff_K > 0.5 ? (tVL_K / tDiff_K) * guetegradWP : 99
 
   const wpAktiv = tVL > tGW
-  const qGeoBenoetigt = wpAktiv && _copEst < 90
-    ? zielLeistung * (_copEst - 1) / _copEst  // WP addiert W_el → weniger Q_geo nötig
+  const qGeoBenoetigt = wpAktiv && cop < 90
+    ? zielLeistung * (cop - 1) / cop  // WP addiert W_el → weniger Q_geo nötig
     : zielLeistung
 
   // null wenn ΔT ≤ 0 (unphysikalisch für Wärmeentzug) — kein Sentinel-999 mehr
-  const anzahlDoubletten: number | null = deltaT > 0 && qThPerDoublet > 0
+  const anzahlDubletten: number | null = deltaT > 0 && qThPerDoublet > 0
     ? Math.max(1, Math.ceil(qGeoBenoetigt / qThPerDoublet))
     : null
-  const _anzahl = anzahlDoubletten ?? 0
+  const _anzahl = anzahlDubletten ?? 0
   const qThGesamt = _anzahl * qThPerDoublet
-  const qDelivered = wpAktiv && _copEst < 90
-    ? qThGesamt * _copEst / (_copEst - 1)
+  const qDelivered = wpAktiv && cop < 90
+    ? qThGesamt * cop / (cop - 1)
     : qThGesamt
 
   const gesamtFoerderrate = _anzahl * Q
@@ -194,21 +206,14 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
 
   // Durchbruchszeit [Jahre] — Gringarten & Sauty 1975, Water Resources Research
   // t = (π·n·b·D²) / (3·Q) × (ρc_Aquifer / ρc_Wasser) / (365·24·3600)
-  const n = 0.25
-  const hcRatio = 0.7  // ρc_Aquifer/ρc_Wasser = 2.3e6/4.18e6 ≈ 0.55 (Sandstein); Default 0.7 (konservativ)
+  const n = porositaet  // Eingabeparameter — Default 0.25 (Sandstein)
+  const hcRatio = 0.7   // ρc_Aquifer/ρc_Wasser = 2.3e6/4.18e6 ≈ 0.55 (Sandstein); Default 0.7 (konservativ)
   const tBreak = (Math.PI * n * maechtig * abstand * abstand) / (3 * (Q / 1000)) * hcRatio / (365 * 24 * 3600)
 
   const spezLeistung = tiefe > 0 ? (qThPerDoublet * 1000) / tiefe : 0
 
   // Optimaler Abstand für t_break = 25 Jahre
-  const abstandOpt = Math.sqrt((3 * (Q / 1000) * 25 * 365 * 86400) / (Math.PI * 0.25 * maechtig * hcRatio))
-
-  // COP real = COP_Carnot × 0.5, Quellen-Temp = T_R (Reinjektionstemperatur)
-  // Arpagaus et al. 2018, Energy 152, Gl. 7 — T_R ist Verdampfer-Austrittstemperatur
-  const tVL_K = tVL + 273.15
-  const tR_K = tR + 273.15
-  const tDiff_K = tVL_K - tR_K
-  const cop = tDiff_K > 0.5 ? (tVL_K / tDiff_K) * 0.5 : 99
+  const abstandOpt = Math.sqrt((3 * (Q / 1000) * 25 * 365 * 86400) / (Math.PI * porositaet * maechtig * hcRatio))
 
   // W_el = Q_geo / (COP − 1) — nur wenn WP aktiv
   const elLeistungWP = wpAktiv && cop < 90 ? qThGesamt / (cop - 1) : 0
@@ -280,7 +285,7 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
 
   return {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,
-    anzahlDoubletten, gesamtFoerderrate, tauchpumpenLeistung,
+    anzahlDubletten, gesamtFoerderrate, tauchpumpenLeistung,
     tBreak, spezLeistung, abstandOpt,
     cop, elLeistungWP,
     lmtd, lmtdValid, wtFlaeche,
