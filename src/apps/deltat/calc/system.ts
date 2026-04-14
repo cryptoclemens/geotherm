@@ -147,6 +147,9 @@ export function calcDefaultFoerderhoehe(tiefe: number): number {
  */
 export const GEOTHERM_GRADIENT = 0.03  // K/m, VDI 4640 Bl. 1
 export const SURFACE_TEMP      = 10    // °C, Jahresmittel neutrale Zone
+/** ρc_Aquifer / ρc_Wasser — Sandstein gesättigt ≈ 0,55; konservativ für Durchbruchszeit
+ *  Quellen: VDI 4640 Bl. 1 Tab. B1; Clauser 2011 Handbook of Geomathematics */
+export const HC_RATIO = 0.55
 
 export function calcDefaultTGW(tiefe: number): number {
   return Math.round((SURFACE_TEMP + GEOTHERM_GRADIENT * tiefe) * 2) / 2
@@ -210,7 +213,12 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // Durchbruchszeit [Jahre] — Gringarten & Sauty 1975, Water Resources Research
   // t = (π·n·b·D²) / (3·Q) × (ρc_Aquifer / ρc_Wasser) / (365·24·3600)
   const n = porositaet  // Eingabeparameter — Default 0.25 (Sandstein)
-  const hcRatio = 0.7   // ρc_Aquifer/ρc_Wasser = 2.3e6/4.18e6 ≈ 0.55 (Sandstein); Default 0.7 (konservativ)
+  // HC_RATIO = ρc_Aquifer / ρc_Wasser — Wärmekapazitätsverhältnis für Durchbruchszeit
+  // Sandstein gesättigt: ρc ≈ 2,3 MJ/(m³K) → Ratio = 2,3/4,18 ≈ 0,55
+  // Karbonat: ρc ≈ 2,5 → 0,60 | Kristallin: ρc ≈ 2,2 → 0,53
+  // 0,55 ist KONSERVATIV (kürzere Durchbruchszeit = sicherer); 0,7 wäre ANTI-KONSERVATIV
+  // Quellen: VDI 4640 Bl. 1 Tab. B1; Clauser 2011 Handbook of Geomathematics
+  const hcRatio = HC_RATIO
   const tBreak = (Math.PI * n * maechtig * abstand * abstand) / (3 * (Q / 1000)) * hcRatio / (365 * 24 * 3600)
 
   const spezLeistung = tiefe > 0 ? (qThPerDoublet * 1000) / tiefe : 0

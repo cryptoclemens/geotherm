@@ -14,7 +14,7 @@
  *   - Stober & Bucher (2012) Kap. 7.4 — Tauchpumpen Eigenverbrauch
  */
 
-import { calculateSystem } from './system'
+import { calculateSystem, HC_RATIO } from './system'
 import type { DeltaTInputs } from './system'
 
 export type OptimizeMode = 'MIN_DOUBLETTEN' | 'MAX_SPF'
@@ -47,7 +47,7 @@ export type OptimizeResult =
 /** Physikalische Konstanten für Optimierung */
 const R_EINFLUSS  = 500  // m — Einflussradius Brunnen (DVGW W 115)
 const R_BRUNNEN   = 0.15 // m — Brunnenradius
-const HC_RATIO    = 0.7  // ρc_Aquifer/ρc_Wasser — konservativ (Sandstein 0,55; default 0,70)
+// HC_RATIO: importiert aus system.ts (0.55 für Sandstein, VDI 4640 Bl. 1)
 const T_BREAK_ZIEL = 25  // Jahre — Auslegungslebensdauer (VDI 4640 Bl. 2)
 const ABSTAND_MIN  = 300 // m — technisches Minimum (getrennte Bohrplätze)
 /** Mindest-Reinjektionstemperatur [°C] — Frostschutz + Ökologie, VDI 4640 Bl. 2 Abschn. 5.4
@@ -80,7 +80,8 @@ function calcAbstandOpt(Q_ls: number, porositaet: number, maechtig: number, tBre
  *
  * Algorithmus (analytisch, O(1)):
  *   1. Q_max aus Thiem-Formel (DVGW W 115)
- *   2. tR_opt = max(2 °C, tRL − WT_PINCH_K) — Pinch-Point Wärmetauscher
+ *   2. tR_opt = TR_MIN (2 °C) — Frostschutz/Ökologie (VDI 4640 Bl. 2 Abschn. 5.4)
+ *      Im WP-Betrieb (tVL > tGW) überbrückt die WP den Temperaturhub — tRL irrelevant
  *   3. Q = min(100, Q_max)
  *   4. n_opt = ceil(Q_geo / q_Dublett(Q, ΔT))
  *   5. Q' = min Q für exakt n_opt Doubletten (kein Reserve-Overhead)
