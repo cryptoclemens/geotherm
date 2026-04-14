@@ -168,7 +168,7 @@ export default function BohrkostApp() {
       {tab === 'berechnung' && (
         <div className="flex flex-1 overflow-hidden gap-3 p-3">
           {/* Spalte 1: Eingabeparameter */}
-          <div className="w-64 shrink-0 overflow-y-auto">
+          <div className="w-80 shrink-0 overflow-y-auto">
             <InputColumn inputs={inputs} onChange={handleChange} onReset={handleReset} />
           </div>
 
