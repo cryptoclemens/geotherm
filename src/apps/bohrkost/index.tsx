@@ -8,7 +8,7 @@ import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
 import { BohrkostFormelTab } from './components/BohrkostFormelTab'
 import { useBohrkostStore } from './store/useBohrkostStore'
-import { updateProject } from '@/core/api/projects'
+import { useProjectStore } from '@/core/store/useProjectStore'
 import type { BohrkostInputs } from './calc/kosten'
 
 type TabId = 'berechnung' | 'formeln'
@@ -99,6 +99,8 @@ export default function BohrkostApp() {
   const reset = useBohrkostStore(s => s.reset)
   const currentProjectId   = useBohrkostStore(s => s.currentProjectId)
   const currentProjectName = useBohrkostStore(s => s.currentProjectName)
+  const storeProjects      = useProjectStore(s => s.projects)
+  const storeUpdateProject = useProjectStore(s => s.updateProject)
 
   function handleChange<K extends keyof BohrkostInputs>(key: K, value: BohrkostInputs[K]) {
     setInput(key, value)
@@ -112,9 +114,17 @@ export default function BohrkostApp() {
     if (!currentProjectId) return
     setSaveState('saving')
     try {
-      await updateProject(currentProjectId, {
+      // Überlappende Felder in deltat_input synchronisieren (nur wenn DeltaT-Daten vorhanden)
+      const currentProject = storeProjects.find(p => p.id === currentProjectId)
+      const existingDeltaT = currentProject?.deltat_input ?? null
+      const mergedDeltaT = existingDeltaT != null
+        ? { ...existingDeltaT, tiefe: inputs.tiefe, Q: inputs.foerderrate, tGW: inputs.tGW, tR: inputs.tReinjektion }
+        : null
+
+      await storeUpdateProject(currentProjectId, {
         bohrkost_input: inputs,
         bohrkost_result: outputs,
+        ...(mergedDeltaT != null && { deltat_input: mergedDeltaT }),
       })
       setSaveState('saved')
       setTimeout(() => setSaveState('idle'), 2500)
