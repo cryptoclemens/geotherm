@@ -246,12 +246,17 @@ export function ProjectDetailDialog({
       onLoad({ ...project, deltat_input: merged })
     } else {
       const d = project.deltat_input
+      const deltaTAnzahl = project.deltat_result?.anzahlDubletten ?? null
       const merged: BohrkostInputs = {
         ...project.bohrkost_input,
         tiefe:        d.tiefe,
         foerderrate:  d.Q,
         tGW:          d.tGW,
         tReinjektion: d.tR,
+        // Dubletten-Anzahl aus DeltaT-Ergebnis synchronisieren (max. 8)
+        ...(deltaTAnzahl != null && {
+          anzahlDubletten: Math.min(8, Math.max(1, deltaTAnzahl)),
+        }),
       }
       onLoadBohrkost({ ...project, bohrkost_input: merged })
     }
@@ -455,7 +460,7 @@ export function ProjectDetailDialog({
                     <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-xs">
                       {(([
                         { label: 'Gelieferte Wärme', value: `${fmt(project.deltat_result.qDelivered, 0)} kW`, strong: true },
-                        { label: 'Anzahl Dubletten', value: `${project.deltat_result.anzahlDoubletten}×` },
+                        { label: 'Anzahl Dubletten', value: `${project.deltat_result.anzahlDubletten ?? '–'}×` },
                         { label: 'COP', value: fmt(project.deltat_result.cop, 2) },
                         { label: 'Jahreswärmemenge', value: `${fmt(project.deltat_result.jahreswaerme, 0)} MWh/a` },
                         { label: 'Durchbruchszeit', value: `${fmt(project.deltat_result.tBreak, 1)} Jahre` },
@@ -554,6 +559,14 @@ export function ProjectDetailDialog({
               </div>
             )}
 
+            {(() => {
+              const n = project.deltat_result?.anzahlDubletten ?? null
+              return n != null && n > 8 ? (
+                <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                  DeltaT empfiehlt <strong>{n} Dubletten</strong> — Bohrkostrechner begrenzt auf max. 8. Bitte nach dem Laden manuell anpassen.
+                </p>
+              ) : null
+            })()}
             {!project.bohrkost_result && (
               <Button
                 size="sm"

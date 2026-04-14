@@ -43,6 +43,11 @@ export interface BohrkostInputs {
   gesteinstyp: Gesteinstyp
   /** Bohrungszweck */
   zweck: Bohrungszweck
+  /** Anzahl Dubletten [1–8] — aus DeltaT-Ergebnis vorbelegt, manuell überschreibbar.
+   *  Nur relevant wenn zweck === 'Dublette'.
+   *  Conservative: kein Skalenrabatt (liegt in ±35–50 %-AACE-Class-5-Bandbreite).
+   *  Quelle: GtV Bohrpreise 2024 (Pad-Drilling-Rabatt 5–15 % ab 2. Bohrung). */
+  anzahlDubletten: number
   /** Produktionsdurchmesser */
   durchmesser: Produktionsdurchmesser
   /** Region */
@@ -99,6 +104,7 @@ export const DEFAULT_INPUTS: BohrkostInputs = {
   tiefe: 700,
   gesteinstyp: 'Festgestein_sed',
   zweck: 'Dublette',
+  anzahlDubletten: 1,
   durchmesser: '9 5/8"',
   region: 'NDB',
   foerderrate: 15,
@@ -114,6 +120,8 @@ export const DEFAULT_INPUTS: BohrkostInputs = {
 
 const GESTEINS_FAKTOR: Record<Gesteinstyp, number> = {
   // Abgeleitet aus ROP-Verhältnissen; Baujard et al. (2017), Stanford SGW
+  // Kristallin 1.30 am unteren Rand der Literatur (real 1.5–2.5 möglich je nach Mineralogie);
+  // AACE Class 5 ±35–50 % deckt erhöhte Unsicherheit ab.
   'Lockergestein':          0.70,
   'Festgestein_sed':        1.00,
   'Festgestein_kristallin': 1.30,
@@ -157,29 +165,39 @@ const LINEAR_MOBILISIERUNG: Record<Gesteinstyp, number> = {
 function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const { tiefe, gesteinstyp, durchmesser, region } = inp
 
+  // Korrekturfaktoren (für beide Formeln benötigt)
+  // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
+  //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
+  //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
+  //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
+  //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
+  const f_waehrung     = 1.34
+  const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
+  const f_region       = REGION_FAKTOR[region]
+  const f_durchmesser  = DURCHMESSER_FAKTOR[durchmesser]
+  const f_markt        = 1.40  // Deutscher Marktaufschlag; GtV / LIAG Broschüre Tiefe Geothermie
+  const f_gesamt       = f_waehrung * f_gestein * f_region * f_durchmesser * f_markt
+
+  // Lukawski-Formel: C(d) = (1.72e-7 × d² + 2.3e-3 × d − 0.62) × 10⁶ [USD 2009]
+  // Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
+  const c_usd_2009 = (1.72e-7 * tiefe * tiefe + 2.3e-3 * tiefe - 0.62) * 1e6
+  const lukawski = c_usd_2009 * f_gesamt
+
+  // Linearer Fallback — GtV Bohrpreise (2024); DVGW W 115
+  const linear = LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+
   let basiskosten: number
-
-  if (tiefe < 500) {
-    // Linearer Fallback — GtV Bohrpreise (2024); DVGW W 115
-    basiskosten = LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+  if (tiefe <= 400) {
+    // Unterhalb 400 m: lineares Modell (Lukawski nicht valide für flache Bohrungen)
+    basiskosten = linear
+  } else if (tiefe < 600) {
+    // Übergangsbereich 400–600 m: linearer Blend — vermeidet Unstetigkeit bei 500 m
+    // (Scientist-Review 2026-04-14: harter Sprung ~140 % ohne Blend)
+    const blend = (tiefe - 400) / 200
+    basiskosten = linear * (1 - blend) + lukawski * blend
   } else {
-    // Lukawski-Formel: C(d) = (1.72e-7 × d² + 2.3e-3 × d − 0.62) × 10⁶ [USD 2009]
-    // Lukawski et al. (2014), J. Pet. Sci. Eng. 118, 1–14
-    const c_usd_2009 = (1.72e-7 * tiefe * tiefe + 2.3e-3 * tiefe - 0.62) * 1e6
-
-    // Korrekturfaktoren
-    // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
-    //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
-    //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
-    //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
-    //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
-    const f_waehrung     = 1.34
-    const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
-    const f_region       = REGION_FAKTOR[region]
-    const f_durchmesser  = DURCHMESSER_FAKTOR[durchmesser]
-    const f_markt        = 1.40  // Deutscher Marktaufschlag; GtV / LIAG Broschüre Tiefe Geothermie
-
-    basiskosten = c_usd_2009 * f_waehrung * f_gestein * f_region * f_durchmesser * f_markt
+    // ≥ 600 m: Lukawski-Formel
+    basiskosten = lukawski
   }
 
   // Explorationsbohrung: +15 % Aufschlag (höhere Unsicherheit)
@@ -191,25 +209,33 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
 }
 
 /**
- * Komplettierungskosten (pauschal) — DVGW W 115; Stober & Bucher (2012) Kap. 7; Branchenschätzung
+ * Komplettierungskosten — DVGW W 115; Stober & Bucher (2012) Kap. 7; Branchenschätzung
+ *
+ * Skalierungslogik bei n Dubletten (Scientist-Review 2026-04-14):
+ *   Pumpe/Steigleitung: linear per Bohrung (× n × 2)
+ *   Pumptest:           linear per Dublette (× n)
+ *   Genehmigung:        einmalig pro Projekt, dann +5k EUR je weitere Dublette (BBergG/WHG)
+ *   Gutachten:          weitgehend fix, moderate Steigerung (Stober & Bucher 2012, Kap. 6.2)
+ *   Versicherung:       % von Bohrkosten → skaliert automatisch
  */
 function berechneKomplettierung(inputs: BohrkostInputs, bohrkostenMid: number): number {
-  const { tiefe, zweck, fuendigkeitsRisiko } = inputs
+  const { tiefe, zweck, fuendigkeitsRisiko, anzahlDubletten } = inputs
   const isDublette = zweck === 'Dublette'
+  const n = isDublette ? Math.max(1, anzahlDubletten) : 1
 
-  // Pumpe + Steigleitung: tiefe × 60 EUR/m (Dublette: ×2)
-  const pumpe = tiefe * 60 * (isDublette ? 2 : 1)
+  // Pumpe + Steigleitung: tiefe × 60 EUR/m × Anzahl Bohrungen
+  const pumpe = tiefe * 60 * (isDublette ? n * 2 : 1)
 
-  // Pumptest
-  const pumptest = isDublette ? 80_000 : 60_000
+  // Pumptest: einmal pro Dublette
+  const pumptest = isDublette ? 80_000 * n : 60_000
 
-  // Genehmigung WHG/BBergG
-  const genehmigung = 25_000
+  // Genehmigung WHG/BBergG: einmalig pro Projekt + 5k EUR je weitere Dublette
+  const genehmigung = 25_000 + 5_000 * Math.max(0, n - 1)
 
-  // Geologisches Gutachten
-  const gutachten = 30_000
+  // Geologisches Gutachten: weitgehend fix; +20 % je weitere Dublette (konservativ)
+  const gutachten = 30_000 * (1 + 0.2 * Math.max(0, n - 1))
 
-  // Versicherung Fündigkeitsrisiko
+  // Versicherung Fündigkeitsrisiko: % von Bohrkosten (skaliert automatisch)
   const versicherung = bohrkostenMid * (fuendigkeitsRisiko / 100)
 
   return pumpe + pumptest + genehmigung + gutachten + versicherung
@@ -217,25 +243,29 @@ function berechneKomplettierung(inputs: BohrkostInputs, bohrkostenMid: number): 
 
 /**
  * MAP/KfW-Förderung — BEG / MAP-Programm KfW 2024
- * 375 EUR/m × min(tiefe, 2500), max. 2.500.000 EUR
- * Dublette: nur Förderbohrung (eine der zwei)
+ * 375 EUR/m × min(tiefe, 2500), max. 2.500.000 EUR pro Förderbohrung
+ * Bei n Dubletten: n × Förderbohrungen förderfähig (BEG EW 2024, Ziff. 5.3)
+ * Programmobergrenze: 20.000.000 EUR pro Vorhaben (BEG EW 2024, Ziff. 9)
  */
 function berechneFoerderung(inputs: BohrkostInputs): number {
   if (!inputs.foerderungAktiv) return 0
   const tiefeFoerder = Math.min(inputs.tiefe, 2500)
-  return Math.min(375 * tiefeFoerder, 2_500_000)
+  const foerderungProBohrung = Math.min(375 * tiefeFoerder, 2_500_000)
+  const n = inputs.zweck === 'Dublette' ? Math.max(1, inputs.anzahlDubletten) : 1
+  return Math.min(foerderungProBohrung * n, 20_000_000)
 }
 
 /**
- * Thermische Leistung [kW]
- * Q_th = foerderrate [l/s = kg/s] × (tGW − tReinjektion) [K] × c_p [kJ/(kg·K)]
+ * Thermische Leistung gesamt [kW] — alle Dubletten
+ * Q_th = n × foerderrate [l/s = kg/s] × (tGW − tReinjektion) [K] × c_p [kJ/(kg·K)]
  * Drost (1978); VDI 4640 Bl. 2
  */
 function berechneLeistung(inputs: BohrkostInputs): number {
   if (inputs.zweck === 'Explorationsbohrung') return 0
   const deltaT = inputs.tGW - inputs.tReinjektion
   if (deltaT <= 0) return 0
-  return inputs.foerderrate * deltaT * 4.18
+  const n = inputs.zweck === 'Dublette' ? Math.max(1, inputs.anzahlDubletten) : 1
+  return n * inputs.foerderrate * deltaT * 4.18
 }
 
 // ── Hauptfunktion ─────────────────────────────────────────────────────────────
@@ -247,8 +277,10 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
   const basisMin = basisMid * 0.65
   const basisMax = basisMid * 1.50
 
-  // Anzahl Bohrungen
-  const anzahl_bohrungen = inputs.zweck === 'Dublette' ? 2 : 1
+  // Anzahl Bohrungen: bei n Dubletten = n × 2 Bohrungen (konservativ linear, kein Skalenrabatt)
+  // Skaleneffekte 5–15 % (GtV 2024, Pad-Drilling) liegen in ±35–50 %-AACE-Class-5-Bandbreite
+  const n = inputs.zweck === 'Dublette' ? Math.max(1, inputs.anzahlDubletten) : 1
+  const anzahl_bohrungen = inputs.zweck === 'Dublette' ? n * 2 : 1
 
   // Gesamte Bohrkosten (alle Bohrungen)
   const bohrkosten_min = basisMin * anzahl_bohrungen

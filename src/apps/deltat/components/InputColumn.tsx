@@ -54,6 +54,10 @@ export function InputColumn() {
         <ParamSlider label="Förderrate Q" value={inputs.Q} min={1} max={100} step={1} unit="l/s"
           onChange={v => setInput('Q', v)}
           info="Volumenstrom der Förderbohrung [l/s].\nBegrenzt durch Transmissivität und Absenkung.\nThermische Leistung: P = ρ·c_p·Q·ΔT\n(DVGW W 115)" />
+        <ParamSlider label="Effektive Porosität n" value={inputs.porositaet} min={0.01} max={0.40} step={0.01} unit=""
+          format={v => v.toFixed(2)}
+          onChange={v => setInput('porositaet', v)}
+          info={'Effektive Porosität des Aquifers [-].\nBestimmt die Durchbruchszeit (Gringarten & Sauty 1975).\nSandstein: 0,20–0,35 | Kalkstein: 0,05–0,20 | Kluftgestein: 0,01–0,10\nDefault 0,25 — konservativ für sedimentäre Aquifere.'} />
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
@@ -100,7 +104,7 @@ export function InputColumn() {
           onChange={v => setInput('zielLeistung', v)}
           info="Benötigte Wärmeleistung des Netzes [kW].\nBestimmt die Anzahl der Doubletten:\nn = ⌈P_Ziel / P_Doublette⌉\nHinweis: Förderrate & Tiefe anpassen um weniger Doubletten zu benötigen." />
         {/* Optimierungshinweis: benötigte Q für 1 Doublette */}
-        {outputs.anzahlDoubletten !== null && outputs.anzahlDoubletten > 1 && outputs.qMinFoerderrate !== null && (
+        {outputs.anzahlDubletten != null && outputs.anzahlDubletten > 1 && outputs.qMinFoerderrate !== null && (
           <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-3 py-2 text-xs">
             <span className="text-blue-700 dark:text-blue-300 font-medium">Hinweis:</span>
             <span className="text-blue-600 dark:text-blue-400">
@@ -125,6 +129,10 @@ export function InputColumn() {
         <ParamSlider label="Laufstunden" value={inputs.laufstunden} min={500} max={8760} step={100} unit="h/a"
           onChange={v => setInput('laufstunden', v)}
           info="Jährliche Volllaststunden des Systems [h/a].\nJahreswärmemenge: E = P_Dobl × h/a\n8.760 h/a = Volllast-Dauerbetrieb\nTypisch Fernwärme: 4.000–6.000 h/a" />
+        <ParamSlider label="Gütegrad WP (η_Carnot)" value={inputs.guetegradWP} min={0.30} max={0.65} step={0.05} unit=""
+          format={v => v.toFixed(2)}
+          onChange={v => setInput('guetegradWP', v)}
+          info={'Gütegrad der Wärmepumpe [-] = COP_real / COP_Carnot.\nStandard Sole-Wasser-WP: 0,45–0,55\nHochtemperatur-WP (T_VL > 60 °C): 0,35–0,45\n(IEA HPP Annex 35; Arpagaus et al. 2018, Energy 152)\nDefault 0,50 — mittlere Standard-WP.'} />
       </fieldset>
     </div>
   )

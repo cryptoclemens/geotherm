@@ -84,10 +84,34 @@ export function InputColumn({ inputs, onChange, onReset }: InputColumnProps) {
           options={[
             { value: 'Dublette',            label: 'Dublette (Förder + Injektion)' },
             { value: 'Einzelbohrung',       label: 'Einzelbohrung' },
-            { value: 'Explorationsbohrung', label: 'Explorationsbohrung' },
+            { value: 'Explorationsbohrung', label: 'Explorationsbohrung (+15 %)' },
           ]}
           onChange={v => onChange('zweck', v)}
         />
+        {inputs.zweck === 'Dublette' && (
+          <div className="flex flex-col gap-1">
+            <ParamSlider
+              label="Anzahl Dubletten"
+              value={inputs.anzahlDubletten}
+              min={1}
+              max={8}
+              step={1}
+              unit=""
+              onChange={v => onChange('anzahlDubletten', v)}
+              info={'Anzahl Förder-/Injektionsbohrpaare.\nAus DeltaT-Auslegung vorbelegt — kann manuell überschrieben werden.\n1 Dublette = 2 Bohrungen (Förder + Injektion)\nRealistisch für Fernwärme: 1–4 Dubletten (GtV 2024)\nÜber 4: Mengenrabatt 5–15 % nicht berücksichtigt (konservativ)\n(Stober & Bucher 2012, Kap. 7; GtV Bohrpreise 2024)'}
+            />
+            {inputs.anzahlDubletten > 4 && inputs.anzahlDubletten <= 8 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug">
+                {inputs.anzahlDubletten} Dubletten — ungewöhnlich für Einzelstandort. Skalenrabatt (5–15 %) nicht berücksichtigt (konservativ).
+              </p>
+            )}
+            {inputs.anzahlDubletten > 8 && (
+              <p className="text-xs text-red-600 dark:text-red-400 -mt-1 leading-snug">
+                &gt; 8 Dubletten — separate Projektplanung empfohlen (GtV 2024).
+              </p>
+            )}
+          </div>
+        )}
         <SelectField<Produktionsdurchmesser>
           label="Produktionsdurchmesser"
           value={inputs.durchmesser}

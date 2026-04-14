@@ -107,7 +107,7 @@ export function SaveProjectDialog() {
             {/* Vorschau der gespeicherten Kennzahlen */}
             <p className="text-xs text-muted-foreground">
               {isUpdate ? 'Aktualisiert werden' : 'Gespeichert werden'}: alle Parameter + Ergebnisse
-              ({inputs.tiefe} m · {inputs.tGW} °C · {outputs.qDelivered.toFixed(0)} kW · {outputs.anzahlDoubletten ?? '–'} Dobl.)
+              ({inputs.tiefe} m · {inputs.tGW} °C · {outputs.qDelivered.toFixed(0)} kW · {outputs.anzahlDubletten ?? '–'} Dobl.)
             </p>
             {status === 'error' && (
               <p className="text-xs text-red-400 flex items-center gap-1">
