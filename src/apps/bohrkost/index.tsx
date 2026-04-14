@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { PrinterIcon, XIcon } from 'lucide-react'
+import { PrinterIcon, XIcon, SaveIcon, FolderOpenIcon } from 'lucide-react'
 import { Button } from '@/core/ui/button'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
 import { BohrkostFormelTab } from './components/BohrkostFormelTab'
 import { useBohrkostStore } from './store/useBohrkostStore'
+import { updateProject } from '@/core/api/projects'
 import type { BohrkostInputs } from './calc/kosten'
 
 type TabId = 'berechnung' | 'formeln'
@@ -90,11 +91,14 @@ function StatusItem({ label, color, value }: { label: string; color: 'green' | '
 export default function BohrkostApp() {
   const [tab, setTab] = useState<TabId>('berechnung')
   const [lukawskiOpen, setLukawskiOpen] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   const inputs = useBohrkostStore(s => s.inputs)
   const outputs = useBohrkostStore(s => s.outputs)
   const setInput = useBohrkostStore(s => s.setInput)
   const reset = useBohrkostStore(s => s.reset)
+  const currentProjectId   = useBohrkostStore(s => s.currentProjectId)
+  const currentProjectName = useBohrkostStore(s => s.currentProjectName)
 
   function handleChange<K extends keyof BohrkostInputs>(key: K, value: BohrkostInputs[K]) {
     setInput(key, value)
@@ -102,6 +106,22 @@ export default function BohrkostApp() {
 
   function handleReset() {
     reset()
+  }
+
+  async function handleSaveToProject() {
+    if (!currentProjectId) return
+    setSaveState('saving')
+    try {
+      await updateProject(currentProjectId, {
+        bohrkost_input: inputs,
+        bohrkost_result: outputs,
+      })
+      setSaveState('saved')
+      setTimeout(() => setSaveState('idle'), 2500)
+    } catch {
+      setSaveState('error')
+      setTimeout(() => setSaveState('idle'), 3000)
+    }
   }
 
   return (
@@ -112,8 +132,14 @@ export default function BohrkostApp() {
       <header className="shrink-0 px-4 py-2 border-b bg-muted/40 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-base font-semibold">
+            <h1 className="text-base font-semibold flex items-center gap-2">
               Bohrkostenrechner — Geothermische Investitionsschätzung
+              {currentProjectName && (
+                <span className="flex items-center gap-1 text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  <FolderOpenIcon className="w-3 h-3" />
+                  {currentProjectName}
+                </span>
+              )}
             </h1>
             <p className="text-xs text-muted-foreground">
               <button
@@ -145,6 +171,21 @@ export default function BohrkostApp() {
           </div>
         </div>
         <div className="flex items-center gap-2" data-print-hide>
+          {tab === 'berechnung' && currentProjectId && (
+            <Button
+              variant={saveState === 'saved' ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleSaveToProject}
+              disabled={saveState === 'saving'}
+              aria-label="Ergebnisse im Projekt speichern"
+            >
+              <SaveIcon />
+              {saveState === 'saving' ? 'Speichern…'
+                : saveState === 'saved'  ? '✓ Gespeichert'
+                : saveState === 'error'  ? 'Fehler'
+                : 'Im Projekt speichern'}
+            </Button>
+          )}
           {tab === 'berechnung' && (
             <Button
               variant="outline"

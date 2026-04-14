@@ -314,20 +314,66 @@ function ProjectCard({ project, onLoad, onLoadBohrkost, onUpdate, onDelete, dele
             Tiefe ↔ GW-Temp. gekoppelt (∇T = 0,03 °C/m · VDI 4640)
           </p>
         )}
+
+        {/* ── Berechnungsstatus ─────────────────────────────────── */}
+        <div className="mt-3 flex flex-col gap-1.5 border-t border-border/50 pt-3">
+          {/* DeltaT — nur bei Dublette relevant */}
+          {project.project_type === 'Dublette' || (!project.project_type && project.deltat_input) ? (
+            project.deltat_result ? (
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span className="text-muted-foreground">DeltaT:</span>
+                <span className="font-medium text-foreground">
+                  {project.deltat_result.qDelivered.toFixed(0)} kW · {project.deltat_result.anzahlDoubletten}× Dublette
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 italic">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+                DeltaT-Berechnung steht noch aus
+              </div>
+            )
+          ) : null}
+
+          {/* Bohrkost */}
+          {project.bohrkost_result ? (
+            <div className="flex items-center gap-1.5 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+              <span className="text-muted-foreground">Bohrkost:</span>
+              <span className="font-medium text-foreground font-mono">
+                {project.bohrkost_result.projektkosten_mid >= 1_000_000
+                  ? `${(project.bohrkost_result.projektkosten_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio. EUR`
+                  : `${(project.bohrkost_result.projektkosten_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T EUR`
+                }
+                {project.bohrkost_result.foerderung_betrag > 0 && (
+                  <span className="text-green-600 dark:text-green-400 ml-1 font-normal">
+                    (nach Förderung: {project.bohrkost_result.projektkosten_netto_mid >= 1_000_000
+                      ? `${(project.bohrkost_result.projektkosten_netto_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio.`
+                      : `${(project.bohrkost_result.projektkosten_netto_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T`
+                    })
+                  </span>
+                )}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 italic">
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+              Bohrkostenberechnung steht noch aus
+            </div>
+          )}
+        </div>
       </CardContent>
       <CardFooter className="flex-wrap gap-2">
-        {project.deltat_input && (
+        {(project.deltat_input || project.project_type === 'Dublette') && (
           <Button size="sm" onClick={() => onLoad(project)}>
             <ArrowRightIcon />
             In DeltaT laden
           </Button>
         )}
-        {project.deltat_input && (
-          <Button size="sm" variant="outline" onClick={() => onLoadBohrkost(project)}>
-            <ArrowRightIcon />
-            In Bohrkost laden
-          </Button>
-        )}
+        <Button size="sm" variant="outline" onClick={() => onLoadBohrkost(project)}>
+          <ArrowRightIcon />
+          In Bohrkost laden
+        </Button>
         <ProjectFormDialog mode="edit" project={project} />
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogTrigger render={
@@ -448,20 +494,22 @@ export default function ProjectsPage() {
   }
 
   function handleLoadBohrkost(project: Project) {
-    if (!project.deltat_input) return
     const zweck: Bohrungszweck =
       project.project_type === 'Dublette'            ? 'Dublette'
       : project.project_type === 'Einzelbohrung'     ? 'Einzelbohrung'
       : project.project_type === 'Explorationsbohrung' ? 'Explorationsbohrung'
       : 'Dublette'
-    const partial: Partial<BohrkostInputs> = {
-      tiefe:          project.deltat_input.tiefe,
-      tGW:            project.deltat_input.tGW,
-      foerderrate:    project.deltat_input.Q,
-      tReinjektion:   project.deltat_input.tR,
-      zweck,
-    }
-    applyBohrkostFromProject(partial)
+    // Wenn bohrkost_input bereits gespeichert: direkt laden
+    const partial: Partial<BohrkostInputs> = project.bohrkost_input
+      ? project.bohrkost_input
+      : {
+          tiefe:        project.deltat_input?.tiefe ?? 700,
+          tGW:          project.deltat_input?.tGW   ?? 35,
+          foerderrate:  project.deltat_input?.Q      ?? 15,
+          tReinjektion: project.deltat_input?.tR     ?? 15,
+          zweck,
+        }
+    applyBohrkostFromProject(partial, project.id, project.name)
     router.push('/bohrkost')
   }
 
