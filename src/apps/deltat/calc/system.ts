@@ -58,8 +58,8 @@ export interface DeltaTOutputs {
   qDelivered: number
   /** Benötigte geothermische Leistung [kW] */
   qGeoBenoetigt: number
-  /** Anzahl Dubletten */
-  anzahlDoubletten: number
+  /** Anzahl Dubletten — null wenn ΔT ≤ 0 (unphysikalisch) */
+  anzahlDoubletten: number | null
   /** Gesamtförderrate [l/s] */
   gesamtFoerderrate: number
   /** Tauchpumpenleistung pro Bohrung [kW] */
@@ -143,7 +143,8 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   const transmissiv = kf * maechtig
   const deltaT = tGW - tR
   // Q_th = Q[l/s = kg/s] × c_p[kJ/kg·K] × ΔT[K] — kW
-  const qThPerDoublet = Math.max(0.01, Q * deltaT * 4.18)
+  // Wenn ΔT ≤ 0 → kein Wärmeentzug möglich (Reinjektion ≥ Grundwassertemp.) — VDI 4640 Bl. 2, Abschn. 5.4
+  const qThPerDoublet = deltaT > 0 ? Q * deltaT * 4.18 : 0
 
   // Vorab-COP für WP-Beitragsrechnung — T_R (Reinjektionstemperatur) als Quellen-Temp
   // Arpagaus et al. 2018, Energy 152, Gl. 7
@@ -157,13 +158,17 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     ? zielLeistung * (_copEst - 1) / _copEst  // WP addiert W_el → weniger Q_geo nötig
     : zielLeistung
 
-  const anzahlDoubletten = deltaT > 0 ? Math.max(1, Math.ceil(qGeoBenoetigt / qThPerDoublet)) : 999
-  const qThGesamt = anzahlDoubletten * qThPerDoublet
+  // null wenn ΔT ≤ 0 (unphysikalisch für Wärmeentzug) — kein Sentinel-999 mehr
+  const anzahlDoubletten: number | null = deltaT > 0 && qThPerDoublet > 0
+    ? Math.max(1, Math.ceil(qGeoBenoetigt / qThPerDoublet))
+    : null
+  const _anzahl = anzahlDoubletten ?? 0
+  const qThGesamt = _anzahl * qThPerDoublet
   const qDelivered = wpAktiv && _copEst < 90
     ? qThGesamt * _copEst / (_copEst - 1)
     : qThGesamt
 
-  const gesamtFoerderrate = anzahlDoubletten * Q
+  const gesamtFoerderrate = _anzahl * Q
   // P_pump = Q[m³/s] × ρ[kg/m³] × g[m/s²] × H[m] / η — VDI 4640, Stober & Bucher (2012) Kap. 7.4
   // H = foerderhoehe (dynamischer Spiegel + Rohrreibung), NICHT Bohrtiefe — Faktor 2-5 Unterschied!
   const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * foerderhoehe / (0.6 * 1000)

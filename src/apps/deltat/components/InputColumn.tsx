@@ -61,6 +61,11 @@ export function InputColumn() {
         <ParamSlider label="Reinjektionstemperatur" value={inputs.tR} min={2} max={40} step={0.5} unit="°C"
           onChange={v => setInput('tR', v)}
           info="Temperatur des rückgeführten Wassers nach Wärmeentzug.\nΔT = T_GW − T_R → thermische Leistung.\nMuss > 2 °C bleiben (Frostschutz, Ökologie)." />
+        {inputs.tR >= inputs.tGW && (
+          <p className="text-xs text-red-600 dark:text-red-400 -mt-1 leading-snug">
+            Reinjektion ({inputs.tR} °C) ≥ Grundwasser ({inputs.tGW} °C) — kein Wärmeentzug möglich (VDI 4640 Bl. 2)
+          </p>
+        )}
         <ParamSlider label="Mineralisation TDS" value={inputs.tds} min={50} max={50000} step={50} unit="mg/l"
           onChange={v => setInput('tds', v)}
           info="Gesamtmineralisation des Thermalwassers [mg/l].\nBestimmt Materialklasse nach DVGW W 115:\n< 1.000 mg/l → Stahl möglich\n1.000–10.000 mg/l → hochwertiger Stahl\n> 10.000 mg/l → Duplex / Titan erforderlich" />

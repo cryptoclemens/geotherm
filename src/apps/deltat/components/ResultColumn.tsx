@@ -27,8 +27,9 @@ export function ResultColumn() {
   const inputs = useDeltaTStore(s => s.inputs)
   const [detailsOpen, setDetailsOpen] = useState(false)
 
-  const gesamtBohrtiefe = r.anzahlDoubletten * inputs.tiefe * 2
-  const pumpEigenverbrauch = r.anzahlDoubletten * r.tauchpumpenLeistung * 2
+  const _anzahl = r.anzahlDoubletten ?? 0
+  const gesamtBohrtiefe = _anzahl * inputs.tiefe * 2
+  const pumpEigenverbrauch = _anzahl * r.tauchpumpenLeistung * 2
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border overflow-y-auto h-full">
@@ -69,8 +70,18 @@ export function ResultColumn() {
             info={'Geothermische Wärmeleistung je Doublette:\nP = ρ·c_p·Q·ΔT [kW]\nρ_Wasser = 1.000 kg/m³\nc_p = 4,18 kJ/(kg·K)\n(Drost 1978)'} />
           <KpiTile label="Jahreswärme" value={r.jahreswaerme} unit="MWh/a"
             info={'Jährliche Wärmemenge:\nE = P_ges × Laufstunden / 1.000 [MWh/a]\nBasis: geothermische Nettoleistung aller Doubletten'} />
-          <KpiTile label="Doubletten" value={r.anzahlDoubletten} unit="Stk."
-            info={'Anzahl benötigter Förder-/Injektionsbohrpaare:\nn = ⌈P_Ziel / P_Doublette⌉\nAufrunden, da Teildoubletten nicht sinnvoll'} />
+          <KpiTile
+            label="Doubletten"
+            value={r.anzahlDoubletten === null ? '–' : r.anzahlDoubletten}
+            unit={r.anzahlDoubletten === null ? '' : 'Stk.'}
+            color={r.anzahlDoubletten === null ? 'red' : r.anzahlDoubletten > 20 ? 'yellow' : 'navy'}
+            sub={r.anzahlDoubletten === null
+              ? 'T_R ≥ T_GW — kein Wärmeentzug möglich'
+              : r.anzahlDoubletten > 20
+                ? '> 20 Dobl. nicht wirtschaftlich'
+                : undefined}
+            info={'Anzahl benötigter Förder-/Injektionsbohrpaare:\nn = ⌈P_Ziel / P_Doublette⌉\nAufrunden, da Teildoubletten nicht sinnvoll\nnull = ΔT ≤ 0 (unphysikalisch)'}
+          />
           <KpiTile label="Förderrate ges." value={r.gesamtFoerderrate} unit="l/s"
             info={'Gesamtförderrate aller Doubletten:\nQ_ges = n · Q [l/s]\nLimitiert durch Aquifer-Transmissivität (DVGW W 115)'} />
           <KpiTile label="Pumpenleistung" value={r.tauchpumpenLeistung} unit="kW/Bohrg."

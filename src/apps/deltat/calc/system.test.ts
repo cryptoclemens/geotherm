@@ -38,18 +38,22 @@ describe('Wärmeleistung Q_th', () => {
     const r = calculateSystem(inp({ tGW: 25, tR: 10, tVL: 20 }))
     expect(r.deltaT).toBe(15)
   })
-  it('Mindestleistung 0.01 kW wenn deltaT ≤ 0', () => {
-    // tR = tGW → ΔT = 0 → clamp
+  it('qThPerDoublet = 0 wenn deltaT ≤ 0 (unphysikalisch)', () => {
+    // tR = tGW → kein Wärmeentzug möglich
     const r = calculateSystem(inp({ tGW: 10, tR: 10 }))
-    expect(r.qThPerDoublet).toBe(0.01)
+    expect(r.qThPerDoublet).toBe(0)
   })
   it('Anzahl Dubletten ≥ 1', () => {
     const r = calculateSystem(inp({ Q: 50, tGW: 30, tR: 5, zielLeistung: 100 }))
     expect(r.anzahlDoubletten).toBeGreaterThanOrEqual(1)
   })
-  it('anzahlDoubletten = 999 wenn deltaT ≤ 0', () => {
+  it('anzahlDoubletten = null wenn deltaT ≤ 0 (unphysikalisch)', () => {
     const r = calculateSystem(inp({ tGW: 10, tR: 10 }))
-    expect(r.anzahlDoubletten).toBe(999)
+    expect(r.anzahlDoubletten).toBeNull()
+  })
+  it('anzahlDoubletten = null wenn tR > tGW', () => {
+    const r = calculateSystem(inp({ tGW: 11.5, tR: 12 }))
+    expect(r.anzahlDoubletten).toBeNull()
   })
 })
 
@@ -270,7 +274,7 @@ describe('Default-Inputs Smoke-Test', () => {
   it('liefert alle Output-Felder', () => {
     const r = calculateSystem(DEFAULT_INPUTS)
     expect(r.transmissiv).toBeTypeOf('number')
-    expect(r.anzahlDoubletten).toBeTypeOf('number')
+    expect(r.anzahlDoubletten).toBeGreaterThanOrEqual(1)
     expect(r.cop).toBeTypeOf('number')
     expect(r.sHydraulik).toMatch(/green|yellow|red/)
     expect(r.sThermik).toMatch(/green|yellow|red/)
