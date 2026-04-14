@@ -30,9 +30,15 @@ export function Header() {
             href="https://www.vencly.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground font-normal text-sm hover:text-foreground transition-colors"
+            className="flex items-center opacity-60 hover:opacity-100 transition-opacity"
+            aria-label="Vencly – Website öffnen"
           >
-            by Vencly
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logovencly.svg"
+              alt="Vencly"
+              className="h-4 w-auto"
+            />
           </a>
           <span className="font-mono text-[10px] text-muted-foreground/50 tabular-nums leading-none">
             {buildLabel}
