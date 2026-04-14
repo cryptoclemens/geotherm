@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { UserNav } from './UserNav'
 import { NavLinks } from './NavLinks'
 import { ThemeToggle } from '@/core/ui/ThemeToggle'
+import { MobileMenu } from './MobileMenu'
 
 // Semver aus package.json (manuell für Major/Minor-Bumps)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -37,11 +38,17 @@ export function Header() {
             {buildLabel}
           </span>
         </div>
-        <nav aria-label="Hauptnavigation" className="flex items-center gap-2">
+        {/* Desktop-Navigation (ab md) */}
+        <nav aria-label="Hauptnavigation" className="hidden md:flex items-center gap-2">
           <NavLinks />
           <ThemeToggle />
           <UserNav />
         </nav>
+
+        {/* Mobile-Navigation (bis md) */}
+        <div className="flex items-center md:hidden">
+          <MobileMenu />
+        </div>
       </div>
     </header>
   )
