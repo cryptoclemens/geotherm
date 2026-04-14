@@ -39,10 +39,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="de" className={`${plusJakartaSans.variable} h-full antialiased dark`} suppressHydrationWarning>
+    <html lang="de" className={`${plusJakartaSans.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
-        {/* Theme flash prevention: apply stored preference before first paint */}
-        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark')}}catch(e){}` }} />
+        {/* Theme flash prevention: apply stored preference before first paint.
+            Default ist Light — Dark nur wenn Nutzer explizit gewählt hat. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark')}}catch(e){}` }} />
       </head>
       <body className="min-h-full flex flex-col">
         <TooltipProvider delay={300}>

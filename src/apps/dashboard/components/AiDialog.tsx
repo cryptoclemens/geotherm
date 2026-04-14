@@ -95,7 +95,16 @@ function loadHistory(): UIMessage[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return [WELCOME_MESSAGE]
     const parsed = JSON.parse(raw) as UIMessage[]
-    return parsed.length > 0 ? parsed : [WELCOME_MESSAGE]
+    if (!parsed.length) return [WELCOME_MESSAGE]
+    // Deduplizierung: aufeinanderfolgende identische Nachrichten entfernen
+    const deduped = parsed.filter((m, i) => {
+      if (i === 0) return true
+      const prev = parsed[i - 1]
+      if (m.role !== prev.role) return true
+      const text = (p: UIMessage) => p.parts.filter(x => x.type === 'text').map(x => (x as unknown as { text: string }).text).join('')
+      return text(m) !== text(prev)
+    })
+    return deduped.length > 0 ? deduped : [WELCOME_MESSAGE]
   } catch {
     return [WELCOME_MESSAGE]
   }
@@ -120,12 +129,16 @@ export function AiDialog() {
   const setInput = useDeltaTStore(s => s.setInput)
   const setGeoSpots = useWorkspaceStore(s => s.setGeoSpots)
   const [text, setText] = useState('')
+  const [apiError, setApiError] = useState<string | null>(null)
   const [initialMessages] = useState<UIMessage[]>(loadHistory)
   const chatScrollRef = useRef<HTMLDivElement>(null)
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/ai/chat' }),
     messages: initialMessages,
+    onError: (err) => {
+      setApiError(err instanceof Error ? err.message : 'Assistent nicht erreichbar')
+    },
     onToolCall: async ({ toolCall }) => {
       // Cast da UIMessage generisch ohne TOOLS-Param
       const tc = toolCall as unknown as {
@@ -165,6 +178,8 @@ export function AiDialog() {
           .catch(() => { /* ignorieren */ })
       }
 
+      setApiError(null)
+
       if (tc.toolName === 'show_geothermal_spots') {
         const input = tc.input as { spots: GeoSpot[]; query_context: string }
         setGeoSpots(input.spots ?? [], input.query_context ?? '')
@@ -184,6 +199,7 @@ export function AiDialog() {
   function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim() || status === 'streaming') return
+    setApiError(null)
     sendMessage({ text: text.trim() })
     setText('')
   }
@@ -311,6 +327,13 @@ export function AiDialog() {
               {s}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* API-Fehler-Banner */}
+      {apiError && (
+        <div className="shrink-0 mx-4 mb-2 px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-xs" role="alert">
+          Assistent nicht erreichbar — bitte später erneut versuchen.
         </div>
       )}
 

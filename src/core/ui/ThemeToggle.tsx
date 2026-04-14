@@ -5,12 +5,12 @@ import { SunIcon, MoonIcon } from 'lucide-react'
 import { Button } from './button'
 
 export function ThemeToggle() {
-  // Lazy initializer reads from DOM on client, defaults to dark on server.
+  // Lazy initializer reads from DOM on client, defaults to light on server.
   // suppressHydrationWarning on the button prevents React complaining if
   // the server-rendered icon differs from the client-hydrated icon (e.g. when
-  // the user previously chose light mode and the flash-prevention script fired).
+  // the user previously chose dark mode and the flash-prevention script fired).
   const [dark, setDark] = useState(() => {
-    if (typeof window === 'undefined') return true
+    if (typeof window === 'undefined') return false
     return document.documentElement.classList.contains('dark')
   })
 
