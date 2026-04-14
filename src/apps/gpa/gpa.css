@@ -718,6 +718,12 @@
 .saved-loc-projekt:hover { background: rgba(99,102,241,.25); border-color: #818cf8; }
 .saved-loc-projekt--saved { background: rgba(22,163,74,.15); color: #4ade80; border-color: #4ade80; }
 .saved-loc-projekt:disabled { opacity: 0.5; cursor: default; }
+.saved-loc-project-name { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.saved-loc-name-input {
+  flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #818cf8;
+  border-radius: 6px; color: var(--text); font-size: 11px; padding: 5px 8px; outline: none;
+}
+.saved-loc-name-input:focus { box-shadow: 0 0 0 2px rgba(99,102,241,.25); }
 
 /* ── LOCATION INSPECTOR PANEL ─────────────────────────────────────────────── */
 #loc-inspector {
@@ -836,6 +842,25 @@
   border-color: transparent;
 }
 .loc-action-deltat:hover { background: var(--accent2); }
+#loc-inspector-savename {
+  display: flex; gap: 6px; align-items: center;
+  padding: 0 14px 12px;
+}
+.loc-name-input {
+  flex: 1; background: rgba(255,255,255,0.06);
+  border: 1px solid var(--accent); border-radius: 6px;
+  color: var(--text); font-size: 11px; padding: 5px 8px; outline: none;
+}
+.loc-name-input:focus { box-shadow: 0 0 0 2px rgba(91,175,214,.2); }
+.loc-name-confirm {
+  font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px;
+  background: var(--accent); color: #08111f; border: none; cursor: pointer; white-space: nowrap;
+}
+.loc-name-confirm:disabled { opacity: 0.5; cursor: default; }
+.loc-name-cancel {
+  font-size: 11px; padding: 5px 8px; border-radius: 6px;
+  background: none; color: var(--muted); border: 1px solid var(--border); cursor: pointer;
+}
 
 /* ── PROJECT DETAIL PANEL ──────────────────────────────────────────────────── */
 #project-detail-panel {

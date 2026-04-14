@@ -28,16 +28,19 @@ export default function SavedLocationsTab() {
   const setLocationPreset = useWorkspaceStore(s => s.setLocationPreset)
   const createProject   = useProjectStore(s => s.createProject)
 
-  const [savingId, setSavingId] = useState(null)
-  const [savedId,  setSavedId]  = useState(null)
-  const [errorId,  setErrorId]  = useState(null)
+  const [savingId,       setSavingId]       = useState(null)
+  const [savedId,        setSavedId]        = useState(null)
+  const [errorId,        setErrorId]        = useState(null)
+  const [pendingProject, setPendingProject] = useState(null) // { locId, name }
 
   function handleFly(loc) {
     const map = getMapInstance()
     if (map) map.flyTo([loc.lat, loc.lng], 12, { duration: 1.5, animate: true })
   }
 
-  async function handleSaveToProject(loc) {
+  async function handleSaveToProject(loc, customName) {
+    const nameToUse = (customName || loc.name).trim()
+    if (!nameToUse) return
     setSavingId(loc.id)
     try {
       const deltat_input = {
@@ -49,7 +52,7 @@ export default function SavedLocationsTab() {
         ...(loc.tds_mgl     != null && { tds:      loc.tds_mgl }),
       }
       await createProject({
-        name:     loc.name,
+        name:     nameToUse,
         location: { name: loc.name, lat: loc.lat, lng: loc.lng },
         deltat_input,
         geological_data: {
@@ -144,8 +147,8 @@ export default function SavedLocationsTab() {
               </button>
               <button
                 className={`saved-loc-btn saved-loc-projekt${savedId === loc.id ? ' saved-loc-projekt--saved' : ''}`}
-                onClick={() => handleSaveToProject(loc)}
-                disabled={savingId === loc.id}
+                onClick={() => setPendingProject({ locId: loc.id, name: loc.name })}
+                disabled={savingId === loc.id || savedId === loc.id}
                 title="Als Projekt speichern"
               >
                 {savingId === loc.id ? '…'
@@ -159,6 +162,31 @@ export default function SavedLocationsTab() {
                 title="Ort löschen"
               >×</button>
             </div>
+
+            {/* Inline-Name-Input für Projekterstellung */}
+            {pendingProject?.locId === loc.id && (
+              <div className="saved-loc-project-name">
+                <input
+                  className="saved-loc-name-input"
+                  value={pendingProject.name}
+                  onChange={e => setPendingProject({ ...pendingProject, name: e.target.value })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { handleSaveToProject(loc, pendingProject.name); setPendingProject(null) }
+                    if (e.key === 'Escape') setPendingProject(null)
+                  }}
+                  placeholder="Projektname…"
+                  autoFocus
+                />
+                <button
+                  className="saved-loc-btn saved-loc-projekt"
+                  onClick={() => { handleSaveToProject(loc, pendingProject.name); setPendingProject(null) }}
+                  disabled={!pendingProject.name.trim()}
+                >
+                  Anlegen
+                </button>
+                <button className="saved-loc-btn saved-loc-del" onClick={() => setPendingProject(null)}>✕</button>
+              </div>
+            )}
           </div>
         )
       })}
