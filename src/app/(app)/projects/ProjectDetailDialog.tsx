@@ -246,12 +246,17 @@ export function ProjectDetailDialog({
       onLoad({ ...project, deltat_input: merged })
     } else {
       const d = project.deltat_input
+      const deltaTAnzahl = project.deltat_result?.anzahlDoubletten ?? null
       const merged: BohrkostInputs = {
         ...project.bohrkost_input,
         tiefe:        d.tiefe,
         foerderrate:  d.Q,
         tGW:          d.tGW,
         tReinjektion: d.tR,
+        // Dubletten-Anzahl aus DeltaT-Ergebnis synchronisieren (max. 8)
+        ...(deltaTAnzahl != null && {
+          anzahlDubletten: Math.min(8, Math.max(1, deltaTAnzahl)),
+        }),
       }
       onLoadBohrkost({ ...project, bohrkost_input: merged })
     }
