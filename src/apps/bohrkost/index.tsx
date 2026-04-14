@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { PrinterIcon } from 'lucide-react'
+import { PrinterIcon, XIcon } from 'lucide-react'
 import { Button } from '@/core/ui/button'
 import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { InputColumn } from './components/InputColumn'
@@ -11,6 +11,51 @@ import { berechneBohrkosten, DEFAULT_INPUTS } from './calc/kosten'
 import type { BohrkostInputs } from './calc/kosten'
 
 type TabId = 'berechnung' | 'formeln'
+
+function LukawskiPopup({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-popover text-popover-foreground rounded-xl shadow-xl ring-1 ring-foreground/10 max-w-md w-full mx-4 p-5"
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Schließen"
+        >
+          <XIcon className="w-4 h-4" />
+        </button>
+        <h3 className="text-sm font-semibold mb-1">Lukawski et al. (2014) — Was ist in den Bohrkosten enthalten?</h3>
+        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+          Die Lukawski-Formel basiert auf realen <strong>Authorization for Expenditure (AFE)</strong>-Daten
+          aus 760 Geothermieprojekten. AFE-Werte sind Gesamtbohrkosten und enthalten implizit:
+        </p>
+        <ul className="flex flex-col gap-1.5 text-xs">
+          {[
+            'Bohrbesatzung (Driller, Roughnecks, Derrickman)',
+            'Bohrservice-Personal (Mud Engineer, Directional Driller, Logging)',
+            'On-site Bohrbrückenführung',
+            'Mobilisierung / Demobilisierung',
+          ].map(item => (
+            <li key={item} className="flex items-start gap-2">
+              <span className="text-green-500 shrink-0">✓</span>
+              <span className="text-foreground/80">{item}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-[10px] text-muted-foreground/60 mt-4 leading-relaxed">
+          Nicht enthalten: Projektmanagement, hydrogeologische Begleitung, Bauüberwachung und
+          rechtliche Beratung außerhalb der Bohrbaustelle (typisch 5–15 % Overhead —
+          fällt bei Klasse-5-Schätzung ±35–50 % in die Bandbreite).
+        </p>
+      </div>
+    </div>
+  )
+}
 
 function fmt(n: number, dec = 0): string {
   return n.toLocaleString('de-DE', { maximumFractionDigits: dec })
@@ -45,6 +90,7 @@ function StatusItem({ label, color, value }: { label: string; color: 'green' | '
 export default function BohrkostApp() {
   const [tab, setTab] = useState<TabId>('berechnung')
   const [inputs, setInputs] = useState<BohrkostInputs>(DEFAULT_INPUTS)
+  const [lukawskiOpen, setLukawskiOpen] = useState(false)
 
   const outputs = useMemo(() => berechneBohrkosten(inputs), [inputs])
 
@@ -58,6 +104,8 @@ export default function BohrkostApp() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+      {lukawskiOpen && <LukawskiPopup onClose={() => setLukawskiOpen(false)} />}
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="shrink-0 px-4 py-2 border-b bg-muted/40 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -66,7 +114,13 @@ export default function BohrkostApp() {
               Bohrkostenrechner — Geothermische Investitionsschätzung
             </h1>
             <p className="text-xs text-muted-foreground">
-              Auf Basis Lukawski et al. (2014) · GtV Bohrpreise · MAP/KfW 2024
+              <button
+                onClick={() => setLukawskiOpen(true)}
+                className="underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors cursor-help"
+              >
+                Auf Basis Lukawski et al. (2014)
+              </button>
+              {' · GtV Bohrpreise · MAP/KfW 2024'}
             </p>
           </div>
           {/* Tab-Switcher */}
