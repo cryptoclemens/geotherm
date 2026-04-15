@@ -51,6 +51,12 @@ function formatDate(iso: string): string {
   }).format(new Date(iso))
 }
 
+function fmtEur(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio. EUR`
+  if (n >= 1_000)     return `${(n / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} T EUR`
+  return `${n.toLocaleString('de-DE', { maximumFractionDigits: 0 })} EUR`
+}
+
 const STATUS_COLOR: Record<ProjectStatus, string> = {
   Idee:       '#94a3b8',
   Planung:    '#3b82f6',
@@ -231,29 +237,67 @@ function ProjectCard({ project, onClick }: ProjectCardProps) {
               </div>
             )
           )}
-          {project.bohrkost_result ? (
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-              <span className="text-muted-foreground">Bohrkost:</span>
-              <span className="font-medium text-foreground font-mono">
-                {project.bohrkost_result.projektkosten_mid >= 1_000_000
-                  ? `${(project.bohrkost_result.projektkosten_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio. EUR`
-                  : `${(project.bohrkost_result.projektkosten_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T EUR`
-                }
-              </span>
-              <span className="text-muted-foreground/60">
-                ({project.bohrkost_result.anzahl_bohrungen} Bohr.)
-              </span>
-              {project.bohrkost_result.foerderung_betrag > 0 && (
-                <span className="text-green-600 dark:text-green-400 font-mono">
-                  → {project.bohrkost_result.projektkosten_netto_mid >= 1_000_000
-                    ? `${(project.bohrkost_result.projektkosten_netto_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio.`
-                    : `${(project.bohrkost_result.projektkosten_netto_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T`
-                  } netto
-                </span>
-              )}
-            </div>
-          ) : (
+          {project.bohrkost_result ? (() => {
+            const res = project.bohrkost_result
+            const eineBohrungMid = res.bohrkosten_mid / res.anzahl_bohrungen
+            const bohrkostDubletten = project.bohrkost_input?.anzahlDubletten ?? (res.anzahl_bohrungen / 2)
+            const deltaTDubletten = project.deltat_result?.anzahlDubletten ?? null
+            const mismatch = deltaTDubletten != null && deltaTDubletten !== bohrkostDubletten
+            const tiefe = project.bohrkost_input?.tiefe ?? 700
+
+            return (
+              <div className="flex flex-col gap-1.5">
+                {/* Bohrkost-Zeile */}
+                <div className="flex items-center gap-1.5 text-[11px]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                  <span className="text-muted-foreground">Bohrkost:</span>
+                  <span className="font-medium text-foreground font-mono">
+                    {fmtEur(res.projektkosten_mid)}
+                  </span>
+                  <span className="text-muted-foreground/60">
+                    ({res.anzahl_bohrungen} Bohr.)
+                  </span>
+                  {res.foerderung_betrag > 0 && (
+                    <span className="text-green-600 dark:text-green-400 font-mono">
+                      → {fmtEur(res.projektkosten_netto_mid).replace(' EUR', '')} netto
+                    </span>
+                  )}
+                </div>
+
+                {/* Hochrechnung bei Mismatch */}
+                {mismatch && deltaTDubletten != null && (
+                  <div className="ml-3 pl-2 border-l-2 border-amber-400/50 flex flex-col gap-0.5">
+                    <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                      Hochrechnung: {deltaTDubletten} Dubletten · {deltaTDubletten * 2} Bohrungen
+                    </p>
+                    <dl className="grid grid-cols-2 gap-x-3 text-[10px]">
+                      <div>
+                        <dt className="text-muted-foreground/60">Bohrkosten (näherungsw.)</dt>
+                        <dd className="font-mono font-medium text-amber-700 dark:text-amber-300">
+                          {fmtEur(eineBohrungMid * deltaTDubletten * 2)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground/60">Pro Bohrung</dt>
+                        <dd className="font-mono font-medium">{fmtEur(eineBohrungMid)}</dd>
+                      </div>
+                      {res.foerderung_betrag > 0 && (
+                        <div>
+                          <dt className="text-muted-foreground/60">MAP/KfW (max.)</dt>
+                          <dd className="font-mono font-medium text-green-600 dark:text-green-400">
+                            {fmtEur(Math.min(375 * Math.min(tiefe, 2500) * deltaTDubletten, 20_000_000))}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                    <p className="text-[9px] text-muted-foreground/40 italic leading-tight">
+                      Näherung — Komplettierungskosten skalieren separat
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
+          })() : (
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 italic">
               <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
               Bohrkostenberechnung steht noch aus
