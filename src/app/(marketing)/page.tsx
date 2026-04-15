@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="dark flex flex-col min-h-screen">
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden geo-bg flex-1 flex items-center justify-center px-4 py-24 md:py-36">
