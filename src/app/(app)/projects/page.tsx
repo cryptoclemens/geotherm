@@ -240,15 +240,18 @@ function ProjectCard({ project, onClick }: ProjectCardProps) {
                   ? `${(project.bohrkost_result.projektkosten_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio. EUR`
                   : `${(project.bohrkost_result.projektkosten_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T EUR`
                 }
-                {project.bohrkost_result.foerderung_betrag > 0 && (
-                  <span className="text-green-600 dark:text-green-400 ml-1 font-normal">
-                    (nach Förderung: {project.bohrkost_result.projektkosten_netto_mid >= 1_000_000
-                      ? `${(project.bohrkost_result.projektkosten_netto_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio.`
-                      : `${(project.bohrkost_result.projektkosten_netto_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T`
-                    })
-                  </span>
-                )}
               </span>
+              <span className="text-muted-foreground/60">
+                ({project.bohrkost_result.anzahl_bohrungen} Bohr.)
+              </span>
+              {project.bohrkost_result.foerderung_betrag > 0 && (
+                <span className="text-green-600 dark:text-green-400 font-mono">
+                  → {project.bohrkost_result.projektkosten_netto_mid >= 1_000_000
+                    ? `${(project.bohrkost_result.projektkosten_netto_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio.`
+                    : `${(project.bohrkost_result.projektkosten_netto_mid / 1_000).toLocaleString('de-DE', { maximumFractionDigits: 0 })} T`
+                  } netto
+                </span>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 italic">
