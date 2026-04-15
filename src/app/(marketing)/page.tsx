@@ -55,7 +55,7 @@ export default function LandingPage() {
             Wo bohren? Wie auslegen?
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[oklch(0.72_0.15_195)] to-[oklch(0.72_0.14_60)]">
-              Geotherm.
+              Geotherm!
             </span>
           </h1>
 
