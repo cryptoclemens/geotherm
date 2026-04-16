@@ -194,6 +194,56 @@ npm run typecheck  # TypeScript-Check muss grün sein
 
 ---
 
+## 🔄 Feature-Phasen (inspiriert von GSD)
+
+Jedes Tasks.md-Item trägt einen Phase-Tag. Das verhindert "Context Rot" und macht den Fortschritt transparent.
+
+### Phase-Tags für Tasks.md
+
+```
+[plan]   — Anforderungen klären, REQUIREMENTS.md schreiben, Scope bestätigen
+[build]  — Implementierung läuft
+[verify] — Lint + Tests + Typecheck grün, manuell getestet
+[done]   — Gemergt auf main
+```
+
+**Beispiel in Tasks.md:**
+```markdown
+- [ ] [build] BYOK-Settings-Seite (M5) 🔥
+- [ ] [plan]  GPA-Kartenfilter nach Aquifer 📦
+- [x] [done]  DeltaT-Rechner Migration ✅
+```
+
+### REQUIREMENTS.md — wann und wie
+
+Für Features **≥ M (mehrere Tage, mehrere Dateien)** eine Datei anlegen:
+
+```
+docs/requirements/{feature-name}.md
+```
+
+Inhalt-Minimalstruktur:
+```markdown
+# Requirements: {Feature-Name}
+
+## Ziel
+Ein Satz: Was soll erreicht werden?
+
+## Nicht-Ziele (Out of Scope)
+- Was explizit NICHT gebaut wird
+
+## Akzeptanzkriterien
+- [ ] Kriterium 1
+- [ ] Kriterium 2
+
+## Technische Entscheidungen
+- Welche Komponenten / APIs / DB-Tabellen betroffen sind
+```
+
+Kleine Fixes und Feedback-Items brauchen **kein** REQUIREMENTS.md.
+
+---
+
 ## 🚫 Do's & Don'ts
 
 ### ✅ DO
@@ -251,14 +301,14 @@ grep -c '^## .*\[offen\]' feedback.md
 ## 📋 Typische Workflow-Muster
 
 ### Muster: Neues Feature implementieren
-1. Tasks.md öffnen, Feature priorisieren
-2. Feature-Branch: `git checkout -b feature/xyz`
-3. Wenn neues Modul: Ordner unter `src/apps/{name}/` oder `src/core/`
-4. Komponenten mit TypeScript-Interfaces schreiben
-5. Unit-Tests für Logik
-6. `npm run lint && npm test && npm run typecheck` grün
-7. Commit mit `feat:` Prefix
-8. Push, PR, Review, Merge
+1. Tasks.md: Task mit `[plan]` taggen, Scope mit User bestätigen
+2. Bei Feature ≥ M: `docs/requirements/{name}.md` anlegen
+3. Task auf `[build]` setzen, Feature-Branch: `git checkout -b feature/xyz`
+4. Wenn neues Modul: Ordner unter `src/apps/{name}/` oder `src/core/`
+5. Komponenten mit TypeScript-Interfaces schreiben
+6. Unit-Tests für Logik
+7. `npm run lint && npm test && npm run typecheck` grün → Task auf `[verify]`
+8. Commit mit `feat:` Prefix, Push, PR, Merge → Task auf `[done]`
 
 ### Muster: Feedback-Item bearbeiten
 1. `feedback.md` öffnen, Item lesen

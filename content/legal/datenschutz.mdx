@@ -60,21 +60,52 @@ Geotherm ist eine webbasierte Ingenieur-Suite für die Vorplanung geothermischer
 
 ### 3.4 KI-gestützte Funktionen
 
-Geotherm nutzt einen KI-Assistenten (Anthropic Claude) für folgende Funktionen:
+Geotherm nutzt einen KI-Assistenten für folgende Funktionen:
 
 - **Dashboard-Assistent:** Eingabe von Nutzerprompts → Rückgabe von Standortvorschlägen, Parameterempfehlungen, Navigation.
 - **Standortanalyse (GPA):** Koordinaten und Ortsname eines angeklickten Kartenausschnitts → Rückgabe einer geologischen Ersteinschätzung.
 - **Projektoptimierung:** Projekte-Parameter des Nutzers → Rückgabe von Optimierungsvorschlägen.
 
-**Daten:** Nutzerprompts und Projektparameter werden zur Verarbeitung an Anthropic übermittelt. Es werden keine Volltext-Gesprächsverläufe dauerhaft bei Anthropic gespeichert (Anthropic-API ohne Trainingsdatennutzung für API-Kunden gemäß Anthropic-Nutzungsrichtlinien).
+**Daten:** Nutzerprompts und Projektparameter werden zur Verarbeitung an den jeweiligen KI-Anbieter übermittelt. Es werden keine Volltext-Gesprächsverläufe dauerhaft gespeichert (API-Betrieb ohne Trainingsdatennutzung gemäß den Nutzungsrichtlinien der Anbieter).
 
 **Zweck:** Vertragsleistung — KI-Assistent ist fester Bestandteil des Dashboard-Features.
 
 **Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
 
-**Drittlandtransfer:** Anthropic PBC, San Francisco, USA — **DPF-zertifiziert** seit 10.07.2023 (EU-US Data Privacy Framework, Angemessenheitsbeschluss gem. Art. 45 DSGVO). Zertifikat abrufbar unter dataprivacyframework.gov.
+**Standard-Anbieter:** Anthropic PBC, San Francisco, USA — **DPF-zertifiziert** seit 10.07.2023 (EU-US Data Privacy Framework, Angemessenheitsbeschluss gem. Art. 45 DSGVO). Zertifikat abrufbar unter dataprivacyframework.gov.
 
 **Hinweis zu automatisierten Entscheidungen (Art. 13 Abs. 2 lit. f DSGVO):** Die KI-Ausgaben (Standorteinschätzungen, Parametervorschläge) sind **unverbindliche Empfehlungen** und ersetzen keine hydrogeologischen Gutachten. Es findet keine automatisierte Entscheidung mit Rechtswirkung statt.
+
+### 3.9 BYOK — Nutzer-eigene API-Schlüssel
+
+Nutzer können in den Kontoeinstellungen einen eigenen API-Schlüssel eines Drittanbieters hinterlegen (BYOK — Bring Your Own Key). Folgende Daten werden dabei verarbeitet:
+
+**Gespeicherte Daten in unserer Datenbank:**
+- **Verschlüsselter API-Key:** AES-256-GCM-Chiffrat des API-Schlüssels (Klartext wird server-seitig nie persistiert)
+- **Anzeige-Hint:** Maskiertes Fragment des Keys (z.B. `sk-ant•••••a03-`) zur Identifikation im UI — kein funktionsfähiger Schlüssel
+- **Provider-Angabe:** Name des API-Anbieters (z.B. „anthropic")
+- **Optionaler Azure-Endpoint:** URL des Azure-Deployments (nur bei Microsoft Azure OpenAI)
+- **Zeitstempel:** Zeitpunkt der Hinterlegung bzw. letzten Aktualisierung
+
+**Verarbeitung bei KI-Anfragen:**
+Wird ein BYOK-Key hinterlegt, entschlüsselt der Server den Schlüssel **temporär im Arbeitsspeicher** und übermittelt ihn im API-Aufruf an den gewählten Anbieter. Der Klartext wird nach dem Aufruf nicht weiter gespeichert.
+
+**Zweck:** Ermöglichung der KI-Funktionen über den eigenen API-Vertrag des Nutzers.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
+
+**Mögliche Drittanbieter (je nach Nutzerwahl):**
+
+| Anbieter | Unternehmen | Standort | Datenschutz-Hinweis |
+|----------|-------------|----------|---------------------|
+| Anthropic (Claude) | Anthropic PBC | San Francisco, USA | DPF-zertifiziert |
+| OpenAI (GPT) | OpenAI, LLC | San Francisco, USA | DPF-zertifiziert |
+| Azure OpenAI | Microsoft Corp. | USA / EU (je Deployment) | Standardvertragsklauseln / DPF |
+| Perplexity AI | Perplexity AI, Inc. | San Francisco, USA | Standardvertragsklauseln |
+
+Der Nutzer ist für die Auswahl des Anbieters und die Einhaltung der jeweiligen Nutzungsbedingungen selbst verantwortlich. Anfallende Kosten beim gewählten Anbieter trägt ausschließlich der Nutzer.
+
+**Löschung:** Das Entfernen des Keys in den Einstellungen oder das Löschen des Kontos bewirkt die sofortige Löschung des Chiffrats aus der Datenbank.
 
 ### 3.5 Kartennutzung & externe Geodatendienste
 

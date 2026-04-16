@@ -95,6 +95,23 @@ KI-Ausgaben auf fachliche Plausibilität zu prüfen.
 **6.4** Der Nutzer darf die KI-Funktionen nicht für Zwecke nutzen, die gegen geltendes Recht
 oder die Nutzungsrichtlinien von Anthropic verstoßen.
 
+**6.5 BYOK — Bring Your Own Key:** Der Nutzer kann unter den Kontoeinstellungen einen eigenen
+API-Schlüssel eines Drittanbieters (z.B. Anthropic, OpenAI, Microsoft Azure OpenAI Service,
+Perplexity AI) hinterlegen (nachfolgend „Nutzer-API-Key"). In diesem Fall gelten folgende
+Sonderregelungen:
+
+- Der Nutzer-API-Key wird serverseitig mit AES-256-GCM verschlüsselt; der Klartext wird
+  weder in der Datenbank noch in Protokolldateien gespeichert.
+- Die Nutzung des Nutzer-API-Keys erfolgt **auf Rechnung und im Verantwortungsbereich des Nutzers**.
+  Anfallende Kosten beim jeweiligen API-Anbieter trägt ausschließlich der Nutzer.
+- Der Anbieter übernimmt keine Haftung für Leistungsausfälle, Kostenüberschreitungen oder
+  Datenschutzvorfälle, die auf den jeweiligen Drittanbieter zurückzuführen sind.
+- Der Nutzer ist verpflichtet, seinen API-Key vertraulich zu behandeln und bei Verdacht auf
+  Kompromittierung unverzüglich zu erneuern sowie den alten Key unter den Einstellungen zu
+  entfernen.
+- Das Löschen des Kontos bewirkt die sofortige und unwiderrufliche Löschung des verschlüsselten
+  API-Keys aus der Datenbank.
+
 ## § 7 Nutzerpflichten
 
 Der Nutzer verpflichtet sich:

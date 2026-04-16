@@ -368,9 +368,9 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] 📦 77 Unit-Tests grün (System-Kern vollständig abgedeckt — Stand April 2026 nach Plausi-Check II)
 - [x] 📦 Accessibility-Vollaudit (WCAG 2.1 AA — FeedbackModal, NavLinks, UserNav, MapView, InfoPanel, DeltaTTour, AiDialog, LayerGroup, PrintDialog, prefers-reduced-motion)
 - [x] 📦 Performance-Audit (next.config: poweredByHeader, compress, AVIF/WebP; OG-Metadata, robots.ts, sitemap.ts, PWA-Icons)
-- [ ] 📦 Mobile-Testing (iOS Safari, Android Chrome — v.a. GPA/Atlas)
-- [ ] 📦 Cross-Browser (Firefox, Safari, Edge)
-- [ ] 📦 Supabase Site URL im Dashboard auf `https://geotherm.vencly.com` setzen (E-Mail-Bestätigung)
+- [ ] [build] 📦 Mobile-Testing (iOS Safari, Android Chrome — v.a. GPA/Atlas)
+- [ ] [build] 📦 Cross-Browser (Firefox, Safari, Edge)
+- [ ] [build] 📦 Supabase Site URL im Dashboard auf `https://geotherm.vencly.com` setzen (E-Mail-Bestätigung)
 - [x] 📦 Plausi-Fixes C+D: Durchbruch /4→/3 + HC-Ratio 0.7; COP T_GW→T_R (Gringarten & Sauty 1975, Arpagaus 2018)
 - [x] 📦 Wissenschaftlicher Disclaimer auf /deltat prominent sichtbar (BRIEF.md § 7.3)
 - [x] 📦 Service-Worker-Crash behoben: @serwist disabled + Cache-clearing SW (public/sw.js)
@@ -387,8 +387,8 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] 📦 Favicon-Set: icon.svg, favicon.ico, apple-icon.png, icon-192/512.png
 - [x] 📦 heat-abw OSM-Query erweitert: mehr Industriestandorte (industrial=works, landuse=industrial+operator, …)
 - [x] 📦 Vercel-Config + CI: vercel.json + .github/workflows/ci.yml
-- [ ] 📦 Public Beta Announcement
-- [ ] 💡 Erste Feedback-Items aus `feedback.md` einarbeiten
+- [ ] [plan] 📦 Public Beta Announcement
+- [ ] [plan] 💡 Erste Feedback-Items aus `feedback.md` einarbeiten
 
 **DoD M7:** Public Beta live, erste echte Nutzer, Feedback-Loop läuft.
 
@@ -447,6 +447,33 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 - [x] 📦 Persist-Migration v0→v1 (DeltaT + Bohrkost Stores) — Produktions-Crash-Fix
 
 **DoD M7.6:** Alle 8 Scientist-Befunde aus dem Cross-App-Review umgesetzt; anzahlDubletten konsistent; DeltaT mit Porosität- und Gütegrad-Input; Bohrkost-Blend-Zone; Persist-Migration verhindert Produktions-Crash.
+
+---
+
+## Milestone 7.7 – BYOK (Bring Your Own Key) LLM-Integration *(April 2026)* 🔄 LAUFEND
+
+### 7.7.1 Infrastruktur ✅
+- [x] [done] ⭐ `@ai-sdk/openai` installiert
+- [x] [done] ⭐ DB-Migration `user_api_keys` (AES-256-GCM, RLS)
+- [x] [done] ⭐ `src/lib/crypto/apiKeyEncryption.ts` — Encrypt/Decrypt/Mask
+- [x] [done] ⭐ `src/lib/ai/getUserAiModel.ts` — Server-Utility mit Fallback auf Server-Key
+- [x] [done] 🔥 `src/app/api/user/api-keys/route.ts` — GET/POST/DELETE (CRUD)
+
+### 7.7.2 Settings-UI *(in Arbeit)*
+- [ ] [build] ⭐ `src/app/(app)/settings/page.tsx` — 4 Provider-Karten (Anthropic, OpenAI, Azure, Perplexity)
+- [ ] [build] 🔥 Zahnrad-Icon in `UserNav.tsx` → Link zu `/settings`
+- [ ] [build] 📦 Optionaler BYOK-Schritt im Signup-Flow (nach E-Mail-Bestätigung)
+
+### 7.7.3 KI-Routen auf BYOK umstellen
+- [ ] [build] 🔥 `/api/ai/chat/route.ts` — `getUserAiModel()` statt hartem `anthropic()`
+- [ ] [build] 🔥 `/api/ai/project-optimize/route.ts` — gleiche Umstellung
+
+### 7.7.4 Legal & Env
+- [ ] [build] 📦 `content/legal/agb.mdx` — § BYOK ergänzen
+- [ ] [build] 📦 `content/legal/datenschutz.mdx` — Abschnitt Nutzer-API-Keys
+- [ ] [build] ⭐ `.env.example` + `.env.local` — `API_KEY_ENCRYPTION_SECRET` + Provider-Keys
+
+**DoD M7.7:** Nutzer kann eigenen Anthropic/OpenAI/Azure/Perplexity-Key unter `/settings` hinterlegen; KI-Features nutzen diesen Key statt Server-Key; Klartext verlässt den Server nie.
 
 ---
 

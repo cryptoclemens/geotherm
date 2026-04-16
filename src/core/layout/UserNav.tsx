@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { Settings } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
 import { buttonVariants } from '@/core/ui/button'
 import { cn } from '@/core/ui/utils'
@@ -20,6 +21,14 @@ export function UserNav() {
           className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
         >
           Dashboard
+        </Link>
+        <Link
+          href="/settings"
+          aria-current={pathname === '/settings' ? 'page' : undefined}
+          aria-label="Einstellungen"
+          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'px-2')}
+        >
+          <Settings className="h-4 w-4" />
         </Link>
         <button
           onClick={async () => { await signOut(); router.push('/') }}
