@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { TooltipProvider } from '@/core/ui/tooltip'
+import { SwCleanup } from './sw-cleanup'
 import './globals.css'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -46,6 +47,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark')}}catch(e){}` }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <SwCleanup />
         <TooltipProvider delay={300}>
           {children}
         </TooltipProvider>
