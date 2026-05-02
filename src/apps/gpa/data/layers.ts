@@ -84,24 +84,28 @@ export const WMS_LAYERS = {
     params: { layers: 'Standorte', format: 'image/png', transparent: true, version: '1.1.1' },
     label: 'GeotIS: Geothermische Anlagenstandorte', opacity: 0.9,
     attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+    crs: 'EPSG4326',  // GeotIS WMS 1.1.1 returns HTTP 500 with EPSG:3857
   },
   'geotis-hoeff-a': {
     url: 'https://www.geotis.de/wms_atlas.php',
     params: { layers: 'KarteA', format: 'image/png', transparent: true, version: '1.1.1' },
     label: 'GeotIS Höffigkeit: Hydrothermisch (nachgewiesen)', opacity: 0.6,
     attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+    crs: 'EPSG4326',
   },
   'geotis-hoeff-b': {
     url: 'https://www.geotis.de/wms_atlas.php',
     params: { layers: 'KarteB', format: 'image/png', transparent: true, version: '1.1.1' },
     label: 'GeotIS Höffigkeit: Hydrothermisch (vermutet)', opacity: 0.6,
     attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+    crs: 'EPSG4326',
   },
   'geotis-hoeff-d': {
     url: 'https://www.geotis.de/wms_atlas.php',
     params: { layers: 'KarteD', format: 'image/png', transparent: true, version: '1.1.1' },
     label: 'GeotIS Geothermie-Atlas (Kompilation A+B+C)', opacity: 0.6,
     attribution: '© LIAG-Hannover, GeotIS (geotis.de)',
+    crs: 'EPSG4326',
   },
   // ── BGR Tiefentemperatur-WMS ──────────────────────────────────────────────
   // TODO: BGR veröffentlicht Untergrundtemperaturkarten (1000m/2000m/3000m Tiefe).
@@ -113,12 +117,14 @@ export const WMS_LAYERS = {
     url: 'https://services.bgr.de/wms/geologie/igme5000/',
     params: { layers: '3', format: 'image/png', transparent: true, version: '1.3.0' },
     label: 'IGME5000 Geologie Europa', opacity: 0.55,
+    crs: 'EPSG4326',  // BGR IGME5000 also returns empty tiles with EPSG:3857
   },
   'geo-bgr': {
     // GÜK200 wurde abgeschaltet → offizieller Nachfolger GÜK250 (BGR, 2024)
     url: 'https://services.bgr.de/wms/geologie/guek250/',
     params: { layers: '0', format: 'image/png', transparent: true, version: '1.3.0' },
     label: 'GÜK250 Geologie', opacity: 0.6,
+    crs: 'EPSG4326',  // BGR GÜK250 returns empty tiles with EPSG:3857
   },
   'geo-huek250': {
     url: 'https://services.bgr.de/wms/grundwasser/huek250/',

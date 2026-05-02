@@ -14,6 +14,7 @@ interface AuthState {
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: Error | null }>
+  updatePassword: (password: string) => Promise<{ error: Error | null }>
 }
 
 export function useAuth(): AuthState {
@@ -61,10 +62,16 @@ export function useAuth(): AuthState {
   const resetPassword = useCallback(async (email: string) => {
     const supabase = createClient()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/forgot-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`,
     })
     return { error }
   }, [])
 
-  return { user, loading, signIn, signUp, signOut, resetPassword }
+  const updatePassword = useCallback(async (password: string) => {
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password })
+    return { error }
+  }, [])
+
+  return { user, loading, signIn, signUp, signOut, resetPassword, updatePassword }
 }
