@@ -86,8 +86,11 @@ function SingleHeatLayer({ config, bbox }) {
       return
     }
     showOsmSpinner(config.label)
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(config.query(bbox))}`
-    fetch(url)
+    fetch('/api/overpass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: config.query(bbox) }),
+    })
       .then(r => r.json())
       .then(data => {
         let elements = (data.elements || [])
