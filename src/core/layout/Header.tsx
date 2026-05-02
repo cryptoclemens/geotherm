@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { UserNav } from './UserNav'
 import { NavLinks } from './NavLinks'
-import { ThemeToggle } from '@/core/ui/ThemeToggle'
 import { MobileMenu } from './MobileMenu'
 
 // Semver aus package.json (manuell für Major/Minor-Bumps)
@@ -47,7 +46,6 @@ export function Header() {
         {/* Desktop-Navigation (ab md) */}
         <nav aria-label="Hauptnavigation" className="hidden md:flex items-center gap-2">
           <NavLinks />
-          <ThemeToggle />
           <UserNav />
         </nav>
 

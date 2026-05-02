@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { MenuIcon } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
-import { ThemeToggle } from '@/core/ui/ThemeToggle'
 import {
   Sheet,
   SheetTrigger,
@@ -104,11 +103,6 @@ export function MobileMenu() {
           )}
         </nav>
 
-        {/* Footer: Theme-Toggle */}
-        <div className="border-t px-5 py-4 flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Design</span>
-          <ThemeToggle />
-        </div>
       </SheetContent>
     </Sheet>
   )
