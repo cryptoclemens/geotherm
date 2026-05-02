@@ -6,12 +6,12 @@ import { useLayerStore } from '../../store/useLayerStore'
 import { useGpaStore } from '../../store/useGpaStore'
 import { WMS_LAYERS } from '../../data/layers'
 
-// Proxy chain — same as v5.43
+// Proxy chain: eigener Next.js-Proxy zuerst, dann Fallbacks
 const WMS_PROXIES = [
-  url => url,                                                                      // 0: direct
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,                  // 1: corsproxy.io
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,          // 2: allorigins
-  url => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`,    // 3: codetabs
+  url => `/api/wms-proxy?url=${encodeURIComponent(url)}`,                         // 0: eigener Proxy (kein CORS)
+  url => url,                                                                      // 1: direct
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,                  // 2: corsproxy.io
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,          // 3: allorigins
 ]
 
 function makeProxiedWMS(baseUrl, options) {

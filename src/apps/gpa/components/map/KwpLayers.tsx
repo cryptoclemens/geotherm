@@ -119,7 +119,7 @@ export default function KwpLayers() {
     <>
       {layers['kwp-energietraeger'] && (
         <KwpGeoJsonLayer
-          dataUrl="geodata/kwp-energietraeger.geojson"
+          dataUrl="/geodata/kwp-energietraeger.geojson"
           styleFunc={tgRasterStyle}
           popupHtmlFn={tgRasterPopupHtml}
           layerKey="kwp-energietraeger"
@@ -127,7 +127,7 @@ export default function KwpLayers() {
       )}
       {layers['kwp-waermecluster'] && (
         <KwpGeoJsonLayer
-          dataUrl="geodata/kwp-waermecluster.geojson"
+          dataUrl="/geodata/kwp-waermecluster.geojson"
           styleFunc={waermeclusterStyle}
           popupHtmlFn={waermeclusterPopupHtml}
           layerKey="kwp-waermecluster"
