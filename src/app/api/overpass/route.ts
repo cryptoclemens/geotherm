@@ -1,5 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
+const ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.openstreetmap.ru/api/interpreter',
+]
+
 export async function POST(req: NextRequest) {
   let query: string
   try {
@@ -12,20 +18,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
-  try {
-    const upstream = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(30_000),
-    })
+  for (const endpoint of ENDPOINTS) {
+    try {
+      const upstream = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `data=${encodeURIComponent(query)}`,
+        signal: AbortSignal.timeout(30_000),
+      })
 
-    const data: unknown = await upstream.json()
-    return NextResponse.json(data, {
-      status: upstream.status,
-      headers: { 'Cache-Control': 'public, max-age=1800' },
-    })
-  } catch {
-    return NextResponse.json({ error: 'overpass fetch failed' }, { status: 502 })
+      const text = await upstream.text()
+      let data: unknown
+      try {
+        data = JSON.parse(text)
+      } catch {
+        // Non-JSON response (HTML error page) — try next endpoint
+        continue
+      }
+
+      return NextResponse.json(data, {
+        status: upstream.ok ? 200 : upstream.status,
+        headers: { 'Cache-Control': 'public, max-age=1800' },
+      })
+    } catch {
+      // Network error or timeout — try next endpoint
+    }
   }
+
+  return NextResponse.json({ error: 'all overpass endpoints failed' }, { status: 502 })
 }
