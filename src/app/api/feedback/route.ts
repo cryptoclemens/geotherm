@@ -4,7 +4,7 @@ import { appendToFeedbackMd } from '@/lib/feedback/github-sync'
 import { z } from 'zod'
 
 const schema = z.object({
-  inApp: z.enum(['allgemein', 'gpa', 'deltat', 'docs']),
+  inApp: z.enum(['allgemein', 'gpa', 'deltat', 'bohrkost', 'docs']),
   category: z.enum(['bug', 'ui-design', 'feature-wunsch', 'performance', 'datenqualitaet', 'sonstiges']),
   stars: z.number().int().min(1).max(5).nullable(),
   message: z.string().min(5).max(2000),
