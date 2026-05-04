@@ -145,7 +145,7 @@ Wenn > 0 → Triage-Vorschlag präsentieren.
 ## 📝 Git-Workflow
 
 ### Branches
-- `main` — produktiv, Auto-Deploy via Vercel
+- `main` — produktiv, Deploy via `bash /root/deploy/geotherm/deploy.sh` (Hetzner)
 - `feature/{kurzbeschreibung}` — neue Features (max. 1–2 Sessions, dann mergen)
 - `fix/{kurzbeschreibung}` — Bugfixes
 - `docs/{kurzbeschreibung}` — nur Doku
@@ -159,7 +159,7 @@ Jede Claude-Session endet mit diesen Schritten:
 5. PR **automatisch mergen** (squash) via GitHub MCP — kein manueller Schritt nötig
 6. **Veraltete Branches und PRs schließen** — nie mehr als 1 offener PR gleichzeitig
 
-> Merge auf `main` = Vercel-Produktions-Deploy. Nur mergen wenn lint+test+typecheck grün.
+> Merge auf `main` = manueller Deploy via `deploy.sh` auf Hetzner. Nur mergen wenn lint+test+typecheck grün.
 
 ### Keine Long-Running-Branches
 Branches leben **maximal 1–2 Sessions** oder **1 Feature**. Danach:
