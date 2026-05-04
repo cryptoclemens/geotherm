@@ -122,6 +122,8 @@ export interface DeltaTOutputs {
   sMaterial: TrafficLight
   /** WP aktiv? */
   wpAktiv: boolean
+  /** WP-Wärmebeitrag am Kondensator [kW] = qDelivered − qThGesamt = W_el (Energiebilanz) */
+  qWP: number
   /** Mindest-Förderrate für Zielleistung mit 1 Dublette bei aktuellem ΔT [l/s] — null wenn ΔT ≤ 0 */
   qMinFoerderrate: number | null
   /** Tiefe für Direktnutzung ohne WP: T_GW ≥ T_VL [m] */
@@ -295,6 +297,8 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
 
   // W_el = Q_geo / (COP − 1) — nur wenn WP aktiv
   const elLeistungWP = wpAktiv && cop < 90 ? qThGesamt / (cop - 1) : 0
+  // Q_WP (Kondensator-Beitrag) = Q_delivered − Q_geo = W_el (Energiebilanz: Q_geo + W_el = Q_delivered)
+  const qWP = wpAktiv && cop < 90 ? qDelivered - qThGesamt : 0
 
   // LMTD Gegenstrom: heiß (T_GW→T_R), kalt (T_RL→T_VL) — VDI Wärmeatlas 2019
   const dT1 = tGW - tVL
@@ -376,7 +380,7 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,
     anzahlDubletten, gesamtFoerderrate, tauchpumpenLeistung,
     tBreak, spezLeistung, abstandOpt,
-    cop, elLeistungWP,
+    cop, elLeistungWP, qWP,
     lmtd, lmtdValid, wtFlaeche,
     wpType, wpColor, wpModel,
     material, materialColor, scaling, scalingColor,

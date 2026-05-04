@@ -346,6 +346,66 @@ describe('kluftaquiferWarnung (Gringarten & Sauty 1975)', () => {
   })
 })
 
+// ─── T_GW Auto-Berechnung aus Tiefe ──────────────────────────────────────────
+describe('T_GW Auto-Berechnung — calcDefaultTGW (VDI 4640 Bl. 1)', () => {
+  it('T_GW = Oberfläche + Gradient × Tiefe (custom/Deutschland-Mittel)', () => {
+    // T = 10 + 0.03 × 500 = 25 °C
+    expect(calcDefaultTGW(500, 'custom')).toBeCloseTo(25, 1)
+  })
+  it('tiefe=0 → Oberflächentemperatur (10 °C für custom)', () => {
+    expect(calcDefaultTGW(0, 'custom')).toBe(10)
+  })
+  it('tiefe=1000 → 10 + 0.03×1000 = 40 °C (gerundet auf 0.5)', () => {
+    expect(calcDefaultTGW(1000, 'custom')).toBeCloseTo(40, 1)
+  })
+  it('Molasse 500m: 10 + 0.030×500 = 25 °C', () => {
+    expect(calcDefaultTGW(500, 'Molasse')).toBeCloseTo(25, 1)
+  })
+  it('Ergebnis ist auf 0.5 gerundet', () => {
+    // 10 + 0.03 × 333 = 10 + 9.99 = 19.99 → round to 20.0
+    const v = calcDefaultTGW(333, 'custom')
+    expect(v % 0.5).toBe(0)
+  })
+})
+
+// ─── Einheiten-Konvertierung l/s ↔ m³/min ────────────────────────────────────
+describe('Einheiten-Konvertierung Förderrate', () => {
+  it('1 l/s = 0.06 m³/min', () => {
+    expect(1 * 0.06).toBeCloseTo(0.06, 5)
+  })
+  it('15 l/s = 0.90 m³/min', () => {
+    expect(15 * 0.06).toBeCloseTo(0.9, 5)
+  })
+  it('Rückrechnung: 0.9 m³/min = 15 l/s', () => {
+    expect(0.9 / 0.06).toBeCloseTo(15, 5)
+  })
+  it('Förderrate intern bleibt l/s — calculateSystem unverändert', () => {
+    const r = calculateSystem(inp({ Q: 15 }))
+    expect(r.qThPerDoublet).toBeCloseTo(15 * (DEFAULT_INPUTS.tGW - DEFAULT_INPUTS.tR) * 4.18, 0)
+  })
+})
+
+// ─── qWP — WP-Wärmebeitrag ───────────────────────────────────────────────────
+describe('qWP — WP-Wärmebeitrag (Kondensator, T-Hub)', () => {
+  it('qWP = qDelivered − qThGesamt wenn WP aktiv', () => {
+    const r = calculateSystem(inp({ tVL: 90, tGW: 25 }))
+    expect(r.wpAktiv).toBe(true)
+    expect(r.qWP).toBeCloseTo(r.qDelivered - r.qThGesamt, 3)
+  })
+  it('qWP = elLeistungWP (W_el wird vollständig zu Wärme)', () => {
+    const r = calculateSystem(inp({ tVL: 90, tGW: 25 }))
+    expect(r.qWP).toBeCloseTo(r.elLeistungWP, 3)
+  })
+  it('qWP = 0 wenn WP nicht aktiv (tVL ≤ tGW)', () => {
+    const r = calculateSystem(inp({ tVL: 20, tGW: 25 }))
+    expect(r.qWP).toBe(0)
+  })
+  it('Energiebilanz: qThGesamt + qWP = qDelivered', () => {
+    const r = calculateSystem(inp({ tVL: 90, tGW: 25 }))
+    expect(r.qThGesamt + r.qWP).toBeCloseTo(r.qDelivered, 2)
+  })
+})
+
 // ─── Sichardt Q_max ───────────────────────────────────────────────────────────
 describe('qMaxHydraulisch — Sichardt-Einflussradius (Kruseman & de Ridder 1990)', () => {
   it('ist kleiner als mit R=500m (konservativer) bei hoher Transmissivität', () => {

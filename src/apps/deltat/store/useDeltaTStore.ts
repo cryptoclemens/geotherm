@@ -11,10 +11,13 @@ interface DeltaTState {
   outputs: DeltaTOutputs
   /** true = User hat T_GW manuell überschrieben → Tiefe-Kopplung deaktiviert */
   tGWManual: boolean
+  /** Anzeigeeinheit für Förderrate Q — intern immer l/s */
+  qEinheit: 'ls' | 'm3min'
   setInput: <K extends keyof DeltaTInputs>(key: K, val: DeltaTInputs[K]) => void
   resetInputs: () => void
   /** Tiefe-Kopplung zurücksetzen: T_GW wird wieder aus Tiefe berechnet */
   resetTGWCoupling: () => void
+  setQEinheit: (einheit: 'ls' | 'm3min') => void
   /** Übernimmt Aquifer-Daten aus einem GPA-LocationPreset */
   applyPreset: (preset: LocationPreset) => void
   /** Lädt vollständige Eingaben aus einem gespeicherten Projekt */
@@ -27,6 +30,7 @@ export const useDeltaTStore = create<DeltaTState>()(
       inputs: DEFAULT_INPUTS,
       outputs: calculateSystem(DEFAULT_INPUTS),
       tGWManual: false,
+      qEinheit: 'ls',
       setInput: (key, val) =>
         set((s) => {
           let next = { ...s.inputs, [key]: val }
@@ -63,6 +67,7 @@ export const useDeltaTStore = create<DeltaTState>()(
           const next = { ...s.inputs, tGW }
           return { inputs: next, outputs: calculateSystem(next), tGWManual: false }
         }),
+      setQEinheit: (einheit) => set({ qEinheit: einheit }),
       applyPreset: (preset) =>
         set((s) => {
           const tiefe = preset.aquifer?.tiefe
@@ -94,10 +99,10 @@ export const useDeltaTStore = create<DeltaTState>()(
     }),
     {
       name: 'deltat-inputs',
-      version: 2,
+      version: 3,
       // v0 → v1: porositaet + guetegradWP zu Inputs hinzugefügt; outputs-Shape erweitert.
       // v1 → v2: region + injektionsdruck zu Inputs hinzugefügt; calcEtaPump + Sichardt Q_max.
-      // migrate normalisiert alte Daten gegen DEFAULT_INPUTS und berechnet outputs neu.
+      // v2 → v3: qEinheit (Anzeigeeinheit Förderrate) als UI-State hinzugefügt.
       migrate: (persistedState, version) => {
         if (version < 1) {
           const old = persistedState as Partial<DeltaTState> | null
@@ -107,10 +112,10 @@ export const useDeltaTStore = create<DeltaTState>()(
             inputs,
             outputs: calculateSystem(inputs),
             tGWManual: old?.tGWManual ?? false,
+            qEinheit: 'ls',
           } as DeltaTState
         }
         if (version < 2) {
-          // v1 → v2: region + injektionsdruck fehlen in alten Daten → aus DEFAULT_INPUTS auffüllen
           const old = persistedState as Partial<DeltaTState> | null
           const oldInputs = (old?.inputs ?? {}) as Partial<DeltaTInputs>
           const inputs: DeltaTInputs = { ...DEFAULT_INPUTS, ...oldInputs }
@@ -118,6 +123,18 @@ export const useDeltaTStore = create<DeltaTState>()(
             ...(old ?? {}),
             inputs,
             outputs: calculateSystem(inputs),
+            qEinheit: 'ls',
+          } as DeltaTState
+        }
+        if (version < 3) {
+          const old = persistedState as Partial<DeltaTState> | null
+          const oldInputs = (old?.inputs ?? {}) as Partial<DeltaTInputs>
+          const inputs: DeltaTInputs = { ...DEFAULT_INPUTS, ...oldInputs }
+          return {
+            ...(old ?? {}),
+            inputs,
+            outputs: calculateSystem(inputs),
+            qEinheit: 'ls',
           } as DeltaTState
         }
         return persistedState as DeltaTState

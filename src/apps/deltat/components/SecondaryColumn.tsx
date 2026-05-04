@@ -83,8 +83,19 @@ export function SecondaryColumn() {
             </div>
           </div>
         </div>
-        <DataRow label="Elektrische Leistungsaufnahme" value={r.wpAktiv && r.cop < 90 ? `${fmt(r.elLeistungWP, 1)} kW` : '—'} />
-        <DataRow label="Wärmeleistung gesamt" value={`${fmt(r.qDelivered, 1)} kW`} highlight />
+        {r.wpAktiv && r.cop < 90 ? (
+          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2 mt-1 space-y-0.5">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Wärmebilanz</p>
+            <DataRow label="Q_geo (Dobl. gesamt)" value={`${fmt(r.qThGesamt, 1)} kW`} />
+            <DataRow label="+ Q_WP (Kondensator, T-Hub)" value={`+ ${fmt(r.qWP, 1)} kW`} highlight />
+            <DataRow label="= Q_gesamt (Geliefert)" value={`= ${fmt(r.qDelivered, 1)} kW`} highlight />
+            <div className="border-t border-border/50 mt-1 pt-1">
+              <DataRow label="Elektrische Aufnahme W_el" value={`${fmt(r.elLeistungWP, 1)} kW`} />
+            </div>
+          </div>
+        ) : (
+          <DataRow label="Wärmeleistung gesamt" value={`${fmt(r.qDelivered, 1)} kW`} highlight />
+        )}
         <DataRow label="Temperaturhub T\u1d5b\u1d38 \u2212 T\u1d4a\u1d42" value={`${fmt(r.tHub, 0)} K`} />
       </section>
 

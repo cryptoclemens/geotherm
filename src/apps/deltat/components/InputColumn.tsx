@@ -1,5 +1,6 @@
 'use client'
 
+import { LockIcon, LockOpenIcon } from 'lucide-react'
 import { ParamSlider } from '@/core/ui/ParamSlider'
 import { useDeltaTStore } from '../store/useDeltaTStore'
 import { GEOTHERM_REGIONS } from '../calc/system'
@@ -9,9 +10,11 @@ export function InputColumn() {
   const inputs           = useDeltaTStore(s => s.inputs)
   const outputs          = useDeltaTStore(s => s.outputs)
   const tGWManual        = useDeltaTStore(s => s.tGWManual)
+  const qEinheit         = useDeltaTStore(s => s.qEinheit)
   const setInput         = useDeltaTStore(s => s.setInput)
   const reset            = useDeltaTStore(s => s.resetInputs)
   const resetTGWCoupling = useDeltaTStore(s => s.resetTGWCoupling)
+  const setQEinheit      = useDeltaTStore(s => s.setQEinheit)
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border">
@@ -56,9 +59,27 @@ export function InputColumn() {
           format={v => v.toExponential(1)}
           onChange={v => setInput('kf', v)}
           info="Hydraulische Leitfähigkeit nach Darcy [m/s].\nTransmissivität: T = k_f × b\nVDI 4640: T > 1×10⁻³ m²/s = gut nutzbar\nT > 1×10⁻² m²/s = sehr gut" />
-        <ParamSlider label="Förderrate Q" value={inputs.Q} min={1} max={100} step={1} unit="l/s"
-          onChange={v => setInput('Q', v)}
-          info="Volumenstrom der Förderbohrung [l/s].\nBegrenzt durch Transmissivität und Absenkung.\nThermische Leistung: P = ρ·c_p·Q·ΔT\n(DVGW W 115)" />
+        <div className="flex flex-col gap-1">
+          <ParamSlider
+            label="Förderrate Q"
+            value={inputs.Q}
+            min={1} max={100} step={1}
+            unit={qEinheit === 'm3min' ? 'm³/min' : 'l/s'}
+            format={v => qEinheit === 'm3min' ? (v * 0.06).toFixed(2) : v.toFixed(0)}
+            onChange={v => setInput('Q', v)}
+            info={'Volumenstrom der Förderbohrung.\nThermische Leistung: P = ρ·c_p·Q·ΔT\nBegrenzt durch Transmissivität und Absenkung.\n(DVGW W 115)\n\n1 l/s = 0,06 m³/min = 3,6 m³/h'}
+          />
+          <div className="flex gap-1 justify-end">
+            <button
+              onClick={() => setQEinheit('ls')}
+              className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${qEinheit === 'ls' ? 'bg-primary text-primary-foreground border-primary' : 'text-muted-foreground border-border hover:border-primary/50'}`}
+            >l/s</button>
+            <button
+              onClick={() => setQEinheit('m3min')}
+              className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${qEinheit === 'm3min' ? 'bg-primary text-primary-foreground border-primary' : 'text-muted-foreground border-border hover:border-primary/50'}`}
+            >m³/min</button>
+          </div>
+        </div>
         <ParamSlider label="Effektive Porosität n" value={inputs.porositaet} min={0.01} max={0.40} step={0.01} unit=""
           format={v => v.toFixed(2)}
           onChange={v => setInput('porositaet', v)}
@@ -97,26 +118,28 @@ export function InputColumn() {
           )}
         </div>
 
-        {/* T_GW mit Tiefen-Kopplung */}
+        {/* T_GW mit Tiefen-Kopplung — Lock/Unlock-Toggle */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">
+            <button
+              onClick={tGWManual ? resetTGWCoupling : undefined}
+              disabled={!tGWManual}
+              title={tGWManual ? 'Auf Auto-Berechnung zurücksetzen' : 'T_GW wird aus Tiefe berechnet — Slider überschreibt Auto'}
+              className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                tGWManual
+                  ? 'border-amber-500/70 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 cursor-pointer'
+                  : 'border-green-500/40 text-green-600 dark:text-green-400 cursor-default'
+              }`}
+            >
               {tGWManual
-                ? '✏️ T_GW manuell — Tiefenkopplung aufgehoben'
-                : `🔗 T_GW an Tiefe gekoppelt (${(GEOTHERM_REGIONS[inputs.region].gradient * 100).toFixed(1)} °C/100m)`}
-            </span>
-            {tGWManual && (
-              <button
-                onClick={resetTGWCoupling}
-                className="text-[10px] text-primary/70 hover:text-primary underline underline-offset-2 leading-none"
-              >
-                ↩ koppeln
-              </button>
-            )}
+                ? <><LockOpenIcon className="w-2.5 h-2.5" /> Manuell — ↩ Auto</>
+                : <><LockIcon className="w-2.5 h-2.5" /> Auto ({(GEOTHERM_REGIONS[inputs.region].gradient * 100).toFixed(1)} °C/100m)</>
+              }
+            </button>
           </div>
           <ParamSlider label="Grundwassertemperatur" value={inputs.tGW} min={5} max={120} step={0.5} unit="°C"
             onChange={v => setInput('tGW', v)}
-            info="Temperatur des geförderten Grundwassers [°C].\nFaustformel: T_GW ≈ 10 °C + Tiefe × 0,03 °C/m\n(geothermischer Gradient, Deutschland-Mittel nach VDI 4640 Bl. 1, Abschn. 4.2)\nRegional abweichend: Oberrheingraben bis 0,05 K/m, Harz ~0,02 K/m" />
+            info="Temperatur des geförderten Grundwassers [°C].\nFaustformel: T_GW ≈ 10 °C + Tiefe × 0,03 °C/m\n(geothermischer Gradient, Deutschland-Mittel nach VDI 4640 Bl. 1, Abschn. 4.2)\nRegional abweichend: Oberrheingraben bis 0,05 K/m, Harz ~0,02 K/m\n\nSlider bewegen → Kopplung aufgehoben (Manuell)\nAuf 'Auto' klicken → Tiefenkopplung wiederherstellen" />
         </div>
 
         <ParamSlider label="Reinjektionstemperatur" value={inputs.tR} min={2} max={40} step={0.5} unit="°C"

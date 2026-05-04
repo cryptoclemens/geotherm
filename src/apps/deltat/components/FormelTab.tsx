@@ -110,6 +110,22 @@ const FORMELN: Formel[] = [
     erlaeuterung: 'Jährlich erzeugte Wärmemenge bei Nennleistung. h/a = Volllaststunden. Typisch Fernwärme: 4.000–6.000 h/a. Volllaststunden ≠ Betriebsstunden (Teillastbetrieb nicht berücksichtigt).',
     quelle: 'VDI 4640 Bl. 1',
   },
+  {
+    id: 'scatter-abstand',
+    kennzahl: 'Scatter: Förderrate vs. opt. Abstand',
+    formel: 'd_opt(Q) = √[ 3·Q·t_B·365·86400 / (π·n·b·ρc) ]',
+    einheit: 'm @ t_B=25 a',
+    erlaeuterung: 'Das Scatter-Diagramm zeigt d_opt für t_B = 25 Jahre als Funktion von Q (Schrittweite ΔQ = 5 l/s). Basis: Drost-Modell (analytisch, 1978). Empirische Vergleichswerte aus RWE Power AG-Modellierungen (unveröff.) liegen typisch 10–20 % über dem analytischen Drost-Wert — der Drost-Ansatz ist damit leicht auf der sicheren Seite. Plausibilitätsprüfung: Aktueller Abstand sollte ≥ d_opt liegen; Abweichung > 25 % unter der RWE-Kurve → Standort-Gutachten empfohlen.',
+    quelle: 'Drost 1978; RWE Power AG Modellierung (unveröff., Plausibilitätsprüfung); Gringarten & Sauty 1975',
+  },
+  {
+    id: 'wp-bilanz',
+    kennzahl: 'WP-Wärmebilanz (Kondensator)',
+    formel: 'Q_geo + W_el = Q_delivered; W_el = Q_geo / (COP − 1)',
+    einheit: 'kW',
+    erlaeuterung: 'Energiebilanz der Wärmepumpe: Die geothermisch entzogene Wärme Q_geo wird am Verdampfer aufgenommen. Am Kondensator gibt die WP Q_delivered = Q_geo + W_el ab. Der WP-Wärmebeitrag Q_WP = W_el ergibt sich aus der elektrischen Aufnahme (Kompressionswärme). COP = Q_delivered / W_el → W_el = Q_delivered / COP = Q_geo / (COP − 1).',
+    quelle: 'VDI 4640 Bl. 4; Arpagaus et al. 2018, Energy 152',
+  },
 ]
 
 // ── Feedback-API ─────────────────────────────────────────────────────────────

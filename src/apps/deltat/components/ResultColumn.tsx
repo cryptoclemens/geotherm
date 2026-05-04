@@ -25,6 +25,7 @@ function fmt(n: number, dec = 0) {
 export function ResultColumn() {
   const r = useDeltaTStore(s => s.outputs)
   const inputs = useDeltaTStore(s => s.inputs)
+  const qEinheit = useDeltaTStore(s => s.qEinheit)
   const [detailsOpen, setDetailsOpen] = useState(false)
 
   const _anzahl = r.anzahlDubletten ?? 0
@@ -82,8 +83,12 @@ export function ResultColumn() {
                 : undefined}
             info={'Anzahl benötigter Förder-/Injektionsbohrpaare:\nn = ⌈P_Ziel / P_Doublette⌉\nAufrunden, da Teildoubletten nicht sinnvoll\nnull = ΔT ≤ 0 (unphysikalisch)'}
           />
-          <KpiTile label="Förderrate ges." value={r.gesamtFoerderrate} unit="l/s"
-            info={'Gesamtförderrate aller Doubletten:\nQ_ges = n · Q [l/s]\nLimitiert durch Aquifer-Transmissivität (DVGW W 115)'} />
+          <KpiTile
+            label="Förderrate ges."
+            value={qEinheit === 'm3min' ? parseFloat((r.gesamtFoerderrate * 0.06).toFixed(2)) : r.gesamtFoerderrate}
+            unit={qEinheit === 'm3min' ? 'm³/min' : 'l/s'}
+            info={'Gesamtförderrate aller Doubletten:\nQ_ges = n · Q [l/s]\nLimitiert durch Aquifer-Transmissivität (DVGW W 115)\n\n1 l/s = 0,06 m³/min'}
+          />
           <KpiTile label="Pumpenleistung" value={r.tauchpumpenLeistung} unit="kW/Bohrg."
             info={'Elektrische Leistungsaufnahme der Tauchpumpe je Bohrung:\nP_Pumpe = ρ·g·H·Q / η [kW]\nη_Pumpe ≈ 0,70 (VDI 4640 Bl. 2)'} />
           <KpiTile label="Spez. Leistung" value={r.spezLeistung} unit="W/m" color={r.sHydraulik}
@@ -95,6 +100,41 @@ export function ResultColumn() {
             info={'Optimaler Mindestabstand für t_B = 25 Jahre:\nd_opt = √(3·Q·t_B / (π·n·b) × ρc_W/ρc_Aq) [m]\n(Gringarten & Sauty 1975)'} />
         </div>
       </section>
+
+      {/* ── Dubletten-Herleitung ──────────────────────────────────────────── */}
+      {r.anzahlDubletten !== null && r.qThPerDoublet > 0 && (
+        <section className="shrink-0">
+          <div className="rounded-md bg-muted/30 border border-border px-3 py-2 text-xs leading-relaxed">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Herleitung Dublettenanzahl</p>
+            <div className="font-mono text-foreground/80 space-y-0.5">
+              <div>
+                <span className="text-muted-foreground">Benötigt Q_geo: </span>
+                <span className="font-semibold">{fmt(r.qGeoBenoetigt, 1)} kW</span>
+                {r.wpAktiv && r.cop < 90 && (
+                  <span className="text-muted-foreground text-[10px] ml-1">
+                    (= {fmt(inputs.zielLeistung, 0)} kW × (COP−1)/COP = {fmt(inputs.zielLeistung, 0)} × {fmt((r.cop - 1) / r.cop, 3)})
+                  </span>
+                )}
+              </div>
+              <div>
+                <span className="text-muted-foreground">÷ pro Dublette: </span>
+                <span>{fmt(r.qThPerDoublet, 1)} kW</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">= </span>
+                <span>{(r.qGeoBenoetigt / r.qThPerDoublet).toFixed(2)}</span>
+                <span className="text-muted-foreground"> → aufgerundet </span>
+                <span className="font-bold text-foreground">{r.anzahlDubletten} Dublette{r.anzahlDubletten !== 1 ? 'n' : ''}</span>
+              </div>
+              {r.anzahlDubletten === 1 && r.wpAktiv && r.cop < 90 && (
+                <div className="mt-1 text-[10px] text-green-600 dark:text-green-400 font-sans">
+                  ✓ 1 Dublette + WP (COP {fmt(r.cop, 2)}) liefert {fmt(r.qDelivered, 0)} kW — Ziel {fmt(inputs.zielLeistung, 0)} kW erreicht
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Erweiterbare Details ────────────────────────────────────────────── */}
       <section className="shrink-0">
