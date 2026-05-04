@@ -50,6 +50,13 @@ export interface DeltaTInputs {
    *  Standard-WP: 0,45–0,55 | Hochtemperatur-WP: 0,35–0,45
    *  (IEA HPP Annex 35, Arpagaus et al. 2018, Energy 152) */
   guetegradWP: number
+  /** Geothermische Region — bestimmt Temperaturgradienten für T_GW-Kopplung
+   *  Quellen: Agemar et al. 2014, Geothermics 53 */
+  region: RegionId
+  /** Injektionsdruck [bar] — Gegendruck an der Injektionsbohrung
+   *  (statischer Kopf + Reibungsverluste). Bestimmt Eigenverbrauch Injektionspumpe.
+   *  Typ. gespannter Aquifer: 5–25 bar — Grundfos-Kataloge */
+  injektionsdruck: number
 }
 
 export type TrafficLight = 'green' | 'yellow' | 'red'
@@ -119,9 +126,14 @@ export interface DeltaTOutputs {
   qMinFoerderrate: number | null
   /** Tiefe für Direktnutzung ohne WP: T_GW ≥ T_VL [m] */
   tiefeMinDirekt: number
-  /** Hydraulisch maximal zulässige Förderrate [l/s] nach Thiem (1906), DVGW W 115 Abschn. 6.2
-   *  Q_max = 2π × T × s_zul / ln(R/r_w); s_zul = b/3; R=500m; r_w=0,15m */
+  /** Hydraulisch maximal zulässige Förderrate [l/s] — Thiem (1906) + Kruseman & de Ridder (1990)
+   *  Q_max = 2π × T × s_zul / ln(R/r_w); s_zul = b/3; R = Sichardt-Einflussradius */
   qMaxHydraulisch: number
+  /** Injektionspumpenleistung [kW] = Q × ΔP_inj / η_inj
+   *  ΔP_inj = injektionsdruck × 1e5 Pa, η_inj = 0,55 (Grundfos-Kataloge) */
+  injektionsPumpenLeistung: number
+  /** true wenn Porosität < 0,05 → Kluftaquifer → Gringarten & Sauty (1975) nicht anwendbar */
+  kluftaquiferWarnung: boolean
 }
 
 /**
@@ -151,8 +163,56 @@ export const SURFACE_TEMP      = 10    // °C, Jahresmittel neutrale Zone
  *  Quellen: VDI 4640 Bl. 1 Tab. B1; Clauser 2011 Handbook of Geomathematics */
 export const HC_RATIO = 0.55
 
-export function calcDefaultTGW(tiefe: number): number {
-  return Math.round((SURFACE_TEMP + GEOTHERM_GRADIENT * tiefe) * 2) / 2
+// ── Regionale Geothermie-Gradienten ──────────────────────────────────────────
+export type RegionId = 'NDB' | 'Molasse' | 'URG' | 'Mittelgebirge' | 'custom'
+
+export interface GeothermRegion {
+  label: string
+  gradient: number      // geothermischer Gradient [K/m]
+  surfaceTemp: number   // Oberflächentemperatur neutrale Zone [°C]
+  source: string
+}
+
+/** Regionale mittlere Gradienten nach Agemar et al. 2014, Geothermics 53 */
+export const GEOTHERM_REGIONS: Record<RegionId, GeothermRegion> = {
+  NDB:           { label: 'Norddeutsches Becken',   gradient: 0.028, surfaceTemp: 9,  source: 'Agemar et al. 2014, Geothermics 53' },
+  Molasse:       { label: 'Alpenvorland (Molasse)',  gradient: 0.030, surfaceTemp: 10, source: 'Agemar et al. 2014, Geothermics 53' },
+  URG:           { label: 'Oberrheingraben (URG)',   gradient: 0.045, surfaceTemp: 11, source: 'Agemar et al. 2014, Geothermics 53' },
+  Mittelgebirge: { label: 'Mittelgebirge',           gradient: 0.032, surfaceTemp: 9,  source: 'Agemar et al. 2014, Geothermics 53' },
+  custom:        { label: 'Benutzerdefiniert',       gradient: GEOTHERM_GRADIENT, surfaceTemp: SURFACE_TEMP, source: '' },
+}
+
+// ── Brunnen-Hydraulik-Konstanten ─────────────────────────────────────────────
+/** Brunnenradius Standard-Ausbau [m] */
+export const R_BRUNNEN  = 0.15
+/** Speicherkoeffizient gespannter Aquifer [-] — Kruseman & de Ridder 1990 */
+export const S_CONFINED = 1e-4
+/** Auslegungslebensdauer [s] = 25 Jahre */
+export const T_DESIGN_S = 25 * 365.25 * 24 * 3600
+
+/** Transiente Einflussradius-Formel — Kruseman & de Ridder 1990
+ *  R = 1.5 × sqrt(T × t / S)   [T m²/s, t s, S -]
+ *  Ersetzt den fixen Wert R=500 m (DVGW W 115 Faustformel) durch physikalisch
+ *  abgeleitete, transmissivitätsabhängige Reichweite. Konservativer als R=500 bei
+ *  hohen T-Werten (großes R → kleines Q_max). */
+export function calcRInfluence(transmissiv: number): number {
+  return 1.5 * Math.sqrt(transmissiv * T_DESIGN_S / S_CONFINED)
+}
+
+/** Tiefenabhängiger Pumpenwirkungsgrad [−]
+ *  η(z) = 0.72 − 0.08 × (z / 2000), clamped [0.45, 0.72]
+ *  Quellen: Grundfos SP/A-Baureihe Leistungskurven; VDI 4640 Bl. 2 Abschn. 5.6
+ *  Bei z=0: η=0,72 | z=500m: η=0,70 | z=1500m: η=0,66 | z=3000m: η=0,60 */
+export function calcEtaPump(tiefe: number): number {
+  return Math.max(0.45, Math.min(0.72, 0.72 - 0.08 * (tiefe / 2000)))
+}
+
+/** Injektionspumpen-Wirkungsgrad [-] — Grundfos-Kataloge */
+export const ETA_INJEKTION = 0.55
+
+export function calcDefaultTGW(tiefe: number, region: RegionId = 'custom'): number {
+  const r = GEOTHERM_REGIONS[region]
+  return Math.round((r.surfaceTemp + r.gradient * tiefe) * 2) / 2
 }
 
 export const DEFAULT_INPUTS: DeltaTInputs = {
@@ -169,12 +229,14 @@ export const DEFAULT_INPUTS: DeltaTInputs = {
   tRL: 55,
   laufstunden: 2000,
   foerderhoehe: calcDefaultFoerderhoehe(500), // 265 m für Standardtiefe 500 m
-  porositaet:   0.25,  // mittlerer Sandstein-Aquifer (Gringarten & Sauty 1975)
-  guetegradWP:  0.50,  // Standard-WP-Gütegrad (Arpagaus et al. 2018)
+  porositaet:    0.25,   // mittlerer Sandstein-Aquifer (Gringarten & Sauty 1975)
+  guetegradWP:   0.50,   // Standard-WP-Gütegrad (Arpagaus et al. 2018)
+  region:        'custom',
+  injektionsdruck: 10,   // bar — Richtwert gespannter Aquifer (Grundfos-Kataloge)
 }
 
 export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
-  const { tiefe, maechtig, kf, tGW, tds, Q, tR, abstand, zielLeistung, tVL, tRL, laufstunden, foerderhoehe, porositaet, guetegradWP } = inp
+  const { tiefe, maechtig, kf, tGW, tds, Q, tR, abstand, zielLeistung, tVL, tRL, laufstunden, foerderhoehe, porositaet, guetegradWP, injektionsdruck } = inp
 
   const transmissiv = kf * maechtig
   const deltaT = tGW - tR
@@ -206,9 +268,14 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     : qThGesamt
 
   const gesamtFoerderrate = _anzahl * Q
-  // P_pump = Q[m³/s] × ρ[kg/m³] × g[m/s²] × H[m] / η — VDI 4640, Stober & Bucher (2012) Kap. 7.4
+  // P_pump = Q[m³/s] × ρ[kg/m³] × g[m/s²] × H[m] / η(z) — VDI 4640, Stober & Bucher (2012) Kap. 7.4
   // H = foerderhoehe (dynamischer Spiegel + Rohrreibung), NICHT Bohrtiefe — Faktor 2-5 Unterschied!
-  const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * foerderhoehe / (0.6 * 1000)
+  // η(z) = calcEtaPump(tiefe) — tiefenabhängig nach Grundfos-Katalogen
+  const etaPump = calcEtaPump(tiefe)
+  const tauchpumpenLeistung = (Q / 1000) * 1000 * 9.81 * foerderhoehe / (etaPump * 1000)
+  // P_inj = Q × ΔP_inj / η_inj — Eigenverbrauch Injektionspumpe
+  // ΔP_inj = injektionsdruck [bar] × 1e5 [Pa/bar]
+  const injektionsPumpenLeistung = (Q / 1000) * (injektionsdruck * 1e5) / (ETA_INJEKTION * 1000)
 
   // Durchbruchszeit [Jahre] — Gringarten & Sauty 1975, Water Resources Research
   // t = (π·n·b·D²) / (3·Q) × (ρc_Aquifer / ρc_Wasser) / (365·24·3600)
@@ -294,13 +361,16 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
   // VDI 4640 Bl. 1, Abschn. 4.2
   const tiefeMinDirekt = Math.round((tVL - SURFACE_TEMP) / GEOTHERM_GRADIENT)
 
-  // Hydraulisch max. Förderrate (Thiem 1906, stationär) — DVGW W 115 Abschn. 6.2
-  // Q_max = 2π × T × s_zul / ln(R/r_w); s_zul = b/3 (zulässige Absenkung)
-  // R_einfluss = 500 m, r_brunnen = 0,15 m (Standard-Ausbaudurchmesser)
+  // Hydraulisch max. Förderrate — Thiem (1906) + Kruseman & de Ridder (1990)
+  // Q_max = 2π × T × s_zul / ln(R/r_w); s_zul = b/3 (DVGW W 115 Abschn. 6.2)
+  // R = Sichardt-Einflussradius: 1,5 × sqrt(T × t_design / S) — konservativer als fixer R=500 m
   const sZul = maechtig / 3
-  const qMaxHydraulisch = Math.max(1,
-    (2 * Math.PI * transmissiv * sZul) / Math.log(500 / 0.15) * 1000,
-  )
+  const rInfluence = calcRInfluence(transmissiv)
+  const qMaxHydraulisch = (2 * Math.PI * transmissiv * sZul) / Math.log(rInfluence / R_BRUNNEN) * 1000
+
+  // Kluftaquifer-Warnung: Gringarten & Sauty (1975) nur für poröse Aquifere gültig
+  // n < 0,05 → Kluft-/Karstaquifer → Durchbruchszeit-Formel NICHT anwendbar
+  const kluftaquiferWarnung = porositaet < 0.05
 
   return {
     transmissiv, deltaT, qThPerDoublet, qThGesamt, qDelivered, qGeoBenoetigt,
@@ -315,5 +385,6 @@ export function calculateSystem(inp: DeltaTInputs): DeltaTOutputs {
     sHydraulik, sThermik, sDurchbruch, sCOP, sMaterial,
     wpAktiv,
     qMinFoerderrate, tiefeMinDirekt, qMaxHydraulisch,
+    injektionsPumpenLeistung, kluftaquiferWarnung,
   }
 }

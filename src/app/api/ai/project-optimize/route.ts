@@ -4,11 +4,11 @@
  * Nimmt Projektdaten mit aktuellen DeltaT-Parametern und gibt konkrete
  * Optimierungsvorschläge zurück. Nutzt Haiku für schnelle Antwort.
  */
-import { anthropic } from '@ai-sdk/anthropic'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AiSuggestion } from '@/core/api/projects'
+import { getUserAiModel } from '@/lib/ai/getUserAiModel'
 
 const OptimizationSchema = z.object({
   suggestions: z.array(z.object({
@@ -64,9 +64,11 @@ ${optimization_goal ? `Optimierungsziel: ${optimization_goal}` : ''}
 
 Bitte analysiere die Parameter und gib 3–5 konkrete Optimierungsvorschläge.`
 
+  const model = await getUserAiModel('claude-haiku-4-5-20251001', 'anthropic')
+
   try {
     const { object } = await generateObject({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model,
       system: SYSTEM,
       prompt: userPrompt,
       schema: OptimizationSchema,

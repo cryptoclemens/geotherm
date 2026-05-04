@@ -1,6 +1,6 @@
 # Datensicherheit
 
-Technische und organisatorische Maßnahmen (TOMs) gemäß Art. 32 DSGVO — Stand: März 2026
+Technische und organisatorische Maßnahmen (TOMs) gemäß Art. 32 DSGVO — Stand: April 2026
 
 ## Übertragungssicherheit
 
@@ -10,21 +10,14 @@ Technische und organisatorische Maßnahmen (TOMs) gemäß Art. 32 DSGVO — Stan
 
 ## Speichersicherheit
 
-- AES-256-GCM-Verschlüsselung für sensible Inhalte und API-Keys
-- Authentifizierungs-Tag (AEAD) verhindert unbemerkte Manipulation
-- Randomisierter IV pro Verschlüsselungsvorgang
+- Authentifizierungs-Tags (AEAD) verhindern unbemerkte Manipulation
+- Passwörter als bcrypt-Hash gespeichert (kein Klartext)
 
 ## Zugriffskontrolle & Mandantentrennung
 
 - PostgreSQL Row-Level Security (RLS) auf allen Tabellen
 - Vollständige Mandantentrennung auf Datenbankebene
 - Service-Role-Client nur serverseitig, nie im Browser
-
-## API-Keys & Token
-
-- API-Keys SHA-256-gehashed (kein Klartext in der Datenbank)
-- Einladungs-Token: 256-Bit Entropie (randomBytes)
-- Scope-Prüfung (read/write) auf allen API-Endpunkten
 
 ## HTTP-Sicherheitsheader
 
@@ -42,22 +35,15 @@ Technische und organisatorische Maßnahmen (TOMs) gemäß Art. 32 DSGVO — Stan
 
 ## Serverstandort & Compliance
 
-- Datenbankserver: Frankfurt am Main, Deutschland (EU)
+- Datenbankserver: Frankfurt am Main, Deutschland (EU) — Supabase Inc.
+- Hosting/CDN: Vercel Inc. (US) mit Standardvertragsklauseln (SCCs)
 - DSGVO-konformer Betrieb
 - Kein Tracking, keine Analyse-Cookies
 
 ## Sicherheitsüberprüfung
 
-- Statisches Code-Audit durchgeführt (März 2026)
+- Statisches Code-Audit durchgeführt (April 2026)
 - Alle identifizierten Schwachstellen behoben
-- Audit-Log für alle datenschutzrelevanten Änderungen
-
-## BYOK-Hinweis
-
-Bei Nutzung des BYOK-Modells verlassen Inhalte die Plattform ausschließlich in
-Richtung des vom Nutzer gewählten KI-Anbieters. Die Plattform speichert diese Inhalte
-nicht dauerhaft auf eigenen Servern. Für die Sicherheit der Verarbeitung beim
-Drittanbieter gelten dessen eigene Sicherheitsrichtlinien.
 
 ## Sicherheitslücken melden
 

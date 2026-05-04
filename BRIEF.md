@@ -90,7 +90,11 @@ Beim Start jeder Claude-Code-Sitzung im Geotherm-Repo wird ein **SessionStart-Ho
 
 ### 3.4 DSGVO-Compliance
 
-Da das Repo `cryptoclemens/geotherm` **privat** ist, darf die E-Mail direkt in `feedback.md` stehen — Art. 5 DSGVO (Datenminimierung) ist gewahrt, weil der Zugriff auf autorisierte Entwickler beschränkt ist. Nutzer erteilen beim Senden explizit ihr Einverständnis *(Consent per Checkbox im Modal)*. Löschanfragen werden durch manuelles Entfernen aus `feedback.md` + Supabase-Tabelle umgesetzt (SLA: 30 Tage).
+Nutzer erteilen beim Senden explizit ihr Einverständnis *(Consent per Checkbox im Modal)* — Rechtsgrundlage Art. 6 Abs. 1 lit. a DSGVO.
+
+Die E-Mail-Adresse wird in zwei Systemen gespeichert: **Supabase** (primär, EU-Frankfurt, RLS) und **GitHub `feedback.md`** (sekundär, privates Repo, für Claude Code lesbar). Beide Speicherorte sind in der Datenschutzerklärung offengelegt. GitHub Inc. ist als Auftragsverarbeiter (AVV, SCCs) eingebunden.
+
+> **Hinweis (Architektur-Verbesserung offen):** Das private-Repo-Argument allein begründet keine Datenminimierung i.S.v. Art. 5 Abs. 1 lit. c DSGVO, da die E-Mail in `feedback.md` redundant zur Supabase-Tabelle ist. Langfristig: `feedback.md` nur noch mit anonymisierten Refs befüllen (Supabase-UUID statt E-Mail). SLA-Löschanfragen werden durch manuelles Entfernen aus `feedback.md` + Supabase-Tabelle umgesetzt (SLA: 30 Tage).
 
 ---
 
@@ -216,7 +220,7 @@ Kontakt: hello@vencly.com
 ### 7.2 Compliance-Anforderungen
 
 - **DSGVO**: Vollständige Datenschutzerklärung mit Auskunftsrecht, Löschrecht, Portabilität
-- **TMG § 5**: Impressum mit allen Pflichtangaben
+- **DDG § 5** (Digitale-Dienste-Gesetz, löst TMG ab seit 14.05.2024): Impressum mit allen Pflichtangaben
 - **AGB**: Nutzungsbedingungen für Free + Pro; separate Verträge für Enterprise
 - **Haftungsausschluss**: Explizit, dass Geotherm eine *Vorauslegung* liefert
 - **Cookie-Banner**: Essential-only ohne Banner; Analytics erst nach Zustimmung

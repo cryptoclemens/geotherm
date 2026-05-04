@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 import withSerwistInit from '@serwist/next'
 import { execSync } from 'child_process'
+import { readFileSync } from 'fs'
 
 function getGitSha(): string {
   // Vercel setzt diese Variable automatisch bei jedem Deploy
@@ -14,6 +15,8 @@ function getGitSha(): string {
     return ''
   }
 }
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8')) as { version: string }
 
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
@@ -40,8 +43,7 @@ const nextConfig: NextConfig = {
   },
   // Build-Zeit Env-Vars (werden bei jedem Vercel-Deploy automatisch aktualisiert)
   env: {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
     // Git-SHA: auf Vercel automatisch via VERCEL_GIT_COMMIT_SHA, lokal via git
     NEXT_PUBLIC_GIT_SHA: getGitSha(),
   },

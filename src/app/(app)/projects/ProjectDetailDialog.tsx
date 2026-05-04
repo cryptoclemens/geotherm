@@ -528,44 +528,88 @@ export function ProjectDetailDialog({
               </dl>
             )}
 
-            {project.bohrkost_result && (
-              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg px-4 py-3">
-                <p className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 mb-3 uppercase tracking-wide">
-                  Berechnungsergebnisse
-                </p>
-                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-xs">
-                  {(([
-                    { label: 'Projektkosten (Mitte)', value: fmtEur(project.bohrkost_result.projektkosten_mid), strong: true },
-                    ...(project.bohrkost_result.foerderung_betrag > 0 ? [
-                      { label: 'Nach MAP/KfW-Förderung', value: fmtEur(project.bohrkost_result.projektkosten_netto_mid) },
-                    ] : []),
-                    ...(project.bohrkost_result.leistung_kw > 0 ? [
-                      { label: 'Thermische Leistung', value: `${fmt(project.bohrkost_result.leistung_kw, 0)} kW` },
-                    ] : []),
-                    { label: `Bohrungen (${project.bohrkost_result.anzahl_bohrungen}×)`, value: fmtEur(project.bohrkost_result.bohrkosten_mid) },
-                    { label: 'EUR/m', value: `${fmt(project.bohrkost_result.bohrkosten_pro_m, 0)} EUR/m` },
-                    ...(project.bohrkost_result.foerderung_betrag > 0 ? [
-                      { label: 'Förderung (MAP/KfW)', value: fmtEur(project.bohrkost_result.foerderung_betrag) },
-                    ] : []),
-                  ]) as Array<{ label: string; value: string; strong?: boolean }>).map(({ label, value, strong }) => (
-                    <div key={label}>
-                      <dt className="text-muted-foreground/70 mb-0.5">{label}</dt>
-                      <dd className={`font-mono font-medium text-sm ${strong ? 'text-blue-700 dark:text-blue-400' : ''}`}>
-                        {value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
+            {project.bohrkost_result && (() => {
+              const res = project.bohrkost_result
+              // Kosten je Bohrung — immer ableitbar aus Gesamtbohrkosten / Anzahl Bohrungen
+              const eineBohrungMid = res.bohrkosten_mid / res.anzahl_bohrungen
+              const bohrkostDubletten = project.bohrkost_input?.anzahlDubletten ?? (res.anzahl_bohrungen / 2)
+              const deltaTDubletten = project.deltat_result?.anzahlDubletten ?? null
+              const mismatch = deltaTDubletten != null && deltaTDubletten !== bohrkostDubletten
 
-            {(() => {
-              const n = project.deltat_result?.anzahlDubletten ?? null
-              return n != null && n > 8 ? (
-                <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
-                  DeltaT empfiehlt <strong>{n} Dubletten</strong> — Bohrkostrechner begrenzt auf max. 8. Bitte nach dem Laden manuell anpassen.
-                </p>
-              ) : null
+              return (
+                <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg px-4 py-3 flex flex-col gap-3">
+                  {/* Kontext: Basis dieser Berechnung */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                      Berechnungsergebnisse
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Basis: {bohrkostDubletten} Dublette{bohrkostDubletten !== 1 ? 'n' : ''} · {res.anzahl_bohrungen} Bohrungen
+                    </p>
+                  </div>
+
+                  <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-xs">
+                    {(([
+                      { label: 'Projektkosten (Mitte)', value: fmtEur(res.projektkosten_mid), strong: true },
+                      ...(res.foerderung_betrag > 0 ? [
+                        { label: 'Nach MAP/KfW-Förderung', value: fmtEur(res.projektkosten_netto_mid) },
+                      ] : []),
+                      { label: 'Pro Bohrung (Mitte)', value: fmtEur(eineBohrungMid) },
+                      { label: `Bohrkosten (${res.anzahl_bohrungen}×)`, value: fmtEur(res.bohrkosten_mid) },
+                      { label: 'EUR/m', value: `${fmt(res.bohrkosten_pro_m, 0)} EUR/m` },
+                      ...(res.foerderung_betrag > 0 ? [
+                        { label: 'Förderung (MAP/KfW)', value: fmtEur(res.foerderung_betrag) },
+                      ] : []),
+                    ]) as Array<{ label: string; value: string; strong?: boolean }>).map(({ label, value, strong }) => (
+                      <div key={label}>
+                        <dt className="text-muted-foreground/70 mb-0.5">{label}</dt>
+                        <dd className={`font-mono font-medium text-sm ${strong ? 'text-blue-700 dark:text-blue-400' : ''}`}>
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  {/* Hochrechnung wenn DeltaT-Dubletten ≠ Bohrkost-Dubletten */}
+                  {mismatch && deltaTDubletten != null && (
+                    <div className="border-t border-blue-200 dark:border-blue-800/60 pt-3">
+                      <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-2">
+                        Hochrechnung für {deltaTDubletten} DeltaT-Dubletten ({deltaTDubletten * 2} Bohrungen)
+                      </p>
+                      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-xs">
+                        <div>
+                          <dt className="text-muted-foreground/70 mb-0.5">Bohrkosten (näherungsw.)</dt>
+                          <dd className="font-mono font-medium text-amber-700 dark:text-amber-400">
+                            {fmtEur(eineBohrungMid * deltaTDubletten * 2)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground/70 mb-0.5">Pro Bohrung</dt>
+                          <dd className="font-mono font-medium">{fmtEur(eineBohrungMid)}</dd>
+                        </div>
+                        {res.foerderung_betrag > 0 && (
+                          <div>
+                            <dt className="text-muted-foreground/70 mb-0.5">MAP/KfW (max.)</dt>
+                            <dd className="font-mono font-medium">
+                              {fmtEur(Math.min(375 * Math.min(project.bohrkost_input?.tiefe ?? 700, 2500) * deltaTDubletten, 20_000_000))}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                      <p className="text-[10px] text-muted-foreground/50 mt-2 leading-snug">
+                        Näherung — Komplettierungskosten skalieren separat. Bohrkost mit {deltaTDubletten} Dubletten laden für exakten Wert.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Warnung bei > 8 Dubletten (Bohrkost-Limit) */}
+                  {deltaTDubletten != null && deltaTDubletten > 8 && (
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400 leading-snug">
+                      DeltaT empfiehlt <strong>{deltaTDubletten} Dubletten</strong> — Bohrkostrechner begrenzt auf max. 8. Nach dem Laden manuell anpassen.
+                    </p>
+                  )}
+                </div>
+              )
             })()}
             {!project.bohrkost_result && (
               <Button

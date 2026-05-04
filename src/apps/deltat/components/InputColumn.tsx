@@ -2,6 +2,8 @@
 
 import { ParamSlider } from '@/core/ui/ParamSlider'
 import { useDeltaTStore } from '../store/useDeltaTStore'
+import { GEOTHERM_REGIONS } from '../calc/system'
+import type { RegionId } from '../calc/system'
 
 export function InputColumn() {
   const inputs           = useDeltaTStore(s => s.inputs)
@@ -36,6 +38,9 @@ export function InputColumn() {
             Förderhöhe {inputs.foerderhoehe} m unrealistisch für {inputs.tiefe} m Bohrtiefe — empfohlen: ≤ {inputs.tiefe + 20} m
           </p>
         )}
+        <ParamSlider label="Injektionsdruck" value={inputs.injektionsdruck} min={1} max={50} step={1} unit="bar"
+          onChange={v => setInput('injektionsdruck', v)}
+          info={'Gegendruck der Injektionsbohrung [bar] = statischer Kopf + Reibungsverluste.\nP_Reinjekt = Q × ΔP / η_inj  (η_inj=0,55, Grundfos-Kataloge)\nTypisch gespannter Aquifer: 5–20 bar | artesisch: 1–5 bar\nHöherer Druck → mehr Eigenverbrauch → schlechterer SPF.'} />
         <ParamSlider label="Aquifer-Mächtigkeit" value={inputs.maechtig} min={5} max={500} step={5} unit="m"
           onChange={v => setInput('maechtig', v)}
           info="Vertikale Ausdehnung des wasserführenden Horizonts.\nTransmissivität: T = k_f × b [m²/s]\n(Darcy; DVGW W 115)" />
@@ -58,10 +63,39 @@ export function InputColumn() {
           format={v => v.toFixed(2)}
           onChange={v => setInput('porositaet', v)}
           info={'Effektive Porosität des Aquifers [-].\nBestimmt die Durchbruchszeit (Gringarten & Sauty 1975).\nSandstein: 0,20–0,35 | Kalkstein: 0,05–0,20 | Kluftgestein: 0,01–0,10\nDefault 0,25 — konservativ für sedimentäre Aquifere.'} />
+        {outputs.kluftaquiferWarnung && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-1.5">
+            ⚠ Kluftaquifer (n &lt; 0,05) — Gringarten &amp; Sauty (1975) nicht anwendbar. Durchbruchszeit stark unterschätzt.
+          </p>
+        )}
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
         <legend className="text-xs font-medium text-primary/80 mb-1">Thermik</legend>
+
+        {/* Regionsauswahl — geothermischer Gradient nach Agemar et al. 2014 */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-muted-foreground font-medium">
+            Geothermische Region
+          </label>
+          <select
+            value={inputs.region}
+            onChange={e => setInput('region', e.target.value as RegionId)}
+            className="text-xs rounded-md border bg-background px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+            aria-label="Geothermische Region wählen"
+          >
+            {(Object.keys(GEOTHERM_REGIONS) as RegionId[]).map(id => (
+              <option key={id} value={id}>
+                {GEOTHERM_REGIONS[id].label} ({(GEOTHERM_REGIONS[id].gradient * 100).toFixed(1)} °C/100m)
+              </option>
+            ))}
+          </select>
+          {inputs.region !== 'custom' && (
+            <p className="text-[10px] text-muted-foreground/70 leading-snug">
+              Quelle: Agemar et al. 2014, Geothermics 53
+            </p>
+          )}
+        </div>
 
         {/* T_GW mit Tiefen-Kopplung */}
         <div className="flex flex-col gap-1">
@@ -69,7 +103,7 @@ export function InputColumn() {
             <span className="text-[11px] text-muted-foreground">
               {tGWManual
                 ? '✏️ T_GW manuell — Tiefenkopplung aufgehoben'
-                : `🔗 T_GW an Tiefe gekoppelt (0,03 °C/m)`}
+                : `🔗 T_GW an Tiefe gekoppelt (${(GEOTHERM_REGIONS[inputs.region].gradient * 100).toFixed(1)} °C/100m)`}
             </span>
             {tGWManual && (
               <button

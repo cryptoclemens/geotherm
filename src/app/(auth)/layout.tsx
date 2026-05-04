@@ -1,6 +1,6 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="geo-bg min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+    <main className="dark geo-bg min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
       {/* Dekorative Orbs – CSS-only, kein JS */}
       <div
         className="geo-orb w-96 h-96 bg-[oklch(0.62_0.14_195/0.25)] -top-24 -left-24"

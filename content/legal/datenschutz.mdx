@@ -1,6 +1,8 @@
 # Datenschutzerklärung
 
-Gemäß Art. 13/14 DSGVO, TTDSG und anwendbarem deutschen Datenschutzrecht — Stand: März 2026
+Gemäß Art. 13/14 DSGVO, TDDDG und anwendbarem deutschen Datenschutzrecht — Stand: April 2026
+
+---
 
 ## 1. Verantwortlicher
 
@@ -10,108 +12,242 @@ E-Mail: datenschutz@vencly.com
 Geschäftsführer: Clemens Eugen Theodor Pompeÿ
 HRB 290524, Amtsgericht München
 
-## 2. Verarbeitete Datenkategorien & Zwecke
+---
 
-**a) Account-Daten** (Name, E-Mail-Adresse, Passwort-Hash)
-Zweck: Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO)
+## 2. Überblick: Was ist Geotherm?
 
-**b) Nutzerinhalte** (z. B. Meeting-Transkripte, Aufgaben, Notizen)
-Zweck: Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO)
-Hinweis: Bei BYOK werden Inhalte direkt an den gewählten KI-Anbieter übermittelt
-(keine dauerhafte Speicherung auf eigenen Servern).
+Geotherm ist eine webbasierte Ingenieur-Suite für die Vorplanung geothermischer Anlagen (Dubletten-Auslegung, Kostenschätzung, Standortanalyse). Die Plattform richtet sich ausschließlich an Unternehmen und gewerbliche Nutzer. Berechnungsergebnisse haben Machbarkeits-Charakter und stellen keine verbindlichen Planungsleistungen dar.
 
-**c) Nutzungs- und Logdaten** (IP-Adresse, Zugriffszeiten, Fehlermeldungen)
-Zweck: Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) – IT-Sicherheit,
-Missbrauchsprävention
+---
 
-**d) LLM-API-Keys**
-Zweck: Vertragserfüllung (lit. b). Keys werden AES-256-GCM-verschlüsselt gespeichert.
-Nur der jeweilige Workspace-Inhaber hat Zugang.
+## 3. Verarbeitete Daten im Einzelnen
 
-**e) Zahlungsdaten**
-Zweck: Vertragserfüllung (lit. b); Verarbeitung durch externen Zahlungsdienstleister.
+### 3.1 Kontoanmeldung & Authentifizierung
 
-**f) Feedback**
-Zweck: Freiwillig eingereichte Nachrichten. Rechtsgrundlage: Art. 6 Abs. 1 lit. a
-DSGVO (Einwilligung durch Absenden).
+**Daten:** E-Mail-Adresse, Passwort (als Hash gespeichert, kein Klartext), Zeitstempel der Anmeldung, Session-Token.
 
-## 3. BYOK – KI-Drittanbieter
+**Zweck:** Bereitstellung des passwortgeschützten Nutzerkontos.
 
-Bei Nutzung des BYOK-Modells werden Inhalte direkt an den vom Nutzer gewählten Anbieter
-übermittelt. Der Workspace-Betreiber agiert als eigener Verantwortlicher gegenüber dem
-KI-Anbieter.
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
 
-Es gelten jeweils die Datenschutzrichtlinien des gewählten Anbieters:
-- Anthropic: https://www.anthropic.com/privacy
-- OpenAI: https://openai.com/privacy
-- Microsoft Azure OpenAI: https://privacy.microsoft.com
-- Perplexity AI: https://www.perplexity.ai/privacy
+**Auftragsverarbeiter:** Supabase Inc. (Datenbankstandort EU-Frankfurt — Details unter Ziffer 5).
 
-Die US-amerikanischen Anbieter haben Standardvertragsklauseln mit der EU abgeschlossen.
-Die Datenübermittlung erfolgt auf Grundlage von Art. 46 Abs. 2 lit. c DSGVO.
+### 3.2 Planungsprojekte
 
-## 4. Auftragsverarbeiter
+**Daten:** Nutzerdefinierte Eingabeparameter (Bohrtiefe, Aquifer-Kennwerte, Wärmebedarf u.ä.), berechnete Ergebnisse, Projektbezeichnung, Erstell- und Änderungszeitpunkt.
 
-**Vercel Inc.**, 340 Pine Street, Suite 701, San Francisco, CA 94104, USA
-Zweck: Hosting, CDN. Grundlage: Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO)
-Datenschutzrichtlinie: https://vercel.com/legal/privacy-policy
+**Zweck:** Speicherung und Abruf eigener Projekte; Übergabe von Parametern zwischen den In-Apps (Atlas → DeltaT).
 
-**Supabase Inc.**
-Zweck: Datenbank, Authentifizierung, Storage. Serverstandort: EU (Frankfurt am Main).
-Datenschutzrichtlinie: https://supabase.com/privacy
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
 
-**Zahlungsanbieter:** Mollie B.V., Keizersgracht 126, 1015 CW Amsterdam, Niederlande
-Datenschutzrichtlinie: https://www.mollie.com/de/privacy
+**Hinweis:** Berechnungen im Browser (DeltaT, Bohrkost) werden lokal im Browser-Speicher (`localStorage`) gehalten. Eine Übermittlung an unsere Server findet nur beim expliziten Speichern als Projekt statt.
 
-## 5. Speicherdauer
+### 3.3 Feedback-Funktion
 
-- Account-Daten: bis zur Kündigung + 30 Tage Kulanzfrist
-- Nutzerinhalte: bis zur manuellen Löschung, spätestens 90 Tage nach Vertragsende
-- Logdaten (Server-Logs): maximal 30 Tage rollierend
-- Feedback-Daten: anonymisiert nach 12 Monaten
-- Steuerrelevante Daten: 10 Jahre (§ 147 AO)
+**Daten:** Freitext-Feedback, Kategorie (Bug / Idee / UI u.ä.), betreffende In-App, optionale Sterne-Bewertung, E-Mail-Adresse des Nutzers, Browser-Kennung (User-Agent), App-Version, Zeitstempel.
 
-## 6. Betroffenenrechte (Art. 15–22 DSGVO)
+**Zweck:** Produktverbesserung, Fehlerverfolgung.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. a DSGVO (Einwilligung — Nutzer aktiviert aktiv eine Checkbox im Feedback-Modal).
+
+**Widerruf:** Die Einwilligung kann jederzeit mit Wirkung für die Zukunft widerrufen werden unter datenschutz@vencly.com. Bereits eingereichte Feedbacks werden dann aus unseren Systemen gelöscht (SLA: 30 Tage).
+
+**Speicherorte:** Feedback-Daten inkl. E-Mail-Adresse werden
+1. in einer Supabase-Datenbank (EU-Frankfurt, Row-Level Security, nur für autorisierte Mitarbeiter sichtbar) und
+2. in einem **privaten** GitHub-Repository (für die interne Entwicklungssteuerung via Claude Code) gespeichert.
+
+**Auftragsverarbeiter:** Supabase Inc., GitHub Inc. (Details unter Ziffer 5).
+
+### 3.4 KI-gestützte Funktionen
+
+Geotherm nutzt einen KI-Assistenten für folgende Funktionen:
+
+- **Dashboard-Assistent:** Eingabe von Nutzerprompts → Rückgabe von Standortvorschlägen, Parameterempfehlungen, Navigation.
+- **Standortanalyse (GPA):** Koordinaten und Ortsname eines angeklickten Kartenausschnitts → Rückgabe einer geologischen Ersteinschätzung.
+- **Projektoptimierung:** Projekte-Parameter des Nutzers → Rückgabe von Optimierungsvorschlägen.
+
+**Daten:** Nutzerprompts und Projektparameter werden zur Verarbeitung an den jeweiligen KI-Anbieter übermittelt. Es werden keine Volltext-Gesprächsverläufe dauerhaft gespeichert (API-Betrieb ohne Trainingsdatennutzung gemäß den Nutzungsrichtlinien der Anbieter).
+
+**Zweck:** Vertragsleistung — KI-Assistent ist fester Bestandteil des Dashboard-Features.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
+
+**Standard-Anbieter:** Anthropic PBC, San Francisco, USA — **DPF-zertifiziert** seit 10.07.2023 (EU-US Data Privacy Framework, Angemessenheitsbeschluss gem. Art. 45 DSGVO). Zertifikat abrufbar unter dataprivacyframework.gov.
+
+**Hinweis zu automatisierten Entscheidungen (Art. 13 Abs. 2 lit. f DSGVO):** Die KI-Ausgaben (Standorteinschätzungen, Parametervorschläge) sind **unverbindliche Empfehlungen** und ersetzen keine hydrogeologischen Gutachten. Es findet keine automatisierte Entscheidung mit Rechtswirkung statt.
+
+### 3.9 BYOK — Nutzer-eigene API-Schlüssel
+
+Nutzer können in den Kontoeinstellungen einen eigenen API-Schlüssel eines Drittanbieters hinterlegen (BYOK — Bring Your Own Key). Folgende Daten werden dabei verarbeitet:
+
+**Gespeicherte Daten in unserer Datenbank:**
+- **Verschlüsselter API-Key:** AES-256-GCM-Chiffrat des API-Schlüssels (Klartext wird server-seitig nie persistiert)
+- **Anzeige-Hint:** Maskiertes Fragment des Keys (z.B. `sk-ant•••••a03-`) zur Identifikation im UI — kein funktionsfähiger Schlüssel
+- **Provider-Angabe:** Name des API-Anbieters (z.B. „anthropic")
+- **Optionaler Azure-Endpoint:** URL des Azure-Deployments (nur bei Microsoft Azure OpenAI)
+- **Zeitstempel:** Zeitpunkt der Hinterlegung bzw. letzten Aktualisierung
+
+**Verarbeitung bei KI-Anfragen:**
+Wird ein BYOK-Key hinterlegt, entschlüsselt der Server den Schlüssel **temporär im Arbeitsspeicher** und übermittelt ihn im API-Aufruf an den gewählten Anbieter. Der Klartext wird nach dem Aufruf nicht weiter gespeichert.
+
+**Zweck:** Ermöglichung der KI-Funktionen über den eigenen API-Vertrag des Nutzers.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
+
+**Mögliche Drittanbieter (je nach Nutzerwahl):**
+
+| Anbieter | Unternehmen | Standort | Datenschutz-Hinweis |
+|----------|-------------|----------|---------------------|
+| Anthropic (Claude) | Anthropic PBC | San Francisco, USA | DPF-zertifiziert |
+| OpenAI (GPT) | OpenAI, LLC | San Francisco, USA | DPF-zertifiziert |
+| Azure OpenAI | Microsoft Corp. | USA / EU (je Deployment) | Standardvertragsklauseln / DPF |
+| Perplexity AI | Perplexity AI, Inc. | San Francisco, USA | Standardvertragsklauseln |
+
+Der Nutzer ist für die Auswahl des Anbieters und die Einhaltung der jeweiligen Nutzungsbedingungen selbst verantwortlich. Anfallende Kosten beim gewählten Anbieter trägt ausschließlich der Nutzer.
+
+**Löschung:** Das Entfernen des Keys in den Einstellungen oder das Löschen des Kontos bewirkt die sofortige Löschung des Chiffrats aus der Datenbank.
+
+### 3.5 Kartennutzung & externe Geodatendienste
+
+Die Karten-Komponente (GPA — Geothermie-Potenzial-Atlas) lädt Kartenkacheln und Fachdaten von Drittanbietern. Dabei wird die **IP-Adresse des Nutzers** technisch bedingt an folgende Dienste übermittelt:
+
+| Dienst | Betreiber | Zweck | Standort |
+|--------|-----------|-------|----------|
+| Kartenkacheln (OSM) | OpenStreetMap Foundation, UK | Basiskarte | UK (EU-Angemessenheitsbeschluss) |
+| BGR-WMS | Bundesanstalt für Geowiss. und Rohstoffe, DE | Geothermie-Potenzial-Layer | Deutschland (EU) |
+| IT.NRW-WMS | Landesbetrieb IT.NRW, DE | Regionalgeol. Layer NRW | Deutschland (EU) |
+| GeoTIS-WMS | LIAG, DE | Tiefengeothermie-Informationssystem | Deutschland (EU) |
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO (Berechtigtes Interesse — Kartendarstellung ist technisch erforderlich für die Kernfunktion des Atlas; Nutzerinteressen überwiegen nicht, da IP-Übermittlung unvermeidlich und verhältnismäßig ist).
+
+### 3.6 Geocoding (Adresssuche)
+
+**Daten:** Eingegebene Adresse oder Ortsname wird **serverseitig** an die Nominatim-API der OpenStreetMap Foundation weitergeleitet. Die IP-Adresse des Nutzers wird dabei **nicht** an Nominatim übermittelt (nur die IP unseres Servers). Die eingegebene Adressanfrage kann Standorthinweise enthalten.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung — Adresssuche ist Feature der Karte).
+
+### 3.7 Server-Logs & Hosting
+
+**Daten:** IP-Adresse, Zugriffszeiten, aufgerufene URL, HTTP-Status, Referrer, User-Agent.
+
+**Zweck:** IT-Sicherheit, Fehlerdiagnose, Missbrauchsprävention.
+
+**Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO (Berechtigtes Interesse).
+
+**Speicherdauer:** Max. 30 Tage rollierend.
+
+**Auftragsverarbeiter:** Vercel Inc. (Details unter Ziffer 5).
+
+### 3.8 Browser-Speicher (localStorage / IndexedDB)
+
+Die Rechner-Apps (DeltaT, Bohrkost) speichern Eingabeparameter lokal im Browser-Speicher (`localStorage`). Dieser Speicher verbleibt auf dem Endgerät des Nutzers und wird nicht an unsere Server übertragen. Er dient der Wiederherstellung des letzten Rechner-Zustands nach einem Neustart des Browsers.
+
+**Rechtsgrundlage:** § 25 Abs. 2 Nr. 2 TDDDG (technisch notwendig für die angeforderte Dienstleistung — kein Consent erforderlich).
+
+---
+
+## 4. Cookies & Tracking
+
+Es werden ausschließlich technisch notwendige Cookies gesetzt. Keine Analyse-, Werbe- oder Tracking-Cookies.
+
+| Cookie | Betreiber | Typ | Laufzeit | Zweck |
+|--------|-----------|-----|----------|-------|
+| `sb-access-token` | Supabase | Session-Cookie | Sitzungsdauer | Authentifizierung |
+| `sb-refresh-token` | Supabase | Persistent | 30 Tage | Sitzungsverlängerung ohne Re-Login |
+
+Technisch notwendige Cookies werden ohne Einwilligung gesetzt (§ 25 Abs. 2 Nr. 2 TDDDG). Ein Cookie-Consent-Banner ist daher nicht erforderlich.
+
+---
+
+## 5. Auftragsverarbeiter
+
+Wir setzen folgende Auftragsverarbeiter ein, mit denen Auftragsverarbeitungsverträge gemäß Art. 28 DSGVO geschlossen wurden:
+
+### Supabase Inc.
+325 1st Street, Suite 110, San Francisco, CA 94105, USA
+**Zweck:** Datenbank (Projektdaten, Feedback), Authentifizierung
+**Serverstandort:** Frankfurt am Main, Deutschland (EU)
+**Transfergrundlage:** Keine Drittlandübermittlung (EU-Serverstandort)
+Datenschutzrichtlinie: supabase.com/privacy
+
+### Vercel Inc.
+340 Pine Street, Suite 701, San Francisco, CA 94104, USA
+**Zweck:** Hosting, CDN, Edge-Functions
+**Transfergrundlage:** Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO)
+Datenschutzrichtlinie: vercel.com/legal/privacy-policy
+
+### Anthropic PBC
+548 Market St PMB 90375, San Francisco, CA 94104, USA
+**Zweck:** KI-Textverarbeitung (Chat-Assistent, Standortanalyse, Projektoptimierung)
+**Transfergrundlage:** EU-US Data Privacy Framework (Angemessenheitsbeschluss Art. 45 DSGVO) — Anthropic ist DPF-zertifiziert
+Datenschutzrichtlinie: anthropic.com/privacy
+
+### GitHub Inc. (Microsoft)
+88 Colin P Kelly Jr Street, San Francisco, CA 94107, USA
+**Zweck:** Speicherung von Feedback-Rohdaten in privatem Repository (Development Operations)
+**Transfergrundlage:** Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO); GitHub DPA abrufbar unter github.com/site/privacy
+Datenschutzrichtlinie: docs.github.com/site-policy/privacy-policies
+
+---
+
+## 6. Speicherdauer
+
+| Datenkategorie | Speicherdauer |
+|----------------|---------------|
+| Account-Daten | Bis zur Kündigung + 30 Tage Kulanzfrist |
+| Planungsprojekte | Bis zur manuellen Löschung, spätestens 90 Tage nach Vertragsende |
+| Feedback (Supabase) | Anonymisierung oder Löschung auf Anfrage (SLA 30 Tage); ansonsten unbefristet für Entwicklungszwecke |
+| Feedback (GitHub feedback.md) | Bis zur manuellen Entfernung durch autorisierte Entwickler |
+| Server-Logs | Max. 30 Tage rollierend |
+| Steuerrelevante Rechnungsdaten | 10 Jahre (§ 147 AO) |
+
+---
+
+## 7. Betroffenenrechte (Art. 15–22 DSGVO)
 
 Sie haben das Recht auf:
-- **Auskunft** (Art. 15) über gespeicherte Daten
+
+- **Auskunft** (Art. 15) über die zu Ihrer Person gespeicherten Daten
 - **Berichtigung** (Art. 16) unrichtiger Daten
-- **Löschung** (Art. 17) – „Recht auf Vergessenwerden"
+- **Löschung** (Art. 17) — „Recht auf Vergessenwerden"
 - **Einschränkung** (Art. 18) der Verarbeitung
-- **Datenübertragbarkeit** (Art. 20) – Export als XLSX oder JSON auf Anfrage
+- **Datenübertragbarkeit** (Art. 20) — Export auf Anfrage
 - **Widerspruch** (Art. 21) gegen Verarbeitungen auf Basis berechtigter Interessen
-- **Widerruf** einer Einwilligung jederzeit mit Wirkung für die Zukunft
+- **Widerruf** einer Einwilligung jederzeit (Art. 7 Abs. 3) — ohne Auswirkung auf die Rechtmäßigkeit der bisherigen Verarbeitung
 
-Zur Ausübung dieser Rechte: datenschutz@vencly.com
+Zur Ausübung dieser Rechte: **datenschutz@vencly.com**
 
-## 7. Beschwerderecht
+Wir antworten innerhalb von 30 Tagen (Art. 12 Abs. 3 DSGVO).
+
+---
+
+## 8. Beschwerderecht
 
 Zuständige Aufsichtsbehörde:
+
 **Bayerisches Landesamt für Datenschutzaufsicht (BayLDA)**
 Promenade 18, 91522 Ansbach
-https://www.lda.bayern.de
+www.lda.bayern.de
 
-## 8. Cookies & Tracking
+---
 
-Es werden ausschließlich funktional notwendige Cookies für die Sitzungsverwaltung
-(Supabase Auth) verwendet. Keine Analyse-, Werbe- oder Tracking-Cookies.
-Technisch notwendige Session-Cookies werden ohne Einwilligung gesetzt
-(§ 25 Abs. 2 Nr. 2 TTDSG). Eine Cookie-Einwilligung ist daher nicht erforderlich.
+## 9. Datensicherheit
 
-## 9. Datensicherheit (Art. 32 DSGVO)
+Technische und organisatorische Maßnahmen (TOMs) gemäß Art. 32 DSGVO — siehe [Datensicherheit](/datensicherheit).
 
-Technische und organisatorische Maßnahmen (TOMs) — siehe [Datensicherheit](/datensicherheit).
+---
 
 ## 10. Auftragsverarbeitungsvertrag (AVV)
 
-B2B-Kunden, die personenbezogene Daten über die Plattform verarbeiten, können einen AVV
-nach Art. 28 DSGVO anfordern: datenschutz@vencly.com
+B2B-Kunden, die über Geotherm personenbezogene Daten verarbeiten (z.B. durch Eingabe von Personenbezügen in Projektbeschreibungen), können einen AVV nach Art. 28 DSGVO anfordern: datenschutz@vencly.com
+
+---
 
 ## 11. Änderungen dieser Datenschutzerklärung
 
-Diese Datenschutzerklärung wird bei wesentlichen Änderungen der Datenverarbeitung
-aktualisiert. Nutzer werden über wesentliche Änderungen per E-Mail informiert.
+Bei wesentlichen Änderungen der Datenverarbeitung (neue Verarbeitungszwecke, neue Auftragsverarbeiter, neue Drittlandtransfers) werden registrierte Nutzer per E-Mail informiert. Der Stand-Vermerk oben wird bei jeder Änderung aktualisiert.
+
+---
 
 > Diese Datenschutzerklärung wurde nach bestem Wissen gemäß DSGVO erstellt.
-> Für eine rechtsverbindliche Prüfung wird die Konsultation eines Datenschutzbeauftragten
-> empfohlen.
+> Für eine rechtsverbindliche Prüfung wird die Konsultation eines Datenschutzbeauftragten empfohlen.

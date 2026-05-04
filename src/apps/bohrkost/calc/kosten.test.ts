@@ -72,6 +72,20 @@ describe('berechneBohrkosten — Dublette vs Einzelbohrung', () => {
     expect(rDub.anzahl_bohrungen).toBe(2)
     expect(rEin.anzahl_bohrungen).toBe(1)
   })
+
+  it('Bohrkosten je Bohrung ableitbar: bohrkosten_mid / anzahl_bohrungen (Dublette, 700m)', () => {
+    const r = berechneBohrkosten(inp({ tiefe: 700, zweck: 'Dublette', foerderungAktiv: false, fuendigkeitsRisiko: 0 }))
+    // bohrkosten_mid = basisMid × 2, bohrkosten_pro_m = basisMid / tiefe
+    const eineBohrung = r.bohrkosten_mid / r.anzahl_bohrungen
+    expect(eineBohrung).toBeCloseTo(r.bohrkosten_pro_m * 700, 0)
+  })
+
+  it('8 Dubletten: bohrkosten_mid = 16 × Einzelbohrungskosten', () => {
+    const r8 = berechneBohrkosten(inp({ tiefe: 700, zweck: 'Dublette', anzahlDubletten: 8, foerderungAktiv: false, fuendigkeitsRisiko: 0 }))
+    const r1 = berechneBohrkosten(inp({ tiefe: 700, zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0 }))
+    expect(r8.anzahl_bohrungen).toBe(16)
+    expect(r8.bohrkosten_mid).toBeCloseTo(r1.bohrkosten_mid * 16, -2)
+  })
 })
 
 describe('berechneBohrkosten — Förderung', () => {

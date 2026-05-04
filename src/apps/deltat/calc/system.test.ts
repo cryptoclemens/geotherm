@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateSystem, DEFAULT_INPUTS, calcDefaultFoerderhoehe } from './system'
+import { calculateSystem, DEFAULT_INPUTS, calcDefaultFoerderhoehe, calcEtaPump, calcDefaultTGW } from './system'
 import type { DeltaTInputs } from './system'
 
 // ─── Helper ────────────────────────────────────────────────────────────────
@@ -59,21 +59,23 @@ describe('Wärmeleistung Q_th', () => {
 
 // ─── Tauchpumpe ─────────────────────────────────────────────────────────────
 describe('Tauchpumpenleistung', () => {
-  it('P = Q[m³/s] × ρ × g × H / η — VDI 4640, H=foerderhoehe', () => {
-    // Q=1 l/s = 0.001 m³/s, foerderhoehe=100 m, η=0.6
-    // P = 0.001 × 1000 × 9.81 × 100 / (0.6 × 1000) = 1.635 kW
-    const r = calculateSystem(inp({ Q: 1, foerderhoehe: 100 }))
-    expect(r.tauchpumpenLeistung).toBeCloseTo(1.635, 2)
+  it('P = Q[m³/s] × ρ × g × H / η(tiefe) — η tiefenabhängig (Grundfos-Kataloge)', () => {
+    // Q=1 l/s, foerderhoehe=100m, tiefe=500m → η(500) = 0.72 − 0.08×0.25 = 0.70
+    // P = 0.001 × 1000 × 9.81 × 100 / (0.70 × 1000) = 1.401 kW
+    const r = calculateSystem(inp({ Q: 1, foerderhoehe: 100, tiefe: 500 }))
+    const eta = calcEtaPump(500)  // 0.70
+    expect(r.tauchpumpenLeistung).toBeCloseTo(0.001 * 1000 * 9.81 * 100 / (eta * 1000), 2)
   })
   it('größere Förderhöhe → mehr Pumpenleistung', () => {
     const r200 = calculateSystem(inp({ foerderhoehe: 200 }))
     const r100 = calculateSystem(inp({ foerderhoehe: 100 }))
     expect(r200.tauchpumpenLeistung).toBeGreaterThan(r100.tauchpumpenLeistung)
   })
-  it('Bohrtiefe hat keinen Einfluss auf Pumpenleistung', () => {
+  it('tiefere Bohrung → niedrigerer η → höhere Pumpenleistung bei gleicher Förderhöhe', () => {
+    // η(3000) = 0.72 − 0.12 = 0.60 < η(100) = 0.716
     const rTief = calculateSystem(inp({ tiefe: 3000, foerderhoehe: 150 }))
     const rFlach = calculateSystem(inp({ tiefe: 100, foerderhoehe: 150 }))
-    expect(rTief.tauchpumpenLeistung).toBeCloseTo(rFlach.tauchpumpenLeistung, 5)
+    expect(rTief.tauchpumpenLeistung).toBeGreaterThan(rFlach.tauchpumpenLeistung)
   })
 })
 
@@ -282,5 +284,78 @@ describe('Default-Inputs Smoke-Test', () => {
     expect(r.sDurchbruch).toMatch(/green|yellow|red/)
     expect(r.sCOP).toMatch(/green|yellow|red/)
     expect(r.sMaterial).toMatch(/green|yellow|red/)
+  })
+})
+
+// ─── calcEtaPump ──────────────────────────────────────────────────────────────
+describe('calcEtaPump — tiefenabhängiger Pumpenwirkungsgrad (Grundfos)', () => {
+  it('η(0) = 0,72 (Maximum)', () => {
+    expect(calcEtaPump(0)).toBeCloseTo(0.72)
+  })
+  it('η(500) = 0,70', () => {
+    expect(calcEtaPump(500)).toBeCloseTo(0.70, 3)
+  })
+  it('η(3000) = 0,60', () => {
+    expect(calcEtaPump(3000)).toBeCloseTo(0.60, 3)
+  })
+  it('η(9000) geclampt auf 0,45', () => {
+    expect(calcEtaPump(9000)).toBe(0.45)
+  })
+})
+
+// ─── Regional-Gradient ────────────────────────────────────────────────────────
+describe('calcDefaultTGW — regionale Gradienten (Agemar et al. 2014)', () => {
+  it('URG 500m: 11 + 0,045×500 = 33,5 °C', () => {
+    expect(calcDefaultTGW(500, 'URG')).toBeCloseTo(33.5, 1)
+  })
+  it('NDB 1000m: 9 + 0,028×1000 = 37 °C', () => {
+    expect(calcDefaultTGW(1000, 'NDB')).toBeCloseTo(37, 1)
+  })
+  it('custom (default) entspricht globalem Gradienten 0,03 °C/m', () => {
+    expect(calcDefaultTGW(500)).toBeCloseTo(calcDefaultTGW(500, 'custom'), 2)
+  })
+})
+
+// ─── Injektionspumpe ──────────────────────────────────────────────────────────
+describe('Injektionspumpenleistung', () => {
+  it('P_inj = Q × ΔP / η_inj (Grundfos-Kataloge)', () => {
+    // Q=10 l/s, P=10 bar → P = (10/1000) × (10×1e5) / (0.55×1000) = 18.18 kW
+    const r = calculateSystem(inp({ Q: 10, injektionsdruck: 10 }))
+    expect(r.injektionsPumpenLeistung).toBeCloseTo(18.18, 1)
+  })
+  it('höherer Druck → mehr Injektionsleistung', () => {
+    const r20 = calculateSystem(inp({ injektionsdruck: 20 }))
+    const r10 = calculateSystem(inp({ injektionsdruck: 10 }))
+    expect(r20.injektionsPumpenLeistung).toBeGreaterThan(r10.injektionsPumpenLeistung)
+  })
+})
+
+// ─── Kluftaquifer-Warnung ─────────────────────────────────────────────────────
+describe('kluftaquiferWarnung (Gringarten & Sauty 1975)', () => {
+  it('true wenn Porosität < 0,05', () => {
+    const r = calculateSystem(inp({ porositaet: 0.03 }))
+    expect(r.kluftaquiferWarnung).toBe(true)
+  })
+  it('false wenn Porosität ≥ 0,05', () => {
+    const r = calculateSystem(inp({ porositaet: 0.05 }))
+    expect(r.kluftaquiferWarnung).toBe(false)
+  })
+  it('false für Standard-Sandstein (n=0,25)', () => {
+    const r = calculateSystem(inp())
+    expect(r.kluftaquiferWarnung).toBe(false)
+  })
+})
+
+// ─── Sichardt Q_max ───────────────────────────────────────────────────────────
+describe('qMaxHydraulisch — Sichardt-Einflussradius (Kruseman & de Ridder 1990)', () => {
+  it('ist kleiner als mit R=500m (konservativer) bei hoher Transmissivität', () => {
+    // T=4e-3 m²/s (default kf=1e-4, b=40): R_Sichardt >> 500m → ln(R/r_w) größer → Q_max kleiner
+    const r = calculateSystem(inp())
+    // Mit R=500: Q_max = 2π × 4e-3 × (40/3) / ln(500/0.15) × 1000 ≈ 41 l/s
+    expect(r.qMaxHydraulisch).toBeLessThan(41)
+  })
+  it('ist positiv für jede realistische Transmissivität', () => {
+    const r = calculateSystem(inp({ kf: 1e-6, maechtig: 10 }))
+    expect(r.qMaxHydraulisch).toBeGreaterThan(0)
   })
 })

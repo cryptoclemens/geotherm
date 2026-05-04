@@ -144,8 +144,10 @@
     0 1px 0 oklch(1 0 0 / 0.08) inset;
 }
 
-/* Light Mode: glass-card als solide Card mit Schatten */
-:root:not(.dark) .glass-card {
+/* Light Mode: glass-card als solide Card mit Schatten
+   :not(:is(.dark *)) sorgt dafür dass dark-Wrapper (z.B. auf der Landingpage)
+   die Glassmorphism-Variante behalten, auch wenn :root kein .dark trägt */
+:root:not(.dark) .glass-card:not(:is(.dark *)) {
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow: 0 2px 12px oklch(0 0 0 / 0.07), 0 1px 3px oklch(0 0 0 / 0.04);
@@ -163,7 +165,7 @@
     0 1px 0 oklch(1 0 0 / 0.10) inset;
 }
 
-:root:not(.dark) .glass-card-strong {
+:root:not(.dark) .glass-card-strong:not(:is(.dark *)) {
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow: 0 4px 20px oklch(0 0 0 / 0.09);

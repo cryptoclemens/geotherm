@@ -215,3 +215,39 @@ Quelle: **BEG / MAP-Programm KfW (2024)**. Gilt für Förderbohrung (eine Bohrun
 - **Baujard et al. (2017)** — Rock type drilling cost correction factors. Stanford Geothermal Workshop SGW-2017. → Gesteins-Korrekturfaktoren Bohrkostenrechner
 - **GtV Bundesverband Geothermie (2024)** — Bohrpreise & Marktdaten (intern). → Linearer Fallback-Preis < 500 m, Marktaufschlag Deutschland
 - **BEG / KfW MAP-Programm (2024)** — Bundesförderung Effiziente Gebäude. → Förderformel 375 EUR/m, max. 2.500.000 EUR
+- **Agemar et al. (2014)** — Assessing the geothermal potential of Germany. *Geothermics* 53, 519–535. → Regionale Gradienten (NDB/Molasse/URG/Mittelgebirge)
+- **Kruseman & de Ridder (1990)** — Analysis and Evaluation of Pumping Test Data. 2nd ed. ILRI. → Transiente Einflussradius-Formel R = 1,5·√(T·t/S)
+- **Grundfos SP/A-Baureihe Leistungskurven (2024)** — Tauchmotorpumpen für Bohrlöcher. → Tiefenabhängiger Pumpenwirkungsgrad η(z)
+
+---
+
+## DeltaT — Dritter Plausi-Check: Usability + Physikalische Korrekturen (April 2026)
+
+> **Geprüft von:** Scientist-Agent (Claude Opus 4.6) + Usability-Review (20 kritische Testnutzer-Personas)
+> **Datum:** 2026-04-14
+> **Status:** BESTANDEN — 5 Befunde, alle umgesetzt
+> **Scope:** Hydraulisches Modell, Pumpensystem, regionale Gradienten, Aquifer-Warnungen
+
+### Befunde und Umsetzung
+
+| # | Schweregrad | Befund | Maßnahme | Status |
+|---|---|---|---|---|
+| 1 | 🔴 KRITISCH | Geothermischer Gradient fest auf 0,03 K/m — ignoriert regionale Extremwerte (URG: 0,045; NDB: 0,028) um bis zu 50 % | Neues Input-Feld `region` (NDB/Molasse/URG/Mittelgebirge/custom); T_GW-Kopplung nutzt regionalen Gradienten nach Agemar et al. 2014 | ✅ Umgesetzt |
+| 2 | 🔴 KRITISCH | Q_max mit fixem R=500 m — nicht physikalisch hergeleitet, unterschätzt/überschätzt je nach T | R = 1,5 × √(T × 25a / S), S=1e-4 (Kruseman & de Ridder 1990); konservativer bei hoher Transmissivität (Default: 23 statt 41 l/s) | ✅ Umgesetzt |
+| 3 | 🔴 KRITISCH | Injektionspumpe nicht separat modelliert — SPF-Berechnung unterschätzt Eigenverbrauch | Neues Input-Feld `injektionsdruck [bar]`; P_inj = Q × ΔP / η_inj (η_inj=0,55, Grundfos); SPF-Optimierer nutzt P_Förder + P_Reinjekt | ✅ Umgesetzt |
+| 4 | 🟡 HINWEIS | Gringarten & Sauty (1975) nur für poröse Medien gültig — bei n < 0,05 (Kluftaquifer) liefert die Formel stark falsche Durchbruchszeiten | Neue Output-Warnung `kluftaquiferWarnung` + amber UI-Hinweis in InputColumn | ✅ Umgesetzt |
+| 5 | 🟡 HINWEIS | Pumpenwirkungsgrad η=0,60 fest — ignoriert Tiefenabhängigkeit (onshore/offshore, Wellenlänge) | η(z) = 0,72 − 0,08 × (z/2000), clamped [0,45; 0,72] nach Grundfos SP/A-Katalogen; z=500m: η=0,70; z=3000m: η=0,60 | ✅ Umgesetzt |
+
+### Numerische Auswirkungen (Default-Inputs: tiefe=500m, kf=1e-4, b=40m, Q=15 l/s)
+
+| Größe | Vor Korrekturen | Nach Korrekturen | Änderung |
+|-------|-----------------|------------------|----------|
+| Q_max hydraulisch | 41,2 l/s | 23,2 l/s | −44 % (konservativer) |
+| Tauchpumpenleistung (Q=15, H=265m) | 65,1 kW (η=0,60) | 56,2 kW (η=0,70) | −14 % |
+| Injektionspumpenleistung | nicht modelliert | 27,3 kW (10 bar) | + |
+| T_GW bei 500m (URG) | 25,0 °C (0,03 K/m) | 33,5 °C (0,045 K/m) | +8,5 K |
+
+### Offene Fragen (verbleibend nach diesem Review)
+
+1. **Speicherkoeffizient S=1e-4** (gespannter Aquifer, fest) — für ungespannte Aquifere wäre S=0,05–0,20 realistisch. User-Input `speicherkoeffizient` oder ein "Aquifer-Typ"-Dropdown (gespannt/ungespannt) könnte Abhilfe schaffen.
+2. **Injektionsdruck-Default 10 bar** — für artesische oder stark unter Druck stehende Aquifere (Molasse >1000 m) kann der Gegendruck 0–5 bar betragen. Ggf. regionalen Default koppeln.

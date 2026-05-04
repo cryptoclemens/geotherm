@@ -14,7 +14,7 @@
  *   - Stober & Bucher (2012) Kap. 7.4 — Tauchpumpen Eigenverbrauch
  */
 
-import { calculateSystem, HC_RATIO } from './system'
+import { calculateSystem, HC_RATIO, calcRInfluence, R_BRUNNEN } from './system'
 import type { DeltaTInputs } from './system'
 
 export type OptimizeMode = 'MIN_DOUBLETTEN' | 'MAX_SPF'
@@ -45,8 +45,7 @@ export type OptimizeResult =
     }
 
 /** Physikalische Konstanten für Optimierung */
-const R_EINFLUSS  = 500  // m — Einflussradius Brunnen (DVGW W 115)
-const R_BRUNNEN   = 0.15 // m — Brunnenradius
+// R_BRUNNEN + calcRInfluence: importiert aus system.ts (Kruseman & de Ridder 1990)
 // HC_RATIO: importiert aus system.ts (0.55 für Sandstein, VDI 4640 Bl. 1)
 const T_BREAK_ZIEL = 25  // Jahre — Auslegungslebensdauer (VDI 4640 Bl. 2)
 const ABSTAND_MIN  = 300 // m — technisches Minimum (getrennte Bohrplätze)
@@ -55,14 +54,16 @@ const ABSTAND_MIN  = 300 // m — technisches Minimum (getrennte Bohrplätze)
 const TR_MIN = 2
 
 /**
- * Berechnet hydraulisch maximal zulässige Förderrate nach Thiem (1906).
- * Q_max = 2π × T × s_zul / ln(R/r_w)  mit  s_zul = b/3  (DVGW W 115 Abschn. 6.2)
+ * Berechnet hydraulisch maximal zulässige Förderrate.
+ * Thiem (1906) + Kruseman & de Ridder (1990):
+ * Q_max = 2π × T × s_zul / ln(R_Sichardt/r_w)  mit  s_zul = b/3  (DVGW W 115 Abschn. 6.2)
  */
 function calcQMaxHydraulisch(kf: number, maechtig: number): number {
   const T = kf * maechtig             // Transmissivität [m²/s]
   const sZul = maechtig / 3           // zulässige Absenkung [m]
-  const q = (2 * Math.PI * T * sZul) / Math.log(R_EINFLUSS / R_BRUNNEN)
-  return Math.max(1, Math.round(q * 1000 * 10) / 10)  // l/s, mind. 1 l/s
+  const rInfl = calcRInfluence(T)     // transienter Einflussradius (Kruseman & de Ridder 1990)
+  const q = (2 * Math.PI * T * sZul) / Math.log(rInfl / R_BRUNNEN)
+  return Math.round(q * 1000 * 10) / 10  // l/s, gerundet auf 0,1
 }
 
 /**
@@ -93,6 +94,13 @@ export function optimizeMinDoubletten(inputs: DeltaTInputs): OptimizeResult {
   const qMax = calcQMaxHydraulisch(kf, maechtig)
   const tRMin = TR_MIN  // 2 °C — Frostschutz/Ökologie (VDI 4640 Bl. 2 Abschn. 5.4)
   const deltaT = tGW - tRMin
+
+  if (qMax < 1) {
+    return {
+      ok: false,
+      error: `Transmissivität T = ${(kf * maechtig).toExponential(1)} m²/s zu gering — hydraulischer Maximalfluss ${qMax.toFixed(2)} l/s < 1 l/s. Tiefere oder größere Aquifer-Mächtigkeit erforderlich.`,
+    }
+  }
 
   if (deltaT <= 0) {
     return {
@@ -189,7 +197,14 @@ export function optimizeMinDoubletten(inputs: DeltaTInputs): OptimizeResult {
 export function optimizeMaxSPF(inputs: DeltaTInputs): OptimizeResult {
   const { kf, maechtig, tGW, porositaet } = inputs
 
-  const qMax = Math.min(100, calcQMaxHydraulisch(kf, maechtig))
+  const qMaxRaw = calcQMaxHydraulisch(kf, maechtig)
+  if (qMaxRaw < 1) {
+    return {
+      ok: false,
+      error: `Transmissivität T = ${(kf * maechtig).toExponential(1)} m²/s zu gering — hydraulischer Maximalfluss ${qMaxRaw.toFixed(2)} l/s < 1 l/s.`,
+    }
+  }
+  const qMax = Math.min(100, qMaxRaw)
   const tRMin = TR_MIN  // 2 °C — Frostschutz/Ökologie (VDI 4640 Bl. 2 Abschn. 5.4)
 
   if (tGW - tRMin <= 0) {
@@ -226,9 +241,9 @@ export function optimizeMaxSPF(inputs: DeltaTInputs): OptimizeResult {
       if (out.anzahlDubletten == null) continue
       if (out.anzahlDubletten > 2 * Math.max(1, nMin)) continue
 
-      // SPF = gelieferte Wärme / (Pumpen-Eigenverbrauch aller Bohrungen + WP-Strom)
-      // P_pump_ges = n_Dobl × 2 Bohrungen × P_pump_je_Bohrg.  (Förder + Reinjekt.)
-      const pPumpGes = out.anzahlDubletten * 2 * out.tauchpumpenLeistung
+      // SPF = gelieferte Wärme / (Pumpen-Eigenverbrauch + WP-Strom)
+      // P_pump_ges = n_Dobl × (P_Förder + P_Reinjekt.) — jeweils 1 Pumpe pro Bohrung
+      const pPumpGes = out.anzahlDubletten * (out.tauchpumpenLeistung + out.injektionsPumpenLeistung)
       const pGes = pPumpGes + out.elLeistungWP
       if (pGes <= 0) continue
 
@@ -283,7 +298,7 @@ export function optimizeMaxSPF(inputs: DeltaTInputs): OptimizeResult {
     return { ok: false, error: 'Parameter sind bereits im SPF-Optimum — keine Verbesserung möglich.' }
   }
 
-  hinweise.push(`SPF-Scan prüfte ${Q_STEPS * TR_STEPS} Kombinationen. Hydraulisches Limit Q_max = ${Math.min(100, calcQMaxHydraulisch(kf, maechtig)).toFixed(1)} l/s nach Thiem (1906) / DVGW W 115.`)
+  hinweise.push(`SPF-Scan prüfte ${Q_STEPS * TR_STEPS} Kombinationen. Hydraulisches Limit Q_max = ${qMax.toFixed(1)} l/s (Thiem 1906 + Kruseman & de Ridder 1990 / DVGW W 115).`)
   if (nMin > 5) {
     hinweise.push(`Hohe Dublettenanzahl (Referenz: ${nMin} Stk.) — SPF-Optimierung hat begrenzten Einfluss. CAPEX-Reduktion (Modus "Minimale Doubletten") prüfen.`)
   }

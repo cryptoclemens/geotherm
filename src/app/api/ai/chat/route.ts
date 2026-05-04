@@ -1,7 +1,7 @@
-import { anthropic } from '@ai-sdk/anthropic'
 import { streamText, tool, convertToModelMessages, stepCountIs } from 'ai'
 import { z } from 'zod'
 import { appendToFeedbackMd } from '@/lib/feedback/github-sync'
+import { getUserAiModel } from '@/lib/ai/getUserAiModel'
 
 const SYSTEM = `Du bist der KI-Assistent der Geotherm-Suite — einer Web-Plattform für geothermische Projektentwicklung.
 
@@ -40,9 +40,11 @@ export async function POST(req: Request) {
 
   const { messages } = await req.json()
 
+  const model = await getUserAiModel('claude-haiku-4-5-20251001', 'anthropic')
+
   // AI SDK v6: inputSchema statt parameters, convertToModelMessages ist async
   const result = streamText({
-    model: anthropic('claude-haiku-4-5-20251001'),
+    model,
     system: SYSTEM,
     messages: await convertToModelMessages(messages),
     tools: {
