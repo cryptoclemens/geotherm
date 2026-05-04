@@ -13,7 +13,6 @@ import StatListPanel from './components/ui/StatListPanel'
 import PrintDialog from './components/ui/PrintDialog'
 import WelcomeOverlay from './components/ui/WelcomeOverlay'
 import GuidedTour from './components/ui/GuidedTour'
-import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import SearchResultsPanel from './components/ui/SearchResultsPanel'
 import LocationInspectorPanel from './components/ui/LocationInspectorPanel'
 import SavedLocationsTab from './components/ui/SavedLocationsTab'
@@ -146,7 +145,6 @@ export default function GpaApp() {
         <ProjectsTab />
       </div>
 
-      <FeedbackModal defaultInApp="gpa" />
       <StatListPanel />
       <PrintDialog />
     </div>

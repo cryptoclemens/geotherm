@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { PrinterIcon, XIcon, SaveIcon, FolderOpenIcon } from 'lucide-react'
 import { Button } from '@/core/ui/button'
-import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { InputColumn } from './components/InputColumn'
 import { ResultColumn } from './components/ResultColumn'
 import { BohrkostFormelTab } from './components/BohrkostFormelTab'
@@ -273,7 +272,6 @@ export default function BohrkostApp() {
         </footer>
       )}
 
-      <FeedbackModal defaultInApp="bohrkost" />
     </div>
   )
 }

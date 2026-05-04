@@ -10,7 +10,6 @@ import { SaveProjectDialog } from './components/SaveProjectDialog'
 import { LoadProjectDialog } from './components/LoadProjectDialog'
 import { OptimizeDialog } from './components/OptimizeDialog'
 import { DeltaTTour } from './components/DeltaTTour'
-import { FeedbackModal } from '@/core/ui/FeedbackModal'
 import { Button } from '@/core/ui/button'
 import { useDeltaTStore } from './store/useDeltaTStore'
 import { useWorkspaceStore } from '@/core/store/useWorkspaceStore'
@@ -169,7 +168,6 @@ export default function DeltaTApp() {
       )}
 
       <DeltaTTour />
-      <FeedbackModal defaultInApp="deltat" />
     </div>
   )
 }
