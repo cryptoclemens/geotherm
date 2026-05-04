@@ -234,7 +234,7 @@ function ProjectCard({ project, onClick }: ProjectCardProps) {
           {project.bohrkost_result ? (
             <div className="flex items-center gap-1.5 text-[11px]">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-              <span className="text-muted-foreground">Bohrkost:</span>
+              <span className="text-muted-foreground">Investition (gesamt):</span>
               <span className="font-medium text-foreground font-mono">
                 {project.bohrkost_result.projektkosten_mid >= 1_000_000
                   ? `${(project.bohrkost_result.projektkosten_mid / 1_000_000).toLocaleString('de-DE', { maximumFractionDigits: 2 })} Mio. EUR`

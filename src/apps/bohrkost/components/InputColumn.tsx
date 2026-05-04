@@ -98,7 +98,7 @@ export function InputColumn({ inputs, onChange, onReset }: InputColumnProps) {
               step={1}
               unit=""
               onChange={v => onChange('anzahlDubletten', v)}
-              info={'Anzahl Förder-/Injektionsbohrpaare.\nAus DeltaT-Auslegung vorbelegt — kann manuell überschrieben werden.\n1 Dublette = 2 Bohrungen (Förder + Injektion)\nRealistisch für Fernwärme: 1–4 Dubletten (GtV 2024)\nÜber 4: Mengenrabatt 5–15 % nicht berücksichtigt (konservativ)\n(Stober & Bucher 2012, Kap. 7; GtV Bohrpreise 2024)'}
+              info={'Anzahl Förder-/Injektionsbohrpaare.\nAus DeltaT-Auslegung vorbelegt — kann manuell überschrieben werden.\n1 Dublette = 2 Bohrungen (Förder + Injektion)\nRealistisch für Fernwärme: 1–4 Dubletten (GtV 2024)\nÜber 4: Mengenrabatt 5–15 % nicht berücksichtigt (konservativ)\nLimit 8 Dubletten: Lukawski-Formel und Overhead-Koeffizienten\nnur für diesen Bereich kalibriert; größere Vorhaben\nerfordern individuelle Projektplanung.\n(Stober & Bucher 2012, Kap. 7; GtV Bohrpreise 2024;\nLukawski et al. 2014, J. Pet. Sci. Eng. 118)'}
             />
             {inputs.anzahlDubletten > 4 && inputs.anzahlDubletten <= 8 && (
               <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug">

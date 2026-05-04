@@ -69,7 +69,7 @@ export interface BohrkostInputs {
 }
 
 export interface BohrkostOutputs {
-  // Bohrkosten (eine Bohrung)
+  // Bohrkosten gesamt (alle Bohrungen des Projekts summiert)
   bohrkosten_min: number
   bohrkosten_mid: number
   bohrkosten_max: number

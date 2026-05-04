@@ -111,20 +111,26 @@ export function ResultColumn({ inputs, outputs: r }: ResultColumnProps) {
   return (
     <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border overflow-y-auto h-full">
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
-        Kostenschätzung · {r.anzahl_bohrungen === 2 ? 'Dublette (2 Bohrungen)' : '1 Bohrung'}
+        Kostenschätzung · {
+          r.anzahl_bohrungen === 1
+            ? '1 Bohrung'
+            : r.anzahl_bohrungen === 2
+              ? '1 Dublette (2 Bohrungen)'
+              : `${r.anzahl_bohrungen / 2} Dubletten (${r.anzahl_bohrungen} Bohrungen)`
+        } · Gesamtprojekt
       </h2>
 
       {/* ── Kostenbänder ─────────────────────────────────────────────────── */}
       <section className="flex flex-col gap-2 shrink-0">
         <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Investitionskosten</h3>
         <KostenBand
-          label="Bohrkosten"
+          label="Bohrkosten (alle Bohrungen, gesamt)"
           min={r.bohrkosten_min}
           mid={r.bohrkosten_mid}
           max={r.bohrkosten_max}
         />
         <KostenBand
-          label="Gesamtprojekt (inkl. Komplettierung)"
+          label="Gesamtprojekt (Bohrungen + Komplettierung)"
           min={r.projektkosten_min}
           mid={r.projektkosten_mid}
           max={r.projektkosten_max}
