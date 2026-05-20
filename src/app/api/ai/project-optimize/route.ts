@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import type { AiSuggestion } from '@/core/api/projects'
 import { getUserAiModel } from '@/lib/ai/getUserAiModel'
+import { createClient } from '@/lib/supabase/server'
 
 const OptimizationSchema = z.object({
   suggestions: z.array(z.object({
@@ -38,6 +39,12 @@ Berücksichtige: Thermischen Durchbruch, Materialklasse (Korrosion bei TDS), Tra
 Antworte auf Deutsch.`
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: 'KI nicht konfiguriert' }, { status: 503 })
   }
@@ -58,9 +65,12 @@ export async function POST(req: NextRequest) {
 
   const { project_id, project_name, project_type, current_params, optimization_goal } = body
 
-  const userPrompt = `Projekt: "${project_name}" (Typ: ${project_type ?? 'unbekannt'})
+  const safeName = String(project_name ?? '').slice(0, 200)
+  const safeGoal = optimization_goal ? String(optimization_goal).slice(0, 500) : undefined
+
+  const userPrompt = `Projekt: "${safeName}" (Typ: ${project_type ?? 'unbekannt'})
 Aktuelle Parameter: ${JSON.stringify(current_params, null, 2)}
-${optimization_goal ? `Optimierungsziel: ${optimization_goal}` : ''}
+${safeGoal ? `Optimierungsziel: ${safeGoal}` : ''}
 
 Bitte analysiere die Parameter und gib 3–5 konkrete Optimierungsvorschläge.`
 

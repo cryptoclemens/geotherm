@@ -2,6 +2,7 @@ import { streamText, tool, convertToModelMessages, stepCountIs } from 'ai'
 import { z } from 'zod'
 import { appendToFeedbackMd } from '@/lib/feedback/github-sync'
 import { getUserAiModel } from '@/lib/ai/getUserAiModel'
+import { createClient } from '@/lib/supabase/server'
 
 const SYSTEM = `Du bist der KI-Assistent der Geotherm-Suite — einer Web-Plattform für geothermische Projektentwicklung.
 
@@ -31,6 +32,15 @@ Für show_geothermal_spots: lat/lng immer als dezimale WGS84-Koordinaten (Deutsc
 Potenzial-Skala: "sehr hoch" (T > 15°C Überschuss + sehr gute Transmissivität), "hoch" (gute Bedingungen), "mittel" (ausreichend aber mit Einschränkungen).`
 
 export async function POST(req: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Nicht authentifiziert' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return new Response(JSON.stringify({ error: 'KI nicht konfiguriert' }), {
       status: 503,

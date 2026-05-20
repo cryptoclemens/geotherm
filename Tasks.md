@@ -477,6 +477,19 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
+## Milestone 7.8 – Security Hardening KI-Endpoints *(Mai 2026)* ✅ ERLEDIGT
+
+### 7.8.1 Authentifizierung KI-Routen ✅
+- [x] [done] 🔥 `/api/ai/chat/route.ts` — `supabase.auth.getUser()` + HTTP 401 für Unauthentifizierte
+- [x] [done] 🔥 `/api/ai/project-optimize/route.ts` — Auth-Check + `project_name` max 200, `optimization_goal` max 500 Zeichen
+- [x] [done] 🔥 `/api/ai/location/route.ts` — Auth-Check + `placeName` max 200 Zeichen
+
+**Befund:** Alle drei `/api/ai/*`-Endpoints waren ohne Authentifizierung öffentlich erreichbar — jeder externe Caller konnte den Server-seitigen `ANTHROPIC_API_KEY` verbrauchen. Die Next.js-Middleware schützte nur UI-Routen, nicht die API-Pfade.
+
+**DoD M7.8:** Alle KI-API-Endpoints geben HTTP 401 zurück wenn kein authentifizierter Supabase-User vorhanden ist; User-Inputs werden auf sichere Längen beschränkt.
+
+---
+
 ## Backlog – Weitere In-Apps (ab M8+)
 
 - [ ] ⏸ **LCOH-Modul** (Levelized Cost of Heat)

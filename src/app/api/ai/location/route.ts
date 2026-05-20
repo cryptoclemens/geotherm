@@ -8,6 +8,7 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 const LocationSchema = z.object({
   aquiferType:  z.string().describe('Aquifer-Typ (z.B. "Mittlerer Buntsandstein", "Oberer Muschelkalk", "Lockergestein-Aquifer")'),
@@ -34,6 +35,12 @@ Alle Werte sind SCHÄTZUNGEN basierend auf der regionalen Geologie — kein Ersa
 Antworte immer auf Deutsch.`
 
 export async function POST(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+  }
+
   try {
     const { lat, lng, placeName } = await req.json() as {
       lat: number
@@ -45,7 +52,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'lat/lng required' }, { status: 400 })
     }
 
-    const prompt = `Standort: ${placeName ?? 'Unbekannter Ort'} (${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E)
+    const safePlaceName = placeName ? String(placeName).slice(0, 200) : undefined
+
+    const prompt = `Standort: ${safePlaceName ?? 'Unbekannter Ort'} (${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E)
 
 Bitte schätze die hydrogeologischen Parameter für diesen Standort in Deutschland.`
 
