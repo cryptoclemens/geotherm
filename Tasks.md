@@ -490,6 +490,24 @@ Liste gespeicherter Projekte, Speichern/Laden-Button in DeltaT.
 
 ---
 
+## Milestone 7.9 – Security Hardening — Vibe-Coding-Audit *(Mai 2026)* ✅ ERLEDIGT
+
+*Grundlage: Golem-Artikel + Tenzai-Studie; Befund: fehlende Security-Header + offene Proxy-Routes*
+
+### 7.9.1 Security Headers ✅
+- [x] [done] `next.config.ts`: `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Strict-Transport-Security`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy` (alle Pfade)
+
+### 7.9.2 Auth auf Proxy-Routes ✅
+- [x] [done] `/api/geocode` — Auth-Check (`createClient` + `getUser`) + HTTP 401
+- [x] [done] `/api/overpass` — Auth-Check + HTTP 401 (verhindert DoS-Missbrauch gegen externe Overpass-Endpunkte)
+- [x] [done] `/api/wms-proxy` — Auth-Check + HTTP 401 (Whitelist bleibt zusätzlich erhalten)
+
+**Befund:** Die drei Proxy-Routes waren ohne Auth öffentlich erreichbar. Angreifer könnten sie für DoS auf Nominatim/Overpass oder Bandbreiten-Missbrauch nutzen.
+
+**DoD M7.9:** Vollständige Security-Header-Suite deployed; alle Proxy-Routes erfordern eingeloggten Supabase-User.
+
+---
+
 ## Backlog – Weitere In-Apps (ab M8+)
 
 - [ ] ⏸ **LCOH-Modul** (Levelized Cost of Heat)
