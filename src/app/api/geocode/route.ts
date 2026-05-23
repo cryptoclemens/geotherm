@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * Geocoding-Proxy — leitet Nominatim-Anfragen server-seitig weiter,
@@ -6,6 +7,10 @@ import { NextRequest } from 'next/server'
  * OpenStreetMap Nominatim: https://nominatim.org/release-docs/develop/api/Search/
  */
 export async function GET(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return Response.json({ error: 'Nicht eingeloggt' }, { status: 401 })
+
   const q = req.nextUrl.searchParams.get('q')?.trim()
   if (!q) return Response.json({ error: 'missing q' }, { status: 400 })
 
