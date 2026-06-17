@@ -33,7 +33,7 @@ export function ResultColumn() {
   const pumpEigenverbrauch = _anzahl * r.tauchpumpenLeistung * 2
 
   return (
-    <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border overflow-y-auto h-full">
+    <div className="flex flex-col gap-4 p-4 bg-card rounded-xl border lg:overflow-y-auto lg:h-full">
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
         Primärkreislauf · Dubletten-System
       </h2>

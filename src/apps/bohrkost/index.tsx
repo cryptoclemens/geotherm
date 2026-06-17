@@ -142,12 +142,12 @@ export default function BohrkostApp() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)]">
       {lukawskiOpen && <LukawskiPopup onClose={() => setLukawskiOpen(false)} />}
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="shrink-0 px-4 py-2 border-b bg-muted/40 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <header className="shrink-0 px-4 py-2 border-b bg-muted/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <div>
             <h1 className="text-base font-semibold flex items-center gap-2">
               Bohrkostenrechner — Geothermische Investitionsschätzung
@@ -169,7 +169,7 @@ export default function BohrkostApp() {
             </p>
           </div>
           {/* Tab-Switcher */}
-          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5" role="tablist" aria-label="Bohrkost-Ansicht wählen">
+          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 self-start" role="tablist" aria-label="Bohrkost-Ansicht wählen">
             {(['berechnung', 'formeln'] as const).map(t => (
               <button
                 key={t}
@@ -187,7 +187,7 @@ export default function BohrkostApp() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2" data-print-hide>
+        <div className="flex flex-wrap items-center gap-2" data-print-hide>
           {tab === 'berechnung' && currentProjectId && (
             <Button
               variant={saveState === 'saved' ? 'default' : 'outline'}
@@ -226,14 +226,14 @@ export default function BohrkostApp() {
 
       {/* ── 3-Spalten-Layout ────────────────────────────────────────────────── */}
       {tab === 'berechnung' && (
-        <div className="flex flex-1 overflow-hidden gap-3 p-3">
+        <div className="flex flex-col lg:flex-row flex-1 lg:overflow-hidden gap-3 p-3">
           {/* Spalte 1: Eingabeparameter */}
-          <div className="w-80 shrink-0 overflow-y-auto">
+          <div className="w-full lg:w-80 lg:shrink-0 lg:overflow-y-auto">
             <InputColumn inputs={inputs} onChange={handleChange} onReset={handleReset} />
           </div>
 
           {/* Spalte 2: Ergebnisse */}
-          <div className="flex-1 overflow-hidden min-w-0">
+          <div className="w-full lg:flex-1 lg:overflow-hidden lg:min-w-0">
             <ResultColumn inputs={inputs} outputs={outputs} />
           </div>
         </div>
