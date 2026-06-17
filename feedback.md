@@ -49,12 +49,14 @@
 
 ---
 
-## 2026-05-04T21:31:36.789Z · allgemein · bug · [offen]
+## 2026-05-04T21:31:36.789Z · allgemein · bug · [erledigt]
 **Nutzer:** clemens.pompey@vencly.com
 **Version:** 1.0.0
 **Gerät:** Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Mobile/15E148 Safari/604.1
 
 > In der mobil Version nicht wirklich gut ablesbar. Teile des Bildschirms fehlen
+
+**Bearbeitung (2026-06-17):** DeltaT- und Bohrkost-Rechner mobil responsiv gemacht (Branch `fix/deltat-mobile-layout`). Ursache: 3-Spalten-Layout mit festen Spaltenbreiten (`w-64`/`w-72`/`w-80`) in horizontalem Flex + `overflow-hidden` → Inhalt wurde auf schmalen Viewports rechts abgeschnitten. Fix: mobile-first stacking (standardmäßig `flex-col`/full-width, 3-Spalten-Verhalten erst ab `lg:`), `min-h` statt fixer Viewport-Höhe auf Mobil, Header stapelt, interner Scroll der Ergebnis-Spalten nur noch ab `lg:`. Verifiziert per Screenshot bei 390px (iPhone) für DeltaT + Bohrkost; Desktop unverändert.
 
 ---
 

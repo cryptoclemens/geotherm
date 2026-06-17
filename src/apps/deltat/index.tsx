@@ -58,9 +58,9 @@ export default function DeltaTApp() {
   const [tab, setTab] = useState<TabId>('berechnung')
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-      <header className="shrink-0 px-4 py-2 border-b bg-muted/40 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+    <div className="flex flex-col min-h-[calc(100vh-3.5rem)] lg:h-[calc(100vh-3.5rem)]">
+      <header className="shrink-0 px-4 py-2 border-b bg-muted/40 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <div>
             <h1 className="text-base font-semibold">
               DeltaT – Geothermische Dubletten-Auslegung
@@ -70,7 +70,7 @@ export default function DeltaTApp() {
             </p>
           </div>
           {/* Tab-Switcher */}
-          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5" role="tablist" aria-label="DeltaT-Ansicht wählen">
+          <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 self-start" role="tablist" aria-label="DeltaT-Ansicht wählen">
             {(['berechnung', 'formeln'] as const).map(t => (
               <button
                 key={t}
@@ -88,7 +88,7 @@ export default function DeltaTApp() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2" data-print-hide>
+        <div className="flex flex-wrap items-center gap-2" data-print-hide>
           {tab === 'berechnung' && <OptimizeDialog />}
           {tab === 'berechnung' && <LoadProjectDialog />}
           {tab === 'berechnung' && <SaveProjectDialog />}
@@ -115,19 +115,19 @@ export default function DeltaTApp() {
 
       {/* ── 3-Spalten-Layout ─────────────────────────────────────────────── */}
       {tab === 'berechnung' && (
-      <div className="flex flex-1 overflow-hidden gap-3 p-3" data-deltat-layout>
+      <div className="flex flex-col lg:flex-row flex-1 lg:overflow-hidden gap-3 p-3" data-deltat-layout>
         {/* Spalte 1: Eingabeparameter */}
-        <div className="w-64 shrink-0 overflow-y-auto" data-deltat-inputs>
+        <div className="w-full lg:w-64 lg:shrink-0 lg:overflow-y-auto" data-deltat-inputs>
           <InputColumn />
         </div>
 
         {/* Spalte 2: Primärkreislauf */}
-        <div className="flex-1 overflow-hidden min-w-0" data-deltat-results>
+        <div className="w-full lg:flex-1 lg:overflow-hidden lg:min-w-0" data-deltat-results>
           <ResultColumn />
         </div>
 
         {/* Spalte 3: Sekundärkreislauf */}
-        <div className="w-72 shrink-0 overflow-hidden" data-deltat-secondary>
+        <div className="w-full lg:w-72 lg:shrink-0 lg:overflow-hidden" data-deltat-secondary>
           <SecondaryColumn />
         </div>
       </div>
