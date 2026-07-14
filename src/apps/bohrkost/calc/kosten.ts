@@ -7,7 +7,7 @@
  *                    Injektionsbohrungen — NICHT für Erdwärmesonden/BHE)
  *   - Linearer Fallback: GtV Bohrpreise (2024); DVGW W 115
  *   - Gestein-Faktoren: Baujard et al. (2017), Stanford SGW
- *   - Währungsfaktor: BLS CPI 2009–2026 (×1.54) + ECB EUR/USD → f_waehrung=1.34
+ *   - Währungsfaktor: BLS CPI 2009–2026 (×1.54) ÷ ECB-Kurs 2026 (1.15) → f_waehrung=1.34
  *   - Marktaufschlag: GtV Bundesverband Geothermie; LIAG Broschüre Tiefe Geothermie
  *   - Komplettierung: DVGW W 115; Stober & Bucher (2012) Kap. 7
  *   - Förderung:     BEG / MAP-Programm KfW 2024
@@ -170,11 +170,14 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const { tiefe, gesteinstyp, durchmesser, region } = inp
 
   // Korrekturfaktoren (für beide Formeln benötigt)
-  // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
-  //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
-  //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
-  //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
+  // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆ — zwei Schritte, ein Wechselkurs:
+  //   1. Inflation in USD:  US CPI 2009–2026 ×1.54 (BLS) → USD₂₀₂₆
+  //   2. Konversion:        Kurs 2026 EUR/USD 1.15 (ECB) → EUR₂₀₂₆
+  //   Faktor: 1.54 / 1.15 ≈ 1.34
+  //   Der Kurs 2009 (1.39) geht bewusst NICHT ein — CPI gilt in USD, daher wird erst
+  //   innerhalb USD inflationiert und nur einmal konvertiert (sonst Kurs doppelt gezählt).
   //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
+  //   Offene Frage: CPI misst Verbraucher-, nicht Bohrmarktpreise — PLAUSI_CHECK.md, Befund C
   const f_waehrung     = 1.34
   const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
   const f_region       = REGION_FAKTOR[region]

@@ -44,10 +44,10 @@ const FORMELN: Formel[] = [
   {
     id: 'waehrung',
     kennzahl: 'Währungskorrektur USD→EUR',
-    formel: 'EUR₂₀₂₆ = USD₂₀₀₉ × 1,20',
+    formel: 'EUR₂₀₂₆ = USD₂₀₀₉ × 1,34',
     einheit: '—',
-    erlaeuterung: 'Umrechnungsfaktor berücksichtigt Wechselkurs (EUR/USD Langzeitdurchschnitt ≈ 1,10) und kumulierte Baupreisinflation 2009–2026 (ca. 45 %). Resultat: Faktor 1,20.',
-    quelle: 'ECB EUR/USD Langzeitdurchschnitt + kumulierte Inflation 2009–2026',
+    erlaeuterung: 'Die Lukawski-Formel liefert Kosten in US-Dollar des Jahres 2009. Die Umrechnung erfolgt in zwei Schritten: Zuerst wird innerhalb des Dollars inflationiert (US-Verbraucherpreisindex 2009–2026: ×1,54), danach einmal zum Wechselkurs des Zieljahres umgerechnet (EUR/USD 1,15 für 2026). Resultat: 1,54 / 1,15 ≈ 1,34. Der Wechselkurs von 2009 geht bewusst nicht ein — ein Preisindex gilt nur in seiner eigenen Währung. Der Faktor wird jährlich geprüft (nächste Prüfung: April 2027); der deutsche Marktaufschlag ist separat abgedeckt.',
+    quelle: 'US CPI 2009–2026 (BLS) + EUR/USD-Kurs 2026 (ECB); PLAUSI_CHECK.md, Befund C (Juli 2026)',
   },
   {
     id: 'gestein-faktor',

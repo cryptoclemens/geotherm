@@ -149,7 +149,7 @@ liegt jedoch innerhalb der ±35–50 %-Bandbreite der AACE-Class-5-Schätzung).
 
 | Faktor | Wert | Quelle / Herleitung |
 |---|---|---|
-| Währung USD₂₀₀₉ → EUR₂₀₂₆ | **1.34** | US CPI 2009–2026: ×1.54 (BLS); EUR/USD: 1.39→1.15 (ECB) → 1.54/(1.15/1.39) ≈ 1.34. Nächste Prüfung: April 2027 |
+| Währung USD₂₀₀₉ → EUR₂₀₂₆ | **1.34** | US CPI 2009–2026: ×1.54 (BLS) → USD₂₀₂₆; Konversion zum Kurs 2026 EUR/USD 1.15 (ECB) → 1.54/1.15 ≈ 1.34. Nächste Prüfung: April 2027. Herleitung korrigiert 07/2026, Wert unverändert — siehe Befund C |
 | Gestein Lockergestein | 0.70 | Baujard et al. (2017), Stanford SGW |
 | Gestein Festgestein_sed | 1.00 | Referenz |
 | Gestein Festgestein_kristallin | 1.30 | Baujard et al. (2017), Stanford SGW |
@@ -372,6 +372,52 @@ kein Sprung. Regressionstests in `kosten.test.ts` (Stetigkeit + Monotonie über 
 > = 'NDB'` (0,95) ist, sind sie auf 156.750 / 294.500 / 484.500 EUR angepasst — die alten Werte
 > waren die Beschreibung des Bugs, nicht der Sollzustand.
 
+### Befund C — 🟡 MITTEL: Währungsfaktor — Doku/Code-Drift und zwei nicht nachrechenbare Herleitungen
+
+Der Währungsfaktor ist an drei Stellen dokumentiert, mit **zwei unterschiedlichen Herleitungen und
+zwei unterschiedlichen Werten**:
+
+| Stelle | Wert | genannte Herleitung |
+|---|---|---|
+| `kosten.ts:178` (gerechnet) + Header + PLAUSI-Tabelle | **1.34** | US CPI ×1.54 (BLS); EUR/USD 1.39 (2009) → 1.15 (2026, ECB); notiert als `1.54 / (1.15/1.39)` |
+| `BohrkostFormelTab.tsx`, Eintrag `waehrung` (nutzersichtbar) | **1,20** | EUR/USD-Langzeitdurchschnitt ≈ 1,10 + kumulierte Baupreisinflation 2009–2026 ≈ 45 % |
+
+Die Ergebnisdifferenz beträgt ~12 % und wirkt auf den gesamten Lukawski-Zweig, also auf alle
+Ergebnisse ≥ 400 m — die Mehrheit der Nutzungsfälle. Beim Nachrechnen ergibt sich: **keine der
+beiden notierten Herleitungen liefert den Wert, den sie behauptet.**
+
+| Herleitung wörtlich gerechnet | Ergebnis | behauptet |
+|---|---|---|
+| `1.54 / (1.15/1.39)` (Code-Kommentar, PLAUSI-Tabelle) | **1,86** | 1.34 |
+| `(1/1,10) × 1,45` (FormelTab) | **1,32** | 1,20 |
+
+**Der gerechnete Wert 1.34 ist dennoch korrekt** — er entspricht dem methodisch sauberen Weg
+`1.54 / 1.15 = 1,339`: US-CPI inflationiert USD₂₀₀₉ → USD₂₀₂₆, anschließend **eine** Konversion zum
+Kurs des Zieljahres. Ein Preisindex gilt nur in seiner eigenen Währung; der 2009er-Kurs 1.39 gehört
+in diesen Rechenweg nicht hinein. Die Notation `/(1.15/1.39)` zieht ihn zusätzlich ein und zählt den
+Wechselkurs damit doppelt — daher die 1,86. Es ist ein **Notationsfehler in der Doku, kein
+Rechenfehler im Code**: `kosten.ts` rechnet mit der Konstanten 1.34, nicht mit dem Kommentar.
+
+Der FormelTab-Wert **1,20 ist aus keiner Angabe rekonstruierbar** — auch nicht aus seinen eigenen
+Eingangswerten, die 1,32 ergäben. Bemerkenswert: Mit dem Kurs 1,15 statt des „Langzeitdurchschnitts"
+1,10 liefert der FormelTab-Ansatz `(1/1,15) × 1,45 = 1,26`, also dieselbe Größenordnung wie 1.34. Die
+Divergenz entsteht also nicht durch die Methode, sondern durch die nicht abgeleitete Zahl 1,20 und den
+veralteten Kurs.
+
+**Bewertung:** Code = ✅ korrekt, FormelTab = ❌ falsch. Damit ist es eine **reine Doku-Korrektur**;
+keine Berechnung ändert sich, die Lukawski-Tests in `kosten.test.ts` bleiben unverändert gültig.
+
+**Umsetzung 2026-07-14 (M8.1) — ✅ behoben.** Drei Stellen auf eine Herleitung vereinheitlicht:
+
+- `BohrkostFormelTab.tsx`, Eintrag `waehrung`: Formel `× 1,20` → `× 1,34`, Erläuterung auf den
+  CPI-Weg umgestellt, Quelle auf BLS + ECB präzisiert.
+- `kosten.ts:174–177` und Datei-Header: Notation `1.54 / (1.15/1.39)` → `1.54 / 1.15`; der Kurs 1.39
+  (2009) entfällt, da im Rechenweg nicht benötigt.
+- PLAUSI-Tabelle „Angewandte Korrekturfaktoren": dieselbe Korrektur.
+
+Der Zahlenwert **1.34 bleibt unverändert** — verifiziert, dass `npm test` ohne Anpassung eines
+einzigen Erwartungswerts grün bleibt.
+
 ### Ergänzende Beobachtung (kein Befund)
 
 Der COP-Cross-Check ist **konsistent**: Die DeltaT-Formel `COP = (T_VL/(T_VL − T_R)) × Gütegrad`
@@ -387,6 +433,13 @@ sich also nur bei den Bohrkosten, nicht bei der Thermodynamik.
    an dieser Stelle höchstens eines stimmt.
 2. Das Referenzprojekt (280 m) liegt genau im am schwächsten verankerten Bereich des Rechners. Gibt es weitere
    reale Angebote < 500 m zur Kalibrierung?
+3. Ist **US-CPI** der richtige Index für `f_waehrung` (Befund C)? CPI misst Verbraucherpreise;
+   Bohrkosten folgen eher Bau-/Bohrmarktpreisen (BLS PPI „Drilling Oil and Gas Wells", IHS UCCI),
+   die im selben Zeitraum deutlich anders verlaufen sind. Der FormelTab nannte bis 07/2026 eine
+   „Baupreisinflation ≈ 45 %" — eine Zahl ohne belegte Quelle, deren Ansatz aber fachlich näher
+   liegt als CPI. Die Wahl ist materiell: CPI-Weg 1.34 vs. EUR-Baupreis-Weg (Kurs 2009 + 45 %) 1,04
+   — Spanne ~29 %. Vor einer Änderung Indexquelle belegen; `f_markt` (1.40) könnte einen Teil des
+   Effekts bereits verdeckt mit abdecken (Doppelzählungs-Risiko).
 
 ### Nachtrag 16.07.2026 — zweite Projektquelle bestätigt Befund A und erklärt ihn
 
