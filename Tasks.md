@@ -553,15 +553,23 @@ Luft-WP + Spitzenlast, Luft-WP + Spitzenlast + PV, Rechenzentrums-Abwärme.
 
 Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen reales Bohrangebot (Juli 2026)"**.
 
-- [ ] ⭐ 🔴 **Befund A:** Bohrkost unterschätzt ein reales Bohrangebot (das Referenzprojekt, 280 m, Lockergestein,
-      Dublette: 1.074 T€) um Faktor 2,6–3,4 (Bohrkost: 318 T€). Liegt außerhalb der AACE-Bandbreite.
-      → Kostenaufschlüsselung beim Bohrunternehmen anfordern, dann `LINEAR_PREIS_PRO_M` /
-      `LINEAR_MOBILISIERUNG` für Lockergestein neu kalibrieren **oder** Gültigkeitsgrenze des linearen
-      Zweigs dokumentieren. **Blocker:** `/lcoh` und `/bohrkost` dürfen nicht mit widersprüchlichen
-      Bohrkosten nebeneinander live gehen.
-- [ ] 🔥 🟡 **Befund B:** `durchmesser` und `region` sind unterhalb 400 m stille No-Ops (`f_gesamt` wirkt
-      nur im Lukawski-Zweig, kosten.ts:165–201). → Faktoren auch linear anwenden (Marktaufschlag bewusst
-      nicht) oder Felder < 400 m deaktivieren mit Begründung im UI.
+- [ ] [build] ⭐ 🔴 **Befund A:** Bohrkost unterschätzt zwei reale Bohrangebote (280 m, Lockergestein,
+      Dublette) um Faktor 3,4–5,0. Liegt außerhalb der AACE-Bandbreite.
+      **Teil 1 erledigt (14.07.2026): Gültigkeitsgrenze deklariert** — `kleinkaliberWarnung` (≤ 400 m)
+      am Bohrtiefe-Slider + Formelwerk-Zeile `linear-gueltigkeit`. Bewusst **nicht** kalibriert:
+      ohne Kostenaufschlüsselung ist der Scope der Vergleichszahl unbekannt, ein €/m-Fit dagegen wäre
+      eine Annahme mit Nachkommastellen — in einem Mehrkunden-Produkt schädlicher als eine
+      offengelegte Grenze.
+      **Teil 2 offen:** Kostenaufschlüsselung beim Bohrunternehmen anfordern → dann
+      `LINEAR_PREIS_PRO_M` / `LINEAR_MOBILISIERUNG` für Lockergestein kalibrieren.
+      **Blocker bleibt:** `/lcoh` und `/bohrkost` dürfen nicht mit widersprüchlichen Bohrkosten
+      nebeneinander live gehen. Der Befund-B-Fix löst das nicht — er verschiebt die Vergleichsebene
+      nur auf 302 T€ (Faktor 3,6); selbst 13 3/8" ergibt erst 378 T€ (Faktor 2,8).
+- [x] [verify] 🔥 🟡 **Befund B erledigt (14.07.2026):** `f_region × f_durchmesser` wirken nun auch im
+      linearen Zweig (`kosten.ts`, `f_linear`) — Marktaufschlag, Währung und Gestein bewusst nicht
+      (doppelt bzw. bereits enthalten). Bei 280 m: 7"/9 5/8"/13 3/8" = 128,4/151,1/188,8 T€ statt
+      durchgängig 159,0 T€. Faktor greift an der `linear`-Variablen → Blend 400–600 m bleibt stetig
+      (Regressionstests an den Rändern + Monotonie). 136 Tests grün.
 - [ ] 📦 Blend-Zone 400–600 m überdenken: linearer Zweig (255 T€) und Lukawski (1.079 T€) liegen bei
       600 m um Faktor 4,2 auseinander — der Blend mittelt zwei Modelle, von denen dort höchstens eines stimmt.
 

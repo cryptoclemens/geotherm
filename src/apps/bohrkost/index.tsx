@@ -229,7 +229,7 @@ export default function BohrkostApp() {
         <div className="flex flex-col lg:flex-row flex-1 lg:overflow-hidden gap-3 p-3">
           {/* Spalte 1: Eingabeparameter */}
           <div className="w-full lg:w-80 lg:shrink-0 lg:overflow-y-auto">
-            <InputColumn inputs={inputs} onChange={handleChange} onReset={handleReset} />
+            <InputColumn inputs={inputs} outputs={outputs} onChange={handleChange} onReset={handleReset} />
           </div>
 
           {/* Spalte 2: Ergebnisse */}

@@ -27,11 +27,19 @@ const FORMELN: Formel[] = [
   },
   {
     id: 'linear-fallback',
-    kennzahl: 'Linearer Fallback (d < 500 m)',
-    formel: 'C = Preis/m × d + C_Mobil',
+    kennzahl: 'Linearer Fallback (d ≤ 400 m)',
+    formel: 'C = (Preis/m × d + C_Mobil) × f_region × f_durchmesser',
     einheit: 'EUR',
-    erlaeuterung: 'Für flache Bohrungen (< 500 m): Lockergestein 300 EUR/m + 75.000 EUR, Festgestein sed. 700 EUR/m + 100.000 EUR, Kristallin 1.200 EUR/m + 150.000 EUR Mobilisierungskosten.',
+    erlaeuterung: 'Für flache Bohrungen (≤ 400 m): Lockergestein 300 EUR/m + 75.000 EUR, Festgestein sed. 700 EUR/m + 100.000 EUR, Kristallin 1.200 EUR/m + 150.000 EUR Mobilisierung. Region und Durchmesser wirken mit; der deutsche Marktaufschlag bewusst nicht — die GtV-/DVGW-Preise sind bereits deutsche Marktpreise. Zwischen 400 und 600 m linearer Blend zur Lukawski-Kurve.',
     quelle: 'Eigene Schätzung auf Basis GtV Bohrpreise (2024); DVGW W 115',
+  },
+  {
+    id: 'linear-gueltigkeit',
+    kennzahl: 'Gültigkeitsgrenze linearer Zweig',
+    formel: 'gilt für klein-kalibrige Brunnen (Ausbau ≤ 13 3/8" / 340 mm)',
+    einheit: '—',
+    erlaeuterung: 'Die zugrunde liegenden GtV-/DVGW-Preise beschreiben klein-kalibrige Brunnenbohrungen. Für Geothermie-Produktionsbrunnen unter 400 m ist der lineare Zweig nicht belastbar: Reale Angebote liegen um ein Mehrfaches über dem Rechnerwert und damit außerhalb der AACE-Class-5-Bandbreite. Der Durchmesserfaktor endet bei 13 3/8" (340 mm) — größere Ausbauten mit Filterrohr und Kiesschüttung bildet der Rechner nicht ab, ihre Mehrkosten fehlen vollständig. Für solche Bohrungen ist ein Angebot einzuholen; der Rechnerwert taugt dort nicht einmal als Untergrenze.',
+    quelle: 'PLAUSI_CHECK.md, Befund A (Juli 2026); AACE Class 5',
   },
   {
     id: 'waehrung',

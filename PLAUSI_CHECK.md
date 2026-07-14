@@ -259,7 +259,8 @@ Quelle: **BEG / MAP-Programm KfW (2024)**. Gilt für Förderbohrung (eine Bohrun
 > **Geprüft durch:** Scientist-Agent (Claude Opus 4.8), im Rahmen der LCOH-Modul-Vorbereitung
 > **Datum:** 2026-07-16
 > **Module:** `src/apps/bohrkost/calc/kosten.ts` (bestehend) ↔ externes LCOH-Modell Referenzprojekt
-> **Status:** ZWEI BEFUNDE — beide vor Launch des LCOH-Moduls (`/lcoh`) zu klären
+> **Status:** Befund B ✅ behoben (M8.1, 2026-07-14) · Befund A 🟡 Gültigkeitsbereich deklariert,
+> Kalibrierung bewusst offen bis die Kostenaufschlüsselung vorliegt
 > **Anlass:** Für das geplante LCOH-Modul (Tasks.md, Backlog M8+) liegt erstmals ein **reales
 > Bohrangebot** vor (Referenzprojekt eines Kunden; > Angebot des Bohrunternehmens, 03/2026). Damit lässt sich Bohrkost erstmals gegen einen echten
 > Marktpreis prüfen statt nur gegen Literatur.
@@ -302,6 +303,25 @@ Beide Abgrenzungen liegen deutlich außerhalb der dokumentierten AACE-Class-5-Ba
 Formelwerk-Tab explizit dokumentieren, dass der lineare Zweig nur kleinkalibrige Bohrungen
 abbildet und für Geothermie-Produktionsbohrungen < 400 m untauglich ist.
 
+**Umsetzung 2026-07-14 (M8.1) — 🟡 Gültigkeitsbereich deklariert, NICHT kalibriert.**
+Bewusst die zweite Option. Solange die Kostenaufschlüsselung der Angebote fehlt, ist unbekannt,
+welchen Umfang die Vergleichszahl überhaupt hat (Verrohrung? Filter? Kies? Pumpe?). Eine
+Kalibrierung von €/m gegen eine Zahl unbekannten Scopes wäre kein Fix, sondern eine Annahme mit
+Nachkommastellen — und sie landete in einem Produkt, das auch andere Kunden nutzen. Stattdessen:
+
+- `kleinkaliberWarnung: boolean` in `BohrkostOutputs` (true bei `tiefe ≤ 400 m`), gerendert als
+  Hinweis am Bohrtiefe-Slider — Muster wie `kluftaquiferWarnung` in DeltaT.
+- Neue Formelwerk-Zeile `linear-gueltigkeit` mit Grund, Faktorbereich und Nicht-Kalibrierungs-
+  Entscheidung; die Karte `linear-fallback` sagte zudem fälschlich „d < 500 m" statt ≤ 400 m
+  (+ Blend bis 600 m) — korrigiert.
+
+**Befund A bleibt offen.** Der Befund-B-Fix behebt ihn nicht und verschiebt die Vergleichsebene
+leicht: Die Dublette bei 280 m liegt mit dem Default NDB (0,95) nun bei **302 T€** statt 318 T€
+(Faktor 3,4 → **3,6**). Auch der größte wählbare Ausbau schließt die Lücke nicht — 13 3/8" ergibt
+378 T€ und damit immer noch Faktor **2,8**. Das stützt die Diagnose: Der reale Ausbau (≈ 19,7")
+liegt außerhalb des Wertebereichs von `DURCHMESSER_FAKTOR`, die Lücke ist keine Faktor-Frage.
+**Nächster Schritt unverändert:** Kostenaufschlüsselung anfordern, dann kalibrieren.
+
 **Relevanz:** Blocker für `/lcoh`. Sobald LCOH-Modul und Bohrkost in derselben Suite laufen,
 sieht jeder Nutzer den Widerspruch — Bohrkost würde für das Referenzprojekt rund 750 T€ CAPEX „einsparen",
 was den LCOH der Geothermie um grob 8–10 EUR/MWh drückt und die Technologieentscheidung kippt.
@@ -328,6 +348,29 @@ Faktoren zudem nur anteilig — bei 401 m praktisch gar nicht, bei 599 m fast vo
 **Empfehlung:** Entweder `f_durchmesser` und `f_region` auch auf den linearen Zweig anwenden
 (Marktaufschlag bewusst **nicht** — die GtV-Preise sind bereits deutsche Marktpreise), oder
 die betroffenen Felder unterhalb 400 m im UI deaktivieren und den Grund anzeigen.
+
+**Umsetzung 2026-07-14 (M8.1) — ✅ behoben.** Erste Option: `f_region × f_durchmesser` wirken nun
+auch im linearen Zweig (`kosten.ts`, `f_linear`). Bewusst **nicht** angewendet: `f_markt` (GtV-/
+DVGW-Preise sind bereits deutsche Marktpreise), `f_waehrung` (Preise stehen in EUR) und
+`f_gestein` (steckt bereits in `LINEAR_PREIS_PRO_M`).
+
+Nachgerechnet bei 280 m Lockergestein, eine Bohrung (vorher durchgängig 159,0 T€):
+
+| Variation | vorher | nachher |
+|---|---|---|
+| 7" / 9 5/8" / 13 3/8" (NDB) | 159,0 / 159,0 / 159,0 T€ | **128,4 / 151,1 / 188,8 T€** |
+| NDB / Molasse / Oberrheingraben (9 5/8") | 159,0 / 159,0 / 159,0 T€ | **151,1 / 159,0 / 166,9 T€** |
+
+Der Faktor greift an der `linear`-Variablen selbst, nicht nur am `≤ 400 m`-Ast — dadurch nimmt der
+Blend 400–600 m ihn anteilig mit und die Naht bleibt stetig. Verifiziert an den Rändern
+(Lockergestein, 13 3/8", Oberrheingraben): 399→401 m = 0,92 %, 599→601 m = 1,00 %, direkt an der
+Naht 400→400,1 m = 0,08 % und 599,9→600 m = 0,07 %. Das ist der bekannte Knick der Blend-Steigung,
+kein Sprung. Regressionstests in `kosten.test.ts` (Stetigkeit + Monotonie über die Blend-Zone).
+
+> **Hinweis:** Drei bestehende Tests (`kosten.test.ts`, Lineare-Fallback-Block) hatten den No-Op
+> als Erwartungswert fixiert (165.000 / 310.000 / 510.000 EUR bei 300 m). Da `DEFAULT_INPUTS.region
+> = 'NDB'` (0,95) ist, sind sie auf 156.750 / 294.500 / 484.500 EUR angepasst — die alten Werte
+> waren die Beschreibung des Bugs, nicht der Sollzustand.
 
 ### Ergänzende Beobachtung (kein Befund)
 

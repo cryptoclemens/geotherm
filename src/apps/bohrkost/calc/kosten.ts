@@ -98,6 +98,10 @@ export interface BohrkostOutputs {
   ampel_tiefe: 'green' | 'yellow' | 'red'
   // Anzahl Bohrungen (für Anzeige)
   anzahl_bohrungen: number
+  /** true wenn tiefe ≤ 400 m → linearer GtV-/DVGW-Zweig → nur klein-kalibrige
+   *  Brunnenbohrungen abgebildet, nicht Geothermie-Produktionsbrunnen mit großem Ausbau.
+   *  Gültigkeitsgrenze, keine Kalibrierung — siehe PLAUSI_CHECK.md, Befund A (Juli 2026). */
+  kleinkaliberWarnung: boolean
 }
 
 export const DEFAULT_INPUTS: BohrkostInputs = {
@@ -184,7 +188,17 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const lukawski = c_usd_2009 * f_gesamt
 
   // Linearer Fallback — GtV Bohrpreise (2024); DVGW W 115
-  const linear = LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+  // f_region und f_durchmesser wirken hier ebenfalls (Befund B, PLAUSI_CHECK.md Juli 2026):
+  // zuvor galt f_gesamt nur im Lukawski-Zweig, wodurch beide UI-Felder unterhalb 400 m
+  // stille No-Ops waren (7" = 9 5/8" = 13 3/8" = 159,0 T€ bei 280 m).
+  // Bewusst NICHT angewendet:
+  //   f_markt    — GtV-/DVGW-Preise sind bereits deutsche Marktpreise (doppelter Aufschlag)
+  //   f_waehrung — die Preise stehen bereits in EUR
+  //   f_gestein  — steckt bereits in LINEAR_PREIS_PRO_M / LINEAR_MOBILISIERUNG
+  // Der Faktor greift an der linear-Variablen selbst, damit der Blend 400–600 m ihn
+  // anteilig mitnimmt und an der Naht bei 400 m keine Unstetigkeit entsteht.
+  const f_linear = f_region * f_durchmesser
+  const linear = (LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]) * f_linear
 
   let basiskosten: number
   if (tiefe <= 400) {
@@ -338,6 +352,9 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     : inputs.tiefe <= 1500 ? 'yellow'
     : 'red'
 
+  // Gültigkeitsgrenze linearer Zweig — PLAUSI_CHECK.md, Befund A (Juli 2026)
+  const kleinkaliberWarnung = inputs.tiefe <= 400
+
   return {
     bohrkosten_min,
     bohrkosten_mid,
@@ -360,5 +377,6 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     ampel_risiko,
     ampel_tiefe,
     anzahl_bohrungen,
+    kleinkaliberWarnung,
   }
 }

@@ -7,22 +7,24 @@ function inp(overrides: Partial<BohrkostInputs>): BohrkostInputs {
 }
 
 describe('berechneBohrkosten — Linearer Fallback (tiefe < 500 m)', () => {
-  it('Lockergestein 300m: Kosten = 300×300 + 75.000 = 165.000 EUR (eine Bohrung Basis)', () => {
+  // Erwartungswerte seit Befund B (PLAUSI_CHECK.md, Juli 2026) inkl. f_durchmesser × f_region.
+  // DEFAULT_INPUTS: durchmesser '9 5/8"' → 1,00 | region 'NDB' → 0,95 ⇒ Grundpreis × 0,95.
+  it('Lockergestein 300m: (300×300 + 75.000) × 1,00 × 0,95 = 156.750 EUR (eine Bohrung Basis)', () => {
     const r = berechneBohrkosten(inp({ tiefe: 300, gesteinstyp: 'Lockergestein', zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0 }))
-    // 300 EUR/m × 300 m + 75.000 = 165.000 EUR (mid)
+    // 300 EUR/m × 300 m + 75.000 = 165.000 EUR Grundpreis, × f_durchmesser × f_region
     // Komplettierung ohne Risiko: 300×60 + 60.000 + 25.000 + 30.000 = 133.000
-    const erwartete_bohrkosten_mid = 165_000
+    const erwartete_bohrkosten_mid = 156_750
     expect(r.bohrkosten_mid).toBeCloseTo(erwartete_bohrkosten_mid, -1)
   })
 
-  it('Festgestein_sed 300m: Kosten = 700×300 + 100.000 = 310.000 EUR (eine Bohrung Basis)', () => {
+  it('Festgestein_sed 300m: (700×300 + 100.000) × 1,00 × 0,95 = 294.500 EUR (eine Bohrung Basis)', () => {
     const r = berechneBohrkosten(inp({ tiefe: 300, gesteinstyp: 'Festgestein_sed', zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0 }))
-    expect(r.bohrkosten_mid).toBeCloseTo(310_000, -1)
+    expect(r.bohrkosten_mid).toBeCloseTo(294_500, -1)
   })
 
-  it('Kristallin 300m: Kosten = 1200×300 + 150.000 = 510.000 EUR (eine Bohrung Basis)', () => {
+  it('Kristallin 300m: (1200×300 + 150.000) × 1,00 × 0,95 = 484.500 EUR (eine Bohrung Basis)', () => {
     const r = berechneBohrkosten(inp({ tiefe: 300, gesteinstyp: 'Festgestein_kristallin', zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0 }))
-    expect(r.bohrkosten_mid).toBeCloseTo(510_000, -1)
+    expect(r.bohrkosten_mid).toBeCloseTo(484_500, -1)
   })
 
   it('Bandbreite: min=0.65×mid, max=1.50×mid', () => {
@@ -178,5 +180,120 @@ describe('berechneBohrkosten — Thermische Leistung', () => {
   it('tGW ≤ tReinjektion: leistung_kw = 0', () => {
     const r = berechneBohrkosten(inp({ zweck: 'Einzelbohrung', tGW: 15, tReinjektion: 20 }))
     expect(r.leistung_kw).toBe(0)
+  })
+})
+
+// ─── Befund B: f_durchmesser + f_region im linearen Zweig ─────────────────────
+// PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell", Befund B (Juli 2026): f_gesamt wirkte
+// nur im Lukawski-Zweig; unterhalb 400 m waren die UI-Felder Durchmesser und Region
+// stille No-Ops (7" = 9 5/8" = 13 3/8" = 159,0 T€ bei 280 m).
+// f_markt bleibt bewusst außen vor — GtV-/DVGW-Preise sind bereits deutsche Marktpreise.
+// f_waehrung und f_gestein ebenfalls nicht: EUR-Preise, Gestein steckt in LINEAR_PREIS_PRO_M.
+describe('berechneBohrkosten — Korrekturfaktoren im linearen Zweig (Befund B)', () => {
+  const basis = {
+    tiefe: 280,
+    gesteinstyp: 'Lockergestein',
+    zweck: 'Einzelbohrung',
+    foerderungAktiv: false,
+    fuendigkeitsRisiko: 0,
+  } as const
+  // Grundpreis 280 m Lockergestein: 300 × 280 + 75.000 = 159.000 EUR
+
+  it('Durchmesser wirkt bei 280 m: 7" < 9 5/8" < 13 3/8"', () => {
+    const r7    = berechneBohrkosten(inp({ ...basis, durchmesser: '7"' }))
+    const r958  = berechneBohrkosten(inp({ ...basis, durchmesser: '9 5/8"' }))
+    const r1338 = berechneBohrkosten(inp({ ...basis, durchmesser: '13 3/8"' }))
+    expect(r7.bohrkosten_mid).toBeLessThan(r958.bohrkosten_mid)
+    expect(r958.bohrkosten_mid).toBeLessThan(r1338.bohrkosten_mid)
+  })
+
+  it('7" bei 280 m / NDB: 159.000 × 0,85 × 0,95 = 128.392,50 EUR', () => {
+    const r = berechneBohrkosten(inp({ ...basis, durchmesser: '7"', region: 'NDB' }))
+    expect(r.bohrkosten_mid).toBeCloseTo(128_392.5, -1)
+  })
+
+  it('13 3/8" bei 280 m / NDB: 159.000 × 1,25 × 0,95 = 188.812,50 EUR', () => {
+    const r = berechneBohrkosten(inp({ ...basis, durchmesser: '13 3/8"', region: 'NDB' }))
+    expect(r.bohrkosten_mid).toBeCloseTo(188_812.5, -1)
+  })
+
+  it('Region wirkt bei 280 m: NDB (0,95) < Molasse (1,00) < Oberrheingraben (1,05)', () => {
+    const rNDB = berechneBohrkosten(inp({ ...basis, region: 'NDB' }))
+    const rMol = berechneBohrkosten(inp({ ...basis, region: 'Molasse' }))
+    const rORG = berechneBohrkosten(inp({ ...basis, region: 'Oberrheingraben' }))
+    expect(rNDB.bohrkosten_mid).toBeLessThan(rMol.bohrkosten_mid)
+    expect(rMol.bohrkosten_mid).toBeLessThan(rORG.bohrkosten_mid)
+  })
+
+  it('f_markt wirkt NICHT im linearen Zweig: 9 5/8"/NDB bleibt 151.050 EUR statt 211.470 EUR', () => {
+    const r = berechneBohrkosten(inp({ ...basis, durchmesser: '9 5/8"', region: 'NDB' }))
+    expect(r.bohrkosten_mid).toBeCloseTo(151_050, -1)
+    // Mit f_markt = 1,40 wären es 211.470 EUR — doppelter deutscher Marktaufschlag
+    expect(r.bohrkosten_mid).toBeLessThan(200_000)
+  })
+})
+
+// ─── Stetigkeit an den Blend-Rändern ─────────────────────────────────────────
+// Der Blend 400–600 m mischt linearen und Lukawski-Zweig. Da f_durchmesser/f_region
+// auf die linear-Variable selbst wirken (nicht nur auf den < 400-m-Ast), bewegen sich
+// beide Seiten der Naht gemeinsam — Befund-B-Fix darf hier keinen Sprung erzeugen.
+describe('berechneBohrkosten — Stetigkeit an den Blend-Rändern (400 / 600 m)', () => {
+  const basis = {
+    gesteinstyp: 'Lockergestein',
+    zweck: 'Einzelbohrung',
+    durchmesser: '13 3/8"',
+    region: 'Oberrheingraben',
+    foerderungAktiv: false,
+    fuendigkeitsRisiko: 0,
+  } as const
+
+  function mid(tiefe: number): number {
+    return berechneBohrkosten(inp({ ...basis, tiefe })).bohrkosten_mid
+  }
+
+  it('kein Sprung bei 400 m: 399 → 401 unter 2 %', () => {
+    const abweichung = Math.abs(mid(401) - mid(399)) / mid(399)
+    expect(abweichung).toBeLessThan(0.02)
+  })
+
+  it('kein Sprung bei 600 m: 599 → 601 unter 2 %', () => {
+    const abweichung = Math.abs(mid(601) - mid(599)) / mid(599)
+    expect(abweichung).toBeLessThan(0.02)
+  })
+
+  it('Naht 400 m stetig: f(400) und f(400,1) unter 0,2 % auseinander', () => {
+    const abweichung = Math.abs(mid(400.1) - mid(400)) / mid(400)
+    expect(abweichung).toBeLessThan(0.002)
+  })
+
+  it('Naht 600 m stetig: f(599,9) und f(600) unter 0,2 % auseinander', () => {
+    const abweichung = Math.abs(mid(600) - mid(599.9)) / mid(599.9)
+    expect(abweichung).toBeLessThan(0.002)
+  })
+
+  it('monoton steigend über die gesamte Blend-Zone', () => {
+    for (let t = 380; t < 620; t += 10) {
+      expect(mid(t + 10)).toBeGreaterThan(mid(t))
+    }
+  })
+})
+
+// ─── Gültigkeitsbereich linearer Zweig (Befund A) ────────────────────────────
+// Der lineare GtV-/DVGW-Zweig bildet klein-kalibrige Brunnenbohrungen ab. Zwei reale
+// Angebote für Geothermie-Produktionsbrunnen < 400 m mit großem Ausbau liegen Faktor
+// 3,4–5,0 darüber. Ohne Kostenaufschlüsselung wird nicht kalibriert, sondern der
+// Gültigkeitsbereich deklariert — Muster wie kluftaquiferWarnung in DeltaT.
+describe('berechneBohrkosten — kleinkaliberWarnung (Gültigkeitsbereich)', () => {
+  it('true bei 280 m — reiner linearer Zweig', () => {
+    expect(berechneBohrkosten(inp({ tiefe: 280 })).kleinkaliberWarnung).toBe(true)
+  })
+  it('true bei 400 m — obere Grenze des linearen Zweigs', () => {
+    expect(berechneBohrkosten(inp({ tiefe: 400 })).kleinkaliberWarnung).toBe(true)
+  })
+  it('false bei 401 m — Blend-Zone, Lukawski wirkt mit', () => {
+    expect(berechneBohrkosten(inp({ tiefe: 401 })).kleinkaliberWarnung).toBe(false)
+  })
+  it('false bei Default-Tiefe 700 m', () => {
+    expect(berechneBohrkosten(inp({})).kleinkaliberWarnung).toBe(false)
   })
 })
