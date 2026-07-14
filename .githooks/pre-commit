@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Leak-Schutz: verhindert, dass vertrauliche Klarnamen oder Kennzahlen in dieses
+# Repo gelangen. Grund: Laut BRIEF.md §6.1 kann jede In-App als eigenständiges
+# Repository extrahiert und an einen einzelnen Kunden ausgeliefert werden — die
+# Git-Historie reist dabei mit. Ein einmal committeter Name bleibt für immer
+# abrufbar, auch wenn die Datei später gelöscht wird.
+#
+# Die Begriffsliste liegt BEWUSST außerhalb des Repos — sonst stünde sie ja drin.
+# Einrichtung: scripts/install-git-hooks.sh  ·  Details: .githooks/README.md
+
+set -uo pipefail
+
+LIST="${GEOTHERM_DENYLIST:-$HOME/.geotherm/denylist.txt}"
+
+if [[ ! -f "$LIST" ]]; then
+  echo "⚠  Leak-Schutz inaktiv: keine Denylist unter $LIST" >&2
+  echo "   Wer die vertraulichen Begriffe nicht kennt, kann sie auch nicht committen." >&2
+  echo "   Wer sie kennt: .githooks/README.md" >&2
+  exit 0
+fi
+
+PATTERNS=$(grep -vE '^[[:space:]]*(#|$)' "$LIST")
+[[ -z "$PATTERNS" ]] && exit 0
+
+FAIL=0
+
+# 1) Inhalte der gestageten Änderungen
+while IFS= read -r term; do
+  hits=$(git diff --cached -U0 --diff-filter=ACMR | grep -E '^\+' | grep -iF -- "$term" || true)
+  if [[ -n "$hits" ]]; then
+    [[ $FAIL -eq 0 ]] && echo "" >&2 && echo "🚫 Commit abgebrochen — vertraulicher Begriff im Diff:" >&2
+    echo "   • \"$term\" ($(echo "$hits" | wc -l | tr -d ' ')× )" >&2
+    FAIL=1
+  fi
+done <<< "$PATTERNS"
+
+# 2) Dateinamen
+while IFS= read -r term; do
+  files=$(git diff --cached --name-only --diff-filter=ACMR | grep -iF -- "$term" || true)
+  if [[ -n "$files" ]]; then
+    [[ $FAIL -eq 0 ]] && echo "" >&2 && echo "🚫 Commit abgebrochen — vertraulicher Begriff im Dateinamen:" >&2
+    echo "   • \"$term\" in: $files" >&2
+    FAIL=1
+  fi
+done <<< "$PATTERNS"
+
+if [[ $FAIL -eq 1 ]]; then
+  cat >&2 <<'MSG'
+
+   Bitte umformulieren statt zu umgehen: "der Kunde", "der Fachplaner",
+   "das Bohrunternehmen", "ein Referenzprojekt". Die fachlichen Befunde
+   bleiben ohne Namen genauso belastbar.
+
+   Falscher Alarm? Einmalig übergehen mit:  git commit --no-verify
+MSG
+  exit 1
+fi
+exit 0

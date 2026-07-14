@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Leak-Schutz: Denylist gehört NIE ins Repo (siehe .githooks/README.md)
+.geotherm/
+denylist.txt
