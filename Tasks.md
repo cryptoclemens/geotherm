@@ -549,6 +549,22 @@ Luft-WP + Spitzenlast, Luft-WP + Spitzenlast + PV, Rechenzentrums-Abwärme.
       Wer die anderen Technologien vertiefen will, braucht je Technologie eine eigene Kostentabelle und
       andere Fachabteilungen → eigenes Vorhaben, nicht M8.
 
+### M8.0b – Zweck-Anker: Wofür wird das Ergebnis gebraucht? ⭐ (Blocker für die Ausgabe)
+
+Aus dem Scope-Termin 14.07.2026 — laut Fachplaner die eigentliche Leitfrage, und bislang unbeantwortet:
+
+> „Eine Bank möchte eine Risikokalkulation sehen und der [Auftraggeber] möchte einfach den internen
+> Gate-Prozess sehen. […] Deswegen müsste man eigentlich gucken, wie gehen die durch die
+> Gate-Prozesse, solche Projekte, und das dann daraufhin optimieren."
+
+- [ ] ⭐ **Klären: Welche Parameter betrachtet der interne Gate-Prozess des Auftraggebers?**
+      Davon hängt ab, was `/lcoh` überhaupt ausgeben muss — die Ausgestaltung von `ResultColumn`
+      und den KPI-Kacheln ist bis dahin geraten. Rückfrage läuft.
+- [ ] 📦 Konsequenz mitdenken: Dem **Endkunden** ist das Preisrisiko egal — das liegt beim
+      Projektentwickler. Die Sensitivitätsanalyse ist damit primär ein **internes** Instrument für
+      Preisfindung und Gate, kein Kundenargument. Für den Endkunden zählt: „Was ist der Vorteil
+      gegenüber den anderen Technologien?" → zwei verschiedene Sichten auf dieselbe Rechnung.
+
 ### M8.1 – Blocker: Bohrkosten-Widerspruch auflösen ⭐
 
 Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen reales Bohrangebot (Juli 2026)"**.
@@ -595,9 +611,40 @@ Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen re
       (der Prototyp hat für jedes davon eine direkte Entsprechung)
 - [ ] 🔥 Tornado-Diagramm (Sensitivitätsanalyse je Technologie, ceteris paribus) — Kernfeature,
       ersetzt 0,5–1 h Excel-Handarbeit pro Durchlauf
+- [ ] 🔥 **Break-even-Gaspreis als KPI** — „ab welchem Gaspreis schlägt Geothermie den Gaskessel?".
+      Im Prototyp analytisch über zwei Stützstellen gelöst (beide LCOH sind linear im Gaspreis) und
+      damit die Zielwertsuche des Fachmodells ersetzend. Achtung: Der Kipppunkt hängt an der
+      Geothermie-Variante (mit/ohne Spitzenlastkessel) — der Kessel verbrennt selbst Gas.
+- [ ] 🔥 **Lesehilfe für das Tornado-Diagramm** — ausdrückliche Anforderung aus dem Erst-Call:
+      „dass auch jemand, der da nicht drin ist, ein Tornado-Diagramm erst mal lesen kann."
+      Nicht mit dem `FormelTab` verwechseln: Der zeigt die *Formeln*, die Lesehilfe erklärt die
+      *Darstellung* (Balkenbreite = Volatilität × Hebel; lange Balken = kritische Stellhebel;
+      Sortierung nach Wirkung; ceteris paribus). Im Prototyp als „Erklärbär"-Block vorhanden.
 - [ ] 🔥 Registrierung in `src/core/apps.ts` + Route `app/(app)/lcoh/page.tsx`
 - [ ] 📦 Disclaimer sichtbar: CRF-Methode = Richtwert für Technologievergleich; für Investitions-
       entscheidungen ist eine DCF-Rechnung je Technologie nötig (BRIEF §7.3)
+- [ ] 📦 **Plausi-Check der LCOH-Engine** durch den Scientist-Agent nach der Portierung —
+      Hauskonvention: Jedes `calc/`-Modul hat einen (siehe PLAUSI_CHECK.md für DeltaT und Bohrkost).
+      Bisher ist die Engine nur *gegen das Fachmodell* verifiziert — geprüft ist damit die
+      **Portierung**, nicht die **Physik/Ökonomik** dahinter. Das ist ein Unterschied.
+
+### M8.2b – Kostenziel-Modus („Break-even-Logik umkehren") 🔥
+
+Im Kunden-Foliensatz als Next Step zugesagt und im Erst-Call ausführlich beschrieben:
+
+> „Wir sagen von vornherein, Geothermie muss immer günstiger sein als der Gaspreis. Wie muss ich dann
+> die Wärmegestehungskosten verändern? Und die habe ich dann als Benchmark, um zur Organisation
+> zurückzugehen und zu sagen: Könnt ihr das? Wenn wir das erreichen wollen, müsst ihr [die Kosten]
+> auf das und das runterbringen."
+
+- [ ] 🔥 **Rückwärtsrechnung:** Welchen LCOH muss die Geothermie erreichen, um verlässlich unter dem
+      Gas-Szenario zu liegen? Daraus internes Kostenziel für Bohrung, Anlagentechnik und
+      Stromsourcing ableiten. Technisch die Umkehrung der vorhandenen Break-even-Logik auf eine
+      beliebige Zielgröße — der Rechenkern ist bereits linear in den relevanten Preisen.
+- [ ] 📦 **Nur je Produktlayer sinnvoll** (siehe M8.1b): Ohne Layer-Angabe ist „welchen LCOH muss die
+      Geothermie erreichen?" nicht beantwortbar — die Spanne reicht je nach Scope von 30 bis 135 €/MWh.
+- [ ] 💡 Ausbaustufe: verallgemeinern auf „Auf welchen Wert muss Parameter X, damit Technologie Y
+      günstiger ist als Z?"
 
 ### M8.1b – Produktlayer als Dimension ⭐ (neu 16.07.2026)
 
@@ -639,6 +686,24 @@ Damit wird die Modelllandschaft geschlossen: `/deltat` → `/bohrkost` → `/lco
 - [ ] 🔥 **DeltaT → LCOH:** `cop` und `anzahlDubletten` übernehmen (Cross-Check Juli 2026: DeltaT-COP
       und LCOH-Modell sind konsistent — Gütegrad 0,43 → COP 3,0 wie im das Referenzprojekt-Datenblatt)
 - [ ] 📦 **LCOH → Projects:** Ergebnis als Projekt speichern/laden (Preset-Layer = Mehrprojektfähigkeit)
+- [ ] ⭐ **Quellen-Hierarchie statt „eine Zahl gewinnt".** Für dieselbe Kostenposition liefern die
+      Quellen unterschiedliche Werte (im Referenzfall je Bohrung: Formel 140–159 T€, Fachmodell
+      537 T€, Angebot 700 T€). Das sind **keine drei Schätzungen derselben Größe**, sondern zwei
+      Arten von Zahl: ein Angebot ist eine *Messung* an genau diesem Projekt, die Formel eine
+      *Vorhersage*. Eine Messung konkurriert nicht mit einem Modell — sie kalibriert es.
+      → Jeder Kostenblock trägt `wert + quelle + güte`. Rangfolge automatisch:
+      **1. Angebot für dieses Projekt · 2. Annahme aus einem Fachmodell · 3. generische Formel.**
+      Das Tool nimmt die höchste verfügbare Stufe und **zeigt sichtbar an, welche**. Override möglich,
+      wird protokolliert. Bewusst **je Kostenblock, nicht je Zelle** — die Zahlen ergeben nur als
+      Scope-Bündel Sinn (enthält das Angebot Verrohrung/Filter/Kies, die Formel aber nicht, erzeugt
+      Mischen auf Zellebene stille Doppelzählung).
+      Konsequenz: Liegt ein Angebot vor, wird `/bohrkost` für dieses Projekt **gar nicht erst
+      herangezogen** — damit verschwindet der Widerspruch aus M8.1 im UI von selbst.
+- [ ] 🔥 **Spanne statt Scheingenauigkeit anzeigen.** Fachmodelle überschreiben einander nie; sie
+      stehen nebeneinander, und `/lcoh` zeigt die Bandbreite mit Quellenangabe
+      (Referenzfall: „94,7 nach Fachmodell A · 110,3 nach Fachmodell B methodenbereinigt · 135,0 wie
+      dort gerechnet"). Für einen Gate-Prozess ist die Spanne samt Herkunft nützlicher als eine
+      scheingenaue Einzelzahl — siehe M8.0b.
 
 ### M8.4 – Datenschutz-Grenze ⭐
 
@@ -697,7 +762,17 @@ Aus dem Scope-Termin 14.07.2026 — hier dokumentiert, damit es nicht als Lücke
 - [ ] ⏸ **Monte-Carlo-Risikorechnung** statt Best/Worst (Kosten sind schief verteilt, nicht normal).
       Zielgruppe: **Banken / Projektfinanzierung**. Für einen Konzern mit fester Hurdle Rate irrelevant.
       Fachplaner-Einschätzung: Der Tornado ist „vollkommen good enough für den jetzigen Zeitpunkt".
+- [ ] ⏸ **DCF-Rechnung je Technologie** — im Kunden-Foliensatz als „nächste Detailstufe" benannt
+      (Next Step #2). CRF beantwortet „welche Technologie?", DCF „lohnt sich das Investment?"
+      (jahresscharfe Preispfade, Steuern, Förderung, Finanzierungsstruktur → NPV/IRR). Aufwand laut
+      Fachplaner **5–6 PT je Technologie** plus Abstimmungsrunden. Sinnvoll erst, wenn die
+      Technologie eingegrenzt ist — und nach M8.0 ohnehin nur für die Geothermie relevant.
 - [ ] ⏸ **Obertageanlagen-Kalkulation** (nach Kostentabelle + DeltaT)
+- [ ] 💡 **PV/Batterie-Dimensionierung koppeln** — bekannter Modellfehler des Fachmodells, vom
+      Fachplaner selbst gefunden: Wird die PV-Anlage kleiner dimensioniert, die Batterie aber gleich
+      groß gelassen, schlägt das massiv in die Kosten. Beide müssen aneinander hängen.
+      Niedrige Priorität, weil PV nach M8.0 nur Referenzannahme ist — aber ein Schieberegler, der
+      Unsinn produziert, gehört zumindest mit einer Warnung versehen (Guardrail-Muster).
 - [ ] ⏸ **Komponenten-Datenbank** (VDI o. ä., zertifizierte Wärmepumpen/Wärmetauscher) →
       Handlungsvorschlag „für COP X nimm Wärmepumpe Y". Kostenpflichtig, Verfügbarkeit offen.
 - [ ] ⏸ **Live-Preisanbindung (EEX)** — im Kunden-Foliensatz zugesagt, vom Fachplaner aber als wenig
@@ -714,6 +789,19 @@ Aus dem Scope-Termin 14.07.2026 — hier dokumentiert, damit es nicht als Lücke
 - [ ] 💡 Kein Tauri: Die PWA-Leitplanke (BRIEF §6.1.8, „Installierbar auf Desktop und Mobile,
       Offline-First für die Rechner-Logik") deckt den Desktop-Bedarf ohne Code-Signing und
       Update-Infrastruktur ab.
+
+---
+
+**DoD M8:** `/lcoh` ist als In-App registriert und login-geschützt erreichbar. Der Rechenkern
+reproduziert die Referenzmatrix des Fachmodells zellgenau (Vitest, synthetischer Fall). Das
+Tornado-Diagramm ersetzt die manuelle Sensitivitätsanalyse vollständig. Break-even und
+Kostenziel-Modus laufen. Produktlayer sind wählbar. Widersprüchliche Kostenquellen werden als
+Spanne mit Quellenangabe gezeigt, nicht stillschweigend aufgelöst. Die Verkettung
+`/deltat` → `/bohrkost` → `/lcoh` → `/projects` funktioniert. Keine Kundendaten im Repo.
+
+**Bekannte Abhängigkeiten von außen** (blockieren Teile von M8, nicht das Ganze):
+M8.0b (Gate-Parameter), M8.1 (Kostenaufschlüsselung der Bohrangebote — bewusst zurückgestellt),
+M8.1c (Methodik-Konvention), M8.4b (Export-Blatt im Fachmodell).
 
 ---
 
