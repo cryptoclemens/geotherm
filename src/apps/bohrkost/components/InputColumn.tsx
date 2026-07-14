@@ -1,10 +1,11 @@
 'use client'
 
 import { ParamSlider } from '@/core/ui/ParamSlider'
-import type { BohrkostInputs, Gesteinstyp, Bohrungszweck, Produktionsdurchmesser, Region, OverheadInputs } from '../calc/kosten'
+import type { BohrkostInputs, BohrkostOutputs, Gesteinstyp, Bohrungszweck, Produktionsdurchmesser, Region, OverheadInputs } from '../calc/kosten'
 
 interface InputColumnProps {
   inputs: BohrkostInputs
+  outputs: BohrkostOutputs
   onChange: <K extends keyof BohrkostInputs>(key: K, value: BohrkostInputs[K]) => void
   onReset: () => void
 }
@@ -40,7 +41,7 @@ function SelectField<T extends string>({
   )
 }
 
-export function InputColumn({ inputs, onChange, onReset }: InputColumnProps) {
+export function InputColumn({ inputs, outputs, onChange, onReset }: InputColumnProps) {
   const isDublette = inputs.zweck !== 'Explorationsbohrung'
 
   return (
@@ -68,6 +69,13 @@ export function InputColumn({ inputs, onChange, onReset }: InputColumnProps) {
           onChange={v => onChange('tiefe', v)}
           info={'Tiefe der Bohrung [m].\nBestimmt maßgeblich die Bohrkosten (Lukawski-Kurve).\nFaustformel: T_GW ≈ 10 °C + tiefe × 0,03 °C/m\n(Lukawski et al. 2014, J. Pet. Sci. Eng. 118)'}
         />
+        {outputs.kleinkaliberWarnung && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-1.5">
+            ⚠ Bis 400 m rechnet der lineare GtV-/DVGW-Zweig — er bildet klein-kalibrige Brunnen ab
+            (Ausbau bis 13 3/8&quot;). Für Geothermie-Produktionsbrunnen mit größerem Ausbau liegen reale
+            Angebote um ein Mehrfaches höher. Details im Formelwerk.
+          </p>
+        )}
         <SelectField<Gesteinstyp>
           label="Gesteinstyp"
           value={inputs.gesteinstyp}
