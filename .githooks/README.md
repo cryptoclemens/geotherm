@@ -38,8 +38,19 @@ der Leak. Erwartet unter `~/.geotherm/denylist.txt` oder wo `$GEOTHERM_DENYLIST`
 <Ortsname>
 <Fachplaner>
 <Bohrunternehmen>
-<Namen von Ansprechpartnern>
+<Nachnamen von Ansprechpartnern>
 ```
+
+**Begriffe werden als ganze Wörter gesucht**, nicht als Teilstrings. Sonst legt ein kurzes
+Firmenkürzel das Repo lahm: Ein Kürzel wie `ORT` träfe als Teilstring jedes „W**ort**",
+„S**ort**ierung" und „**Ort**sangabe"; ein Nachname wie `Berg` jedes „**Berg**recht" und
+„ver**berg**en". Ein Hook, der bei jedem zweiten Commit falsch anschlägt, wird nach einem Tag
+deaktiviert — und dann ist der Schutz ganz weg. Der Hook setzt deshalb automatisch Wortgrenzen
+(`\bBegriff\b`); Regex-Metazeichen werden escapt.
+
+Trotzdem gilt: **Nachnamen aufnehmen, Vornamen weglassen.** Vornamen sind zu generisch und
+kollidieren auch mit Wortgrenzen noch mit gleichlautenden Verben oder Substantiven.
+Firmenkürzel, Projekt- und Ortsnamen sind dagegen unkritisch — die kommen im Code nicht vor.
 
 **Transfer der Liste: niemals über dieses Repo.** Auf dem Server gehört sie neben die übrigen
 Projekt-Secrets (`/root/.secrets/`), auf dem Laptop nach `~/.geotherm/`. Übertragung per `scp`,
