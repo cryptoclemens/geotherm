@@ -251,3 +251,120 @@ Quelle: **BEG / MAP-Programm KfW (2024)**. Gilt für Förderbohrung (eine Bohrun
 
 1. **Speicherkoeffizient S=1e-4** (gespannter Aquifer, fest) — für ungespannte Aquifere wäre S=0,05–0,20 realistisch. User-Input `speicherkoeffizient` oder ein "Aquifer-Typ"-Dropdown (gespannt/ungespannt) könnte Abhilfe schaffen.
 2. **Injektionsdruck-Default 10 bar** — für artesische oder stark unter Druck stehende Aquifere (Molasse >1000 m) kann der Gegendruck 0–5 bar betragen. Ggf. regionalen Default koppeln.
+
+---
+
+## Bohrkost ↔ LCOH-Modell — Cross-Check gegen reales Bohrangebot (Juli 2026)
+
+> **Geprüft durch:** Scientist-Agent (Claude Opus 4.8), im Rahmen der LCOH-Modul-Vorbereitung
+> **Datum:** 2026-07-16
+> **Module:** `src/apps/bohrkost/calc/kosten.ts` (bestehend) ↔ externes LCOH-Modell Referenzprojekt
+> **Status:** ZWEI BEFUNDE — beide vor Launch des LCOH-Moduls (`/lcoh`) zu klären
+> **Anlass:** Für das geplante LCOH-Modul (Tasks.md, Backlog M8+) liegt erstmals ein **reales
+> Bohrangebot** vor (Referenzprojekt eines Kunden; > Angebot des Bohrunternehmens, 03/2026). Damit lässt sich Bohrkost erstmals gegen einen echten
+> Marktpreis prüfen statt nur gegen Literatur.
+
+### Referenzfall
+
+| Größe | Wert | Quelle |
+|---|---|---|
+| Standort |  (NRW) | Machbarkeitsstudie das Referenzprojekt V2 |
+| Bohrtiefe | 280 m | LCOH-Modell v13, Blatt `10_LCOH_Vergleich` („280m Tiefe") |
+| Gestein | Lockergestein | LCOH-Modell v13, Blatt `02_Inputs`, Block D1 |
+| Konfiguration | Dublette (Entnahme + Infiltration) | ebd. |
+| **Angebotspreis** | **537 T€ je Bohrung → 1.074 T€ Dublette** | Datenblatt V2 (Bohrunternehmen, 03/2026), mit dem Kunden abgestimmt |
+
+### Befund A — 🔴 HOCH: Linearer Zweig unterschätzt reales Angebot um Faktor 2,6–3,4
+
+`berechneBohrkosten({ tiefe: 280, gesteinstyp: 'Lockergestein', zweck: 'Dublette' })` liefert:
+
+| Vergleichsebene | Bohrkost | das Referenzprojekt-Angebot | Faktor |
+|---|---|---|---|
+| Nur Bohrung (Dublette) | 318 T€ | 1.074 T€ | **3,4×** |
+| Bohrung + Komplettierung vs. Bohrung + „Ausrüstung" (253 T€) | 518 T€ | 1.327 T€ | **2,6×** |
+
+Beide Abgrenzungen liegen deutlich außerhalb der dokumentierten AACE-Class-5-Bandbreite
+(`min = mid × 0.65`, `max = mid × 1.50`) — das Angebot ist rund **2,3× über `bohrkosten_max`**.
+
+**Mögliche Ursachen (zu prüfen):**
+1. `LINEAR_PREIS_PRO_M.Lockergestein = 300 EUR/m` + `LINEAR_MOBILISIERUNG = 75.000 EUR` stammen
+   aus GtV Bohrpreise (2024) / DVGW W 115 und beschreiben vermutlich **kleinkalibrige Brunnen-
+   bohrungen**, nicht eine Geothermie-Produktionsbohrung mit Verrohrung, Filterstrecke und
+   Kiesschüttung.
+2. Der Angebotspreis könnte Verrohrung/Komplettierung enthalten, die Bohrkost separat führt
+   (die Excel führt „Ausrüstung" mit 253 T€ allerdings **zusätzlich** — spricht dagegen).
+3. Realpreise DE 2026 > Listenpreise GtV 2024 (Bohrmarkt angespannt).
+4. Der deutsche Marktaufschlag `f_markt = 1.40` wird auf den linearen Zweig **nicht** angewendet
+   (siehe Befund B) — erklärt aber selbst dann nur 159 → 223 T€, nicht 537 T€.
+
+**Empfehlung:** Kostenaufschlüsselung beim Bohrunternehmen anfordern. Danach entweder
+`LINEAR_PREIS_PRO_M`/`LINEAR_MOBILISIERUNG` für Lockergestein neu kalibrieren, oder im
+Formelwerk-Tab explizit dokumentieren, dass der lineare Zweig nur kleinkalibrige Bohrungen
+abbildet und für Geothermie-Produktionsbohrungen < 400 m untauglich ist.
+
+**Relevanz:** Blocker für `/lcoh`. Sobald LCOH-Modul und Bohrkost in derselben Suite laufen,
+sieht jeder Nutzer den Widerspruch — Bohrkost würde für das Referenzprojekt rund 750 T€ CAPEX „einsparen",
+was den LCOH der Geothermie um grob 8–10 EUR/MWh drückt und die Technologieentscheidung kippt.
+
+### Befund B — 🟡 MITTEL: `durchmesser` und `region` sind unterhalb 400 m wirkungslos
+
+In `berechneBohrkostenEine()` (kosten.ts:165–201) wird `f_gesamt` (Währung × Gestein × Region ×
+Durchmesser × Markt) ausschließlich auf den **Lukawski-Zweig** angewendet. Der lineare Zweig
+nutzt nur `LINEAR_PREIS_PRO_M[gesteinstyp]` — Durchmesser, Region und Marktaufschlag fallen
+ersatzlos weg.
+
+Nachgerechnet bei 280 m / Lockergestein:
+
+| Variation | Ergebnis |
+|---|---|
+| Durchmesser 7" / 9 5/8" / 13 3/8" | 159,0 T€ / 159,0 T€ / 159,0 T€ (identisch) |
+| Region NDB / Oberrheingraben | 159,0 T€ / 159,0 T€ (identisch) |
+| *Zum Vergleich bei 800 m:* 7" vs. 13 3/8" | 1.485 T€ vs. 2.183 T€ (Faktor wirkt) |
+
+Die UI bietet beide Eingaben an; unterhalb 400 m sind es **stille No-Ops**. Der Nutzer bekommt
+keinen Hinweis, dass seine Auswahl folgenlos bleibt. Im Blend-Bereich 400–600 m wirken die
+Faktoren zudem nur anteilig — bei 401 m praktisch gar nicht, bei 599 m fast voll.
+
+**Empfehlung:** Entweder `f_durchmesser` und `f_region` auch auf den linearen Zweig anwenden
+(Marktaufschlag bewusst **nicht** — die GtV-Preise sind bereits deutsche Marktpreise), oder
+die betroffenen Felder unterhalb 400 m im UI deaktivieren und den Grund anzeigen.
+
+### Ergänzende Beobachtung (kein Befund)
+
+Der COP-Cross-Check ist **konsistent**: Die DeltaT-Formel `COP = (T_VL/(T_VL − T_R)) × Gütegrad`
+liefert für das Referenzprojekt (Vorlauf 65 °C, Reservoir 16,5 °C) bei einem Gütegrad von 0,43 exakt den
+COP 3,0 aus dem Datenblatt V2 — mitten im zulässigen Band 0,30–0,65. Die Modelle widersprechen
+sich also nur bei den Bohrkosten, nicht bei der Thermodynamik.
+
+### Offene Fragen für die nächste Runde
+
+1. Ist die Blend-Zone 400–600 m haltbar, wenn linearer Zweig (255 T€ bei 600 m) und Lukawski
+   (1.079 T€ bei 600 m) an der Nahtstelle um **Faktor 4,2** auseinanderliegen? Der Blend glättet
+   die Unstetigkeit, löst die Modelldivergenz aber nicht auf — er mittelt zwei Modelle, von denen
+   an dieser Stelle höchstens eines stimmt.
+2. Das Referenzprojekt (280 m) liegt genau im am schwächsten verankerten Bereich des Rechners. Gibt es weitere
+   reale Angebote < 500 m zur Kalibrierung?
+
+### Nachtrag 16.07.2026 — zweite Projektquelle bestätigt Befund A und erklärt ihn
+
+Eine zweite, unabhängige Projektquelle (Wirtschaftlichkeitsmatrix des Betreibers, v4) nennt für
+denselben Fall **700 T€ je Bohrung** (Quelle: dasselbe Bohrunternehmen). Damit sagen zwei
+Projektquellen 537 bzw. 700 T€, der Rechner 140–159 T€ — **Faktor 3,4 bis 5,0**.
+
+**Die wahrscheinliche Ursache steht in derselben Quelle:** `Bohrdurchmesser (Ausbau) = 500 mm`
+(≈ 19,7"), Filterrohr Wickeldraht, dazu Kiesschüttung. `DURCHMESSER_FAKTOR` kennt als größten Wert
+13 3/8" (340 mm) — und im linearen Zweig wirkt der Durchmesser ohnehin nicht (Befund B). Der lineare
+GtV-/DVGW-Zweig (300 EUR/m Lockergestein) bildet damit **flache Brunnen kleinen Kalibers** ab, nicht
+groß-kalibrige Förderbrunnen. Das erklärt beide Befunde in einem.
+
+Ebenfalls neu: Die Referenzquelle nennt **215 m** Bohrtiefe (nicht 280 m) — bei 215 m läge der
+Rechner bei 140 T€, also Faktor 5,0.
+
+**Konkrete Korrekturoptionen (Priorität):**
+1. `DURCHMESSER_FAKTOR` um groß-kalibrige Ausbauten (> 400 mm) erweitern **und** die Faktoren auch
+   auf den linearen Zweig anwenden (Marktaufschlag weiterhin nicht — GtV-Preise sind deutsche Preise).
+2. `LINEAR_PREIS_PRO_M` / `LINEAR_MOBILISIERUNG` für Lockergestein an den beiden realen Stützstellen
+   (537 T€ @280 m, 700 T€ @215 m) kalibrieren — **vorher die Kostenaufschlüsselung anfordern**, damit
+   klar ist, was in den Angeboten enthalten ist (Verrohrung? Filter? Kies? Pumpe?).
+3. Bis dahin im `BohrkostFormelTab` offenlegen, dass der lineare Zweig für Geothermie-Produktions-
+   brunnen < 400 m nicht belastbar ist.
