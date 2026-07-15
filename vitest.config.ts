@@ -9,7 +9,10 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      include: ['src/apps/*/calc/**', 'src/core/**'],
+      // Nur die Rechenkerne. src/core/ ist bewusst draußen: shadcn generiert
+      // via components.json ("ui": "@/core/ui") nach src/core/ui/, jede neue
+      // Komponente würde die Schwelle senken.
+      include: ['src/apps/*/calc/**'],
       thresholds: { lines: 80, functions: 80, branches: 80 },
     },
   },
