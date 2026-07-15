@@ -45,6 +45,21 @@ describe('crf — Grenzfälle', () => {
   it('sehr lange Laufzeit nähert sich dem Zinssatz (ewige Rente)', () => {
     expect(crf({ ...METHODIK_VERSORGER, zins: 0.06, jahre: 1000 })).toBeCloseTo(0.06, 6)
   })
+
+  // jahre <= 0 ist fachlich sinnlos, aber über die Registry (M8.2) editierbar: Prämissen sind
+  // dort Daten, die ein Fachplaner eintippt. Ohne Guard wäre crf({jahre: 0}) eine Division
+  // durch null → Infinity, und der LCOH zeigte still "∞ €/MWh" statt eines Fehlers.
+  it('jahre = 0 → NaN statt Infinity', () => {
+    expect(crf({ ...METHODIK_VERSORGER, jahre: 0 })).toBeNaN()
+  })
+
+  it('negative Laufzeit → NaN', () => {
+    expect(crf({ ...METHODIK_VERSORGER, jahre: -5 })).toBeNaN()
+  })
+
+  it('der Guard greift vor dem zins-0-Zweig (jahre = 0 und zins = 0)', () => {
+    expect(crf({ ...METHODIK_VERSORGER, zins: 0, jahre: 0 })).toBeNaN()
+  })
 })
 
 describe('crf — Monotonie', () => {
