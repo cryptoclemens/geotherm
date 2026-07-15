@@ -643,7 +643,8 @@ Im Kunden-Foliensatz als Next Step zugesagt und im Erst-Call ausführlich beschr
       Stromsourcing ableiten. Technisch die Umkehrung der vorhandenen Break-even-Logik auf eine
       beliebige Zielgröße — der Rechenkern ist bereits linear in den relevanten Preisen.
 - [ ] 📦 **Nur je Produktlayer sinnvoll** (siehe M8.1b): Ohne Layer-Angabe ist „welchen LCOH muss die
-      Geothermie erreichen?" nicht beantwortbar — die Spanne reicht je nach Scope von 30 bis 135 €/MWh.
+      Geothermie erreichen?" nicht beantwortbar — je nach Scope liegt rund Faktor 4,5 dazwischen
+      (Werte siehe Tabelle in M8.1b).
 - [ ] 💡 Ausbaustufe: verallgemeinern auf „Auf welchen Wert muss Parameter X, damit Technologie Y
       günstiger ist als Z?"
 
@@ -688,9 +689,10 @@ Damit wird die Modelllandschaft geschlossen: `/deltat` → `/bohrkost` → `/lco
       und LCOH-Modell sind konsistent — Gütegrad 0,43 → COP 3,0 wie im das Referenzprojekt-Datenblatt)
 - [ ] 📦 **LCOH → Projects:** Ergebnis als Projekt speichern/laden (Preset-Layer = Mehrprojektfähigkeit)
 - [ ] ⭐ **Quellen-Hierarchie statt „eine Zahl gewinnt".** Für dieselbe Kostenposition liefern die
-      Quellen unterschiedliche Werte (im Referenzfall je Bohrung: Formel 140–159 T€, Fachmodell
-      537 T€, Angebot 700 T€). Das sind **keine drei Schätzungen derselben Größe**, sondern zwei
-      Arten von Zahl: ein Angebot ist eine *Messung* an genau diesem Projekt, die Formel eine
+      Quellen unterschiedliche Werte — im Referenzfall je Bohrung liegen Fachmodell und Angebot um
+      Faktor 3,4 bzw. 5,0 über der Formel (Absolutwerte siehe PLAUSI_CHECK.md, Befund A). Das sind
+      **keine drei Schätzungen derselben Größe**, sondern zwei Arten von Zahl: ein Angebot ist eine
+      *Messung* an genau diesem Projekt, die Formel eine
       *Vorhersage*. Eine Messung konkurriert nicht mit einem Modell — sie kalibriert es.
       → Jeder Kostenblock trägt `wert + quelle + güte`. Rangfolge automatisch:
       **1. Angebot für dieses Projekt · 2. Annahme aus einem Fachmodell · 3. generische Formel.**
@@ -701,10 +703,11 @@ Damit wird die Modelllandschaft geschlossen: `/deltat` → `/bohrkost` → `/lco
       Konsequenz: Liegt ein Angebot vor, wird `/bohrkost` für dieses Projekt **gar nicht erst
       herangezogen** — damit verschwindet der Widerspruch aus M8.1 im UI von selbst.
 - [ ] 🔥 **Spanne statt Scheingenauigkeit anzeigen.** Fachmodelle überschreiben einander nie; sie
-      stehen nebeneinander, und `/lcoh` zeigt die Bandbreite mit Quellenangabe
-      (Referenzfall: „94,7 nach Fachmodell A · 110,3 nach Fachmodell B methodenbereinigt · 135,0 wie
-      dort gerechnet"). Für einen Gate-Prozess ist die Spanne samt Herkunft nützlicher als eine
-      scheingenaue Einzelzahl — siehe M8.0b.
+      stehen nebeneinander, und `/lcoh` zeigt die Bandbreite mit Quellenangabe — im Referenzfall drei
+      Werte nebeneinander: Fachmodell A, Fachmodell B methodenbereinigt, Fachmodell B wie dort
+      gerechnet. Die beiden Modelle liegen rund 16 % auseinander, die Methodenkonvention macht
+      nochmals rund 22 % aus (siehe M8.1c). Für einen Gate-Prozess ist die Spanne samt Herkunft
+      nützlicher als eine scheingenaue Einzelzahl — siehe M8.0b.
 
 ### M8.4 – Datenschutz-Grenze ⭐
 
