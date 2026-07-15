@@ -35,10 +35,10 @@ const FORMELN: Formel[] = [
   },
   {
     id: 'linear-gueltigkeit',
-    kennzahl: 'Gültigkeitsgrenze linearer Zweig',
-    formel: 'gilt für klein-kalibrige Brunnen (Ausbau ≤ 13 3/8" / 340 mm)',
+    kennzahl: 'Gültigkeitsbereich linearer Zweig',
+    formel: 'kalibriert für Ausbau ≤ 13 3/8" (340 mm)',
     einheit: '—',
-    erlaeuterung: 'Die zugrunde liegenden GtV-/DVGW-Preise beschreiben klein-kalibrige Brunnenbohrungen. Für Geothermie-Produktionsbrunnen unter 400 m ist der lineare Zweig nicht belastbar: Reale Angebote liegen um ein Mehrfaches über dem Rechnerwert und damit außerhalb der AACE-Class-5-Bandbreite. Der Durchmesserfaktor endet bei 13 3/8" (340 mm) — größere Ausbauten mit Filterrohr und Kiesschüttung bildet der Rechner nicht ab, ihre Mehrkosten fehlen vollständig. Für solche Bohrungen ist ein Angebot einzuholen; der Rechnerwert taugt dort nicht einmal als Untergrenze.',
+    erlaeuterung: 'Der Rechner liefert über die gesamte Spanne 100–3000 m ein Ergebnis — unterhalb 400 m stammt der Preis aus GtV/DVGW. Diese Preise beschreiben klein-kalibrige Brunnenbohrungen, und für die ist der Wert belastbar. Außerhalb dieses Bereichs, also bei Geothermie-Produktionsbrunnen mit großem Ausbau, liegt er zu niedrig: Reale Angebote überschreiten ihn um ein Mehrfaches und damit die AACE-Class-5-Bandbreite. Grund ist der Durchmesserfaktor, der bei 13 3/8" (340 mm) endet — größere Ausbauten mit Filterrohr und Kiesschüttung sind nicht kalibriert, ihre Mehrkosten fehlen. Für solche Bohrungen ist ein Angebot die belastbarere Quelle; der Rechnerwert taugt dort auch nicht als Untergrenze.',
     quelle: 'PLAUSI_CHECK.md, Befund A (Juli 2026); AACE Class 5',
   },
   {

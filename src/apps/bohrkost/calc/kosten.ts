@@ -16,8 +16,30 @@
 
 export type Gesteinstyp = 'Lockergestein' | 'Festgestein_sed' | 'Festgestein_kristallin'
 export type Bohrungszweck = 'Dublette' | 'Einzelbohrung' | 'Explorationsbohrung'
-export type Produktionsdurchmesser = '7"' | '9 5/8"' | '13 3/8"'
+export type Produktionsdurchmesser = '7"' | '9 5/8"' | '13 3/8"' | 'Sonderausbau'
 export type Region = 'NDB' | 'Molasse' | 'Oberrheingraben' | 'Sonstiges'
+
+/** Herkunft eines Bohrplatz-Profils. Die Quelle ist Teil der Aussage, nicht Beiwerk:
+ *  ein Schichtenverzeichnis des Landesamts trägt anders als eine Schätzung. */
+export type Profilquelle = 'Schichtenverzeichnis' | 'Nachbarbohrung' | 'Bohrunternehmen' | 'Schätzung'
+
+/** Eine durchbohrte Schicht [m unter GOK]. bis_m > von_m. */
+export interface Schicht {
+  von_m: number
+  bis_m: number
+  gesteinstyp: Gesteinstyp
+}
+
+/** Schichtenfolge eines konkreten Bohrplatzes.
+ *  Kommt NICHT aus dem Atlas: dessen feinste Ebene (GÜK250, 1:250.000) zeigt
+ *  Oberflächengeologie, der Rechner braucht die durchbohrte Folge — ein Standort kann
+ *  oben Lockergestein führen und bei 150 m Festgestein. Quellen sind daher
+ *  Schichtenverzeichnisse der Landesämter, Nachbarbohrungen oder das Bohrunternehmen.
+ *  Siehe docs/requirements/bohrplatz-profil.md */
+export interface BohrplatzProfil {
+  schichten: Schicht[]
+  quelle: Profilquelle
+}
 
 /** Projektkosten außerhalb der Bohrbaustelle [EUR] */
 export interface OverheadInputs {
@@ -39,8 +61,15 @@ export const DEFAULT_OVERHEAD: OverheadInputs = {
 export interface BohrkostInputs {
   /** Bohrtiefe [m], 100–3000 */
   tiefe: number
-  /** Gesteinstyp */
+  /** Pauschal-Gesteinstyp für die ganze Bohrung. Gilt, wenn kein gültiges `profil` gesetzt ist. */
   gesteinstyp: Gesteinstyp
+  /** Optionales Schichtenprofil des konkreten Bohrplatzes. Überschreibt `gesteinstyp`.
+   *  null oder ungültig (Lücke/Überlappung/deckt tiefe nicht ab) → Rückfall auf `gesteinstyp`. */
+  profil: BohrplatzProfil | null
+  /** Ausbaudurchmesser [mm] bei durchmesser === 'Sonderausbau'. Reine Dokumentation:
+   *  Es gibt keine belastbare Stützstelle jenseits 340 mm, deshalb geht der Wert NICHT in
+   *  die Rechnung ein — siehe DURCHMESSER_FAKTOR. */
+  sonderausbauMm?: number
   /** Bohrungszweck */
   zweck: Bohrungszweck
   /** Anzahl Dubletten [1–8] — aus DeltaT-Ergebnis vorbelegt, manuell überschreibbar.
@@ -98,15 +127,28 @@ export interface BohrkostOutputs {
   ampel_tiefe: 'green' | 'yellow' | 'red'
   // Anzahl Bohrungen (für Anzeige)
   anzahl_bohrungen: number
-  /** true wenn tiefe ≤ 400 m → linearer GtV-/DVGW-Zweig → nur klein-kalibrige
-   *  Brunnenbohrungen abgebildet, nicht Geothermie-Produktionsbrunnen mit großem Ausbau.
-   *  Gültigkeitsgrenze, keine Kalibrierung — siehe PLAUSI_CHECK.md, Befund A (Juli 2026). */
-  kleinkaliberWarnung: boolean
+  /** true wenn tiefe ≤ 400 m → linearer GtV-/DVGW-Zweig aktiv.
+   *  KEIN Fehler und keine Rechenlücke: Der Rechner liefert über die volle Spanne 100–3000 m
+   *  ein Ergebnis. Das Flag sagt nur, dass der Preis hier aus GtV/DVGW stammt und dort für
+   *  klein-kalibrige Brunnen (Ausbau bis 13 3/8") kalibriert ist — für die ist er belastbar.
+   *  Bei größerem Ausbau liegt er zu niedrig. Im UI deshalb als Hinweis darstellen, nicht als
+   *  Warnung — siehe PLAUSI_CHECK.md, Befund A (Juli 2026). */
+  kleinkaliberHinweis: boolean
+  /** true wenn ein gültiges Schichtenprofil in die Rechnung eingeht.
+   *  false auch dann, wenn ein Profil gesetzt, aber ungültig ist → Rückfall auf `gesteinstyp`. */
+  profilAktiv: boolean
+  /** true bei durchmesser === 'Sonderausbau'.
+   *  Anders als kleinkaliberHinweis ein echter Gültigkeitsbruch: DURCHMESSER_FAKTOR endet bei
+   *  13 3/8" (340 mm), darüber gibt es keine Stützstelle. Das Ergebnis ist dann der Wert für
+   *  13 3/8" — kein Schätzwert für den eingegebenen Ausbau. Im UI als Warnung darstellen
+   *  (amber-Stufe wie kluftaquiferWarnung), nicht als Hinweis. */
+  ausserhalbKalibrierung: boolean
 }
 
 export const DEFAULT_INPUTS: BohrkostInputs = {
   tiefe: 700,
   gesteinstyp: 'Festgestein_sed',
+  profil: null,
   zweck: 'Dublette',
   anzahlDubletten: 1,
   durchmesser: '9 5/8"',
@@ -142,6 +184,70 @@ const DURCHMESSER_FAKTOR: Record<Produktionsdurchmesser, number> = {
   '7"':      0.85,
   '9 5/8"':  1.00,
   '13 3/8"': 1.25,
+  // Sonderausbau (> 13 3/8" / 340 mm): BEWUSST KEIN eigener Faktor.
+  // Es existiert keine belastbare Stützstelle jenseits 340 mm — ein extrapolierter Wert wäre
+  // Scheingenauigkeit. Gerechnet wird mit dem letzten kalibrierten Faktor; das Ergebnis ist
+  // damit der Wert für 13 3/8" und ausdrücklich KEINE Schätzung für den realen Ausbau.
+  // Kenntlich über BohrkostOutputs.ausserhalbKalibrierung.
+  'Sonderausbau': 1.25,
+}
+
+/** Härte-Rangfolge für die Mobilisierung: Das Bohrgerät muss die härteste durchbohrte
+ *  Schicht schaffen, nicht die durchschnittliche. */
+const HAERTE_RANG: Record<Gesteinstyp, number> = {
+  'Lockergestein':          0,
+  'Festgestein_sed':        1,
+  'Festgestein_kristallin': 2,
+}
+
+/**
+ * Schichten bis zur Bohrtiefe, sortiert und auf `tiefe` beschnitten.
+ * Ein Profil darf tiefer reichen als die Bohrung — dann zählt nur der durchbohrte Teil.
+ */
+function schichtenBis(profil: BohrplatzProfil, tiefe: number): Schicht[] {
+  return profil.schichten
+    .filter(s => s.von_m < tiefe)
+    .map(s => ({ ...s, bis_m: Math.min(s.bis_m, tiefe) }))
+    .sort((a, b) => a.von_m - b.von_m)
+}
+
+/** Warum ein Profil nicht rechnet. Strukturiert statt als Text, damit die Formulierung
+ *  im UI liegt und der Rechenkern textfrei bleibt. */
+export type ProfilProblem =
+  | { art: 'leer' }
+  | { art: 'startet_nicht_bei_null'; von: number }
+  | { art: 'leere_schicht'; index: number }
+  | { art: 'luecke'; von: number; bis: number }
+  | { art: 'ueberlappung'; von: number; bis: number }
+  | { art: 'zu_kurz'; ende: number; tiefe: number }
+
+/**
+ * Prüft, ob ein Profil 0…tiefe lückenlos und überlappungsfrei abdeckt.
+ * Gibt das erste Problem zurück oder null, wenn das Profil rechnet.
+ *
+ * EINZIGE Quelle dieser Regel: Der Rechenkern fällt bei ungültigen Profilen auf den
+ * Pauschaltyp zurück, und das UI erklärt dem Nutzer warum. Eine zweite Implementierung im
+ * UI würde driften — dann meldet das UI „gültig", während der Kern still zurückfällt.
+ * Genau die Fehlerklasse von Befund B (stille No-Ops).
+ *
+ * Ungültige Profile rechnen NICHT teilweise mit, sondern fallen ganz zurück — ein halb
+ * angewandtes Profil wäre eine stille Falschaussage.
+ */
+export function pruefeProfil(profil: BohrplatzProfil | null | undefined, tiefe: number): ProfilProblem | null {
+  if (!profil || profil.schichten.length === 0) return { art: 'leer' }
+  const s = [...profil.schichten].sort((a, b) => a.von_m - b.von_m)
+  if (s[0].von_m !== 0) return { art: 'startet_nicht_bei_null', von: s[0].von_m }
+  for (let i = 0; i < s.length; i++) {
+    if (!(s[i].bis_m > s[i].von_m)) return { art: 'leere_schicht', index: i }
+    if (i > 0 && s[i].von_m > s[i - 1].bis_m) return { art: 'luecke', von: s[i - 1].bis_m, bis: s[i].von_m }
+    if (i > 0 && s[i].von_m < s[i - 1].bis_m) return { art: 'ueberlappung', von: s[i].von_m, bis: s[i - 1].bis_m }
+  }
+  const ende = s[s.length - 1].bis_m
+  return ende >= tiefe ? null : { art: 'zu_kurz', ende, tiefe }
+}
+
+function profilIstGueltig(profil: BohrplatzProfil | null | undefined, tiefe: number): boolean {
+  return pruefeProfil(profil, tiefe) === null
 }
 
 // Linearer Fallback für d < 500 m — GtV Bohrpreise (2024); DVGW W 115
@@ -167,7 +273,9 @@ const LINEAR_MOBILISIERUNG: Record<Gesteinstyp, number> = {
  *   real ca. 15 % günstiger — liegt in ±35–50 %-Bandbreite, AACE Class 5).
  */
 function berechneBohrkostenEine(inp: BohrkostInputs): number {
-  const { tiefe, gesteinstyp, durchmesser, region } = inp
+  const { tiefe, gesteinstyp, durchmesser, region, profil } = inp
+  const profilAktiv = profilIstGueltig(profil, tiefe)
+  const schichten = profilAktiv ? schichtenBis(profil!, tiefe) : []
 
   // Korrekturfaktoren (für beide Formeln benötigt)
   // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆ — zwei Schritte, ein Wechselkurs:
@@ -179,7 +287,17 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
   //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
   //   Offene Frage: CPI misst Verbraucher-, nicht Bohrmarktpreise — PLAUSI_CHECK.md, Befund C
   const f_waehrung     = 1.34
-  const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
+  // f_gestein: bei aktivem Profil das TIEFENGEWICHTETE MITTEL der Schichtfaktoren.
+  // Bewusst kein schichtweises Zerlegen der Lukawski-Kurve: Sie ist eine Regression über
+  // 146 GANZE Bohrungen, keine EUR/m-Rate, und liefert unterhalb 264,3 m negative Kosten.
+  // Zerlegbar wäre sie nur über die Grenzkosten dC/dd — dann bräuchte der Term −0,62 Mio.
+  // (ein Fit-Artefakt ohne physikalische Bedeutung) eine Schichtzuordnung, die das Ergebnis
+  // um rund 829 T€ verschiebt. Der Realismusgewinn läge unter der AACE-Class-5-Bandbreite
+  // von ±35–50 %. Siehe docs/requirements/bohrplatz-profil.md.
+  // Eine Schicht über die volle Tiefe ⇒ Mittel = GESTEINS_FAKTOR[gesteinstyp] (identisch).
+  const f_gestein      = profilAktiv
+    ? schichten.reduce((acc, s) => acc + GESTEINS_FAKTOR[s.gesteinstyp] * (s.bis_m - s.von_m) / tiefe, 0)
+    : GESTEINS_FAKTOR[gesteinstyp]
   const f_region       = REGION_FAKTOR[region]
   const f_durchmesser  = DURCHMESSER_FAKTOR[durchmesser]
   const f_markt        = 1.40  // Deutscher Marktaufschlag; GtV / LIAG Broschüre Tiefe Geothermie
@@ -201,7 +319,20 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
   // Der Faktor greift an der linear-Variablen selbst, damit der Blend 400–600 m ihn
   // anteilig mitnimmt und an der Naht bei 400 m keine Unstetigkeit entsteht.
   const f_linear = f_region * f_durchmesser
-  const linear = (LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]) * f_linear
+
+  // Bei aktivem Profil wird hier ECHT integriert: LINEAR_PREIS_PRO_M ist eine EUR/m-Rate und
+  // lässt sich schichtweise summieren — anders als die Lukawski-Kurve (siehe f_gestein oben).
+  // Mobilisierung nach dem HÄRTESTEN durchbohrten Gestein: Das Bohrgerät muss die härteste
+  // Schicht schaffen, nicht die durchschnittliche. Mit einer Schicht ist das Maximum diese
+  // Schicht ⇒ identisch zum Pauschalfall.
+  const linearBasis = profilAktiv
+    ? schichten.reduce((acc, s) => acc + LINEAR_PREIS_PRO_M[s.gesteinstyp] * (s.bis_m - s.von_m), 0)
+      + LINEAR_MOBILISIERUNG[schichten.reduce(
+          (haertestes, s) => HAERTE_RANG[s.gesteinstyp] > HAERTE_RANG[haertestes] ? s.gesteinstyp : haertestes,
+          schichten[0].gesteinstyp,
+        )]
+    : LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+  const linear = linearBasis * f_linear
 
   let basiskosten: number
   if (tiefe <= 400) {
@@ -356,7 +487,14 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     : 'red'
 
   // Gültigkeitsgrenze linearer Zweig — PLAUSI_CHECK.md, Befund A (Juli 2026)
-  const kleinkaliberWarnung = inputs.tiefe <= 400
+  const kleinkaliberHinweis = inputs.tiefe <= 400
+
+  // Profil nur aktiv, wenn es 0…tiefe lückenlos abdeckt — sonst stiller Rückfall wäre schlimmer
+  // als gar kein Profil. Dieselbe Prüfung wie in berechneBohrkostenEine.
+  const profilAktiv = profilIstGueltig(inputs.profil, inputs.tiefe)
+
+  // Echter Gültigkeitsbruch, nicht nur Kalibrierungsrand: DURCHMESSER_FAKTOR endet bei 340 mm.
+  const ausserhalbKalibrierung = inputs.durchmesser === 'Sonderausbau'
 
   return {
     bohrkosten_min,
@@ -380,6 +518,8 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     ampel_risiko,
     ampel_tiefe,
     anzahl_bohrungen,
-    kleinkaliberWarnung,
+    kleinkaliberHinweis,
+    profilAktiv,
+    ausserhalbKalibrierung,
   }
 }

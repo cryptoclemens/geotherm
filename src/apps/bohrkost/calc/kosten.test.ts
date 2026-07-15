@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { berechneBohrkosten, DEFAULT_INPUTS, type BohrkostInputs } from './kosten'
+import { berechneBohrkosten, pruefeProfil, DEFAULT_INPUTS, type BohrkostInputs, type Gesteinstyp } from './kosten'
 
 // Hilfsfunktion: Default-Inputs mit Überschreibungen
 function inp(overrides: Partial<BohrkostInputs>): BohrkostInputs {
@@ -283,17 +283,259 @@ describe('berechneBohrkosten — Stetigkeit an den Blend-Rändern (400 / 600 m)'
 // Angebote für Geothermie-Produktionsbrunnen < 400 m mit großem Ausbau liegen Faktor
 // 3,4–5,0 darüber. Ohne Kostenaufschlüsselung wird nicht kalibriert, sondern der
 // Gültigkeitsbereich deklariert — Muster wie kluftaquiferWarnung in DeltaT.
-describe('berechneBohrkosten — kleinkaliberWarnung (Gültigkeitsbereich)', () => {
+describe('berechneBohrkosten — kleinkaliberHinweis (Gültigkeitsbereich)', () => {
   it('true bei 280 m — reiner linearer Zweig', () => {
-    expect(berechneBohrkosten(inp({ tiefe: 280 })).kleinkaliberWarnung).toBe(true)
+    expect(berechneBohrkosten(inp({ tiefe: 280 })).kleinkaliberHinweis).toBe(true)
   })
   it('true bei 400 m — obere Grenze des linearen Zweigs', () => {
-    expect(berechneBohrkosten(inp({ tiefe: 400 })).kleinkaliberWarnung).toBe(true)
+    expect(berechneBohrkosten(inp({ tiefe: 400 })).kleinkaliberHinweis).toBe(true)
   })
   it('false bei 401 m — Blend-Zone, Lukawski wirkt mit', () => {
-    expect(berechneBohrkosten(inp({ tiefe: 401 })).kleinkaliberWarnung).toBe(false)
+    expect(berechneBohrkosten(inp({ tiefe: 401 })).kleinkaliberHinweis).toBe(false)
   })
   it('false bei Default-Tiefe 700 m', () => {
-    expect(berechneBohrkosten(inp({})).kleinkaliberWarnung).toBe(false)
+    expect(berechneBohrkosten(inp({})).kleinkaliberHinweis).toBe(false)
+  })
+})
+
+// ─── Bohrplatz-Profil: Schichtenfolge statt Pauschal-Gesteinstyp ─────────────
+// docs/requirements/bohrplatz-profil.md. Hybrid-Integration:
+//   linearer Zweig  → echte Summe €/m × Mächtigkeit, Mobilisierung nach härtestem Gestein
+//   Lukawski-Zweig  → tiefengewichtetes Mittel von f_gestein auf die Ganzbohrungs-Formel
+// Lukawski wird NICHT schichtweise zerlegt: Ganzbohrungs-Regression, unter 264 m negativ,
+// der −0,62-Mio-Offset ist ein Fit-Artefakt ohne physikalische Zuordnung.
+describe('berechneBohrkosten — Bohrplatz-Profil: Rückwärtskompatibilität', () => {
+  const basis = { zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0 } as const
+
+  // Eine Schicht über die volle Tiefe MUSS den Pauschalfall exakt reproduzieren —
+  // sonst ist das Profil kein Zusatz, sondern eine stille Verhaltensänderung.
+  for (const tiefe of [280, 300, 400, 500, 600, 700, 1000, 2000]) {
+    for (const g of ['Lockergestein', 'Festgestein_sed', 'Festgestein_kristallin'] as Gesteinstyp[]) {
+      it(`${tiefe} m / ${g}: Einzelschicht 0–${tiefe} identisch zum Pauschaltyp`, () => {
+        const pauschal = berechneBohrkosten(inp({ ...basis, tiefe, gesteinstyp: g, profil: null }))
+        const profil = berechneBohrkosten(inp({
+          ...basis, tiefe, gesteinstyp: g,
+          profil: { schichten: [{ von_m: 0, bis_m: tiefe, gesteinstyp: g }], quelle: 'Schätzung' },
+        }))
+        expect(profil.bohrkosten_mid).toBeCloseTo(pauschal.bohrkosten_mid, 6)
+      })
+    }
+  }
+
+  it('profil: null verhält sich wie bisher (Default-Inputs)', () => {
+    const r = berechneBohrkosten(inp({ profil: null }))
+    expect(r.bohrkosten_mid).toBeGreaterThan(0)
+    expect(r.profilAktiv).toBe(false)
+  })
+})
+
+describe('berechneBohrkosten — Bohrplatz-Profil: Schicht-Integration', () => {
+  const basis = { zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0, region: 'NDB', durchmesser: '9 5/8"' } as const
+
+  it('linearer Zweig 300 m: 100 m Locker + 200 m Fest = 300×100 + 700×200 + Mob(Fest), × f_region', () => {
+    const r = berechneBohrkosten(inp({
+      ...basis, tiefe: 300, gesteinstyp: 'Lockergestein',
+      profil: { schichten: [
+        { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+        { von_m: 100, bis_m: 300, gesteinstyp: 'Festgestein_sed' },
+      ], quelle: 'Schichtenverzeichnis' },
+    }))
+    // (300×100 + 700×200 + 100.000) × 1,00 × 0,95 = (30.000 + 140.000 + 100.000) × 0,95 = 256.500
+    expect(r.bohrkosten_mid).toBeCloseTo(256_500, -1)
+  })
+
+  it('Mobilisierung richtet sich nach dem härtesten Gestein, nicht nach der obersten Schicht', () => {
+    // 290 m Locker + 10 m Kristallin: Mobilisierung muss die Kristallin-Stufe sein (150.000)
+    const r = berechneBohrkosten(inp({
+      ...basis, tiefe: 300, gesteinstyp: 'Lockergestein',
+      profil: { schichten: [
+        { von_m: 0, bis_m: 290, gesteinstyp: 'Lockergestein' },
+        { von_m: 290, bis_m: 300, gesteinstyp: 'Festgestein_kristallin' },
+      ], quelle: 'Nachbarbohrung' },
+    }))
+    // (300×290 + 1200×10 + 150.000) × 0,95 = (87.000 + 12.000 + 150.000) × 0,95 = 236.550
+    expect(r.bohrkosten_mid).toBeCloseTo(236_550, -1)
+  })
+
+  it('Lukawski-Zweig 1000 m: hälftig Locker/Kristallin = f_gestein_eff 1,00 (Mittel aus 0,70/1,30)', () => {
+    const gemischt = berechneBohrkosten(inp({
+      ...basis, tiefe: 1000, gesteinstyp: 'Lockergestein',
+      profil: { schichten: [
+        { von_m: 0, bis_m: 500, gesteinstyp: 'Lockergestein' },
+        { von_m: 500, bis_m: 1000, gesteinstyp: 'Festgestein_kristallin' },
+      ], quelle: 'Bohrunternehmen' },
+    }))
+    // Mittel (0,70 + 1,30)/2 = 1,00 = GESTEINS_FAKTOR['Festgestein_sed']
+    const aequivalent = berechneBohrkosten(inp({ ...basis, tiefe: 1000, gesteinstyp: 'Festgestein_sed', profil: null }))
+    expect(gemischt.bohrkosten_mid).toBeCloseTo(aequivalent.bohrkosten_mid, 6)
+  })
+
+  it('profilAktiv = true wenn ein Profil gesetzt ist', () => {
+    const r = berechneBohrkosten(inp({
+      profil: { schichten: [{ von_m: 0, bis_m: 700, gesteinstyp: 'Festgestein_sed' }], quelle: 'Schätzung' },
+    }))
+    expect(r.profilAktiv).toBe(true)
+  })
+})
+
+describe('berechneBohrkosten — Bohrplatz-Profil: ungültige Profile fallen zurück', () => {
+  const basis = { tiefe: 300, gesteinstyp: 'Lockergestein', zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0 } as const
+
+  function pauschal() {
+    return berechneBohrkosten(inp({ ...basis, profil: null })).bohrkosten_mid
+  }
+
+  it('Lücke im Profil → Rückfall auf Pauschaltyp, profilAktiv = false', () => {
+    const r = berechneBohrkosten(inp({
+      ...basis,
+      profil: { schichten: [
+        { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+        { von_m: 150, bis_m: 300, gesteinstyp: 'Lockergestein' },
+      ], quelle: 'Schätzung' },
+    }))
+    expect(r.profilAktiv).toBe(false)
+    expect(r.bohrkosten_mid).toBeCloseTo(pauschal(), 6)
+  })
+
+  it('Überlappung → Rückfall', () => {
+    const r = berechneBohrkosten(inp({
+      ...basis,
+      profil: { schichten: [
+        { von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' },
+        { von_m: 150, bis_m: 300, gesteinstyp: 'Lockergestein' },
+      ], quelle: 'Schätzung' },
+    }))
+    expect(r.profilAktiv).toBe(false)
+  })
+
+  it('deckt die Bohrtiefe nicht ab → Rückfall', () => {
+    const r = berechneBohrkosten(inp({
+      ...basis,
+      profil: { schichten: [{ von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' }], quelle: 'Schätzung' },
+    }))
+    expect(r.profilAktiv).toBe(false)
+  })
+
+  it('leere Schichtenliste → Rückfall', () => {
+    const r = berechneBohrkosten(inp({ ...basis, profil: { schichten: [], quelle: 'Schätzung' } }))
+    expect(r.profilAktiv).toBe(false)
+  })
+})
+
+describe('berechneBohrkosten — Profil ändert die Blend-Stetigkeit nicht', () => {
+  const profil = { schichten: [
+    { von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' as Gesteinstyp },
+    { von_m: 200, bis_m: 3000, gesteinstyp: 'Festgestein_kristallin' as Gesteinstyp },
+  ], quelle: 'Schichtenverzeichnis' as const }
+
+  function mid(tiefe: number): number {
+    // Profil auf die jeweilige Tiefe beschneiden, damit es lückenlos abdeckt
+    const schichten = profil.schichten
+      .filter(s => s.von_m < tiefe)
+      .map(s => ({ ...s, bis_m: Math.min(s.bis_m, tiefe) }))
+    return berechneBohrkosten(inp({
+      tiefe, zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0,
+      profil: { ...profil, schichten },
+    })).bohrkosten_mid
+  }
+
+  it('kein Sprung bei 400 m (399 → 401 unter 3 %)', () => {
+    expect(Math.abs(mid(401) - mid(399)) / mid(399)).toBeLessThan(0.03)
+  })
+  it('kein Sprung bei 600 m (599 → 601 unter 3 %)', () => {
+    expect(Math.abs(mid(601) - mid(599)) / mid(599)).toBeLessThan(0.03)
+  })
+  it('Naht 400 m stetig (400 → 400,1 unter 0,3 %)', () => {
+    expect(Math.abs(mid(400.1) - mid(400)) / mid(400)).toBeLessThan(0.003)
+  })
+})
+
+// pruefeProfil ist die EINZIGE Quelle der Gültigkeitsregel — der Rechenkern entscheidet damit
+// über den Rückfall, das UI formuliert dasselbe Ergebnis als Text. Zwei Implementierungen
+// würden driften: UI meldet „gültig", Kern fällt still zurück (Fehlerklasse Befund B).
+describe('pruefeProfil — Gültigkeitsregel', () => {
+  const q = 'Schätzung' as const
+
+  it('null → leer', () => {
+    expect(pruefeProfil(null, 300)).toEqual({ art: 'leer' })
+  })
+  it('undefined → leer (alter State ohne Feld)', () => {
+    expect(pruefeProfil(undefined, 300)).toEqual({ art: 'leer' })
+  })
+  it('leere Schichtenliste → leer', () => {
+    expect(pruefeProfil({ schichten: [], quelle: q }, 300)).toEqual({ art: 'leer' })
+  })
+  it('startet nicht bei 0 → startet_nicht_bei_null', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 10, bis_m: 300, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toEqual({ art: 'startet_nicht_bei_null', von: 10 })
+  })
+  it('bis <= von → leere_schicht mit Index', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 0, bis_m: 0, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toEqual({ art: 'leere_schicht', index: 0 })
+  })
+  it('Lücke → luecke mit Grenzen', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+      { von_m: 150, bis_m: 300, gesteinstyp: 'Lockergestein' },
+    ], quelle: q }, 300)).toEqual({ art: 'luecke', von: 100, bis: 150 })
+  })
+  it('Überlappung → ueberlappung mit Grenzen', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' },
+      { von_m: 150, bis_m: 300, gesteinstyp: 'Lockergestein' },
+    ], quelle: q }, 300)).toEqual({ art: 'ueberlappung', von: 150, bis: 200 })
+  })
+  it('zu kurz → zu_kurz mit Ende und Tiefe', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toEqual({ art: 'zu_kurz', ende: 200, tiefe: 300 })
+  })
+  it('lückenlos bis zur Tiefe → null', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+      { von_m: 100, bis_m: 300, gesteinstyp: 'Festgestein_sed' },
+    ], quelle: q }, 300)).toBeNull()
+  })
+  it('Profil tiefer als die Bohrung → null (nur der durchbohrte Teil zählt)', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 0, bis_m: 3000, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toBeNull()
+  })
+  it('unsortierte Eingabe wird sortiert bewertet', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 100, bis_m: 300, gesteinstyp: 'Festgestein_sed' },
+      { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+    ], quelle: q }, 300)).toBeNull()
+  })
+})
+
+describe('berechneBohrkosten — Sonderausbau > 13 3/8"', () => {
+  const basis = { tiefe: 280, gesteinstyp: 'Lockergestein', zweck: 'Einzelbohrung', foerderungAktiv: false, fuendigkeitsRisiko: 0, region: 'NDB' } as const
+
+  it('ausserhalbKalibrierung = false für die kalibrierten Durchmesser', () => {
+    for (const d of ['7"', '9 5/8"', '13 3/8"'] as const) {
+      expect(berechneBohrkosten(inp({ ...basis, durchmesser: d })).ausserhalbKalibrierung).toBe(false)
+    }
+  })
+
+  it('ausserhalbKalibrierung = true bei Sonderausbau', () => {
+    const r = berechneBohrkosten(inp({ ...basis, durchmesser: 'Sonderausbau', sonderausbauMm: 500 }))
+    expect(r.ausserhalbKalibrierung).toBe(true)
+  })
+
+  it('Sonderausbau rechnet mit dem letzten kalibrierten Faktor (13 3/8"), erfindet keinen', () => {
+    const sonder = berechneBohrkosten(inp({ ...basis, durchmesser: 'Sonderausbau', sonderausbauMm: 500 }))
+    const gross  = berechneBohrkosten(inp({ ...basis, durchmesser: '13 3/8"' }))
+    expect(sonder.bohrkosten_mid).toBeCloseTo(gross.bohrkosten_mid, 6)
+  })
+
+  it('Sonderausbau-Ergebnis skaliert NICHT mit dem eingegebenen Durchmesser — kein erfundener Faktor', () => {
+    const mm400 = berechneBohrkosten(inp({ ...basis, durchmesser: 'Sonderausbau', sonderausbauMm: 400 }))
+    const mm800 = berechneBohrkosten(inp({ ...basis, durchmesser: 'Sonderausbau', sonderausbauMm: 800 }))
+    expect(mm400.bohrkosten_mid).toBeCloseTo(mm800.bohrkosten_mid, 6)
+  })
+
+  it('Sonderausbau gilt in jeder Tiefe, nicht nur unter 400 m', () => {
+    const tief = berechneBohrkosten(inp({ ...basis, tiefe: 1500, durchmesser: 'Sonderausbau', sonderausbauMm: 500 }))
+    expect(tief.ausserhalbKalibrierung).toBe(true)
+    expect(tief.kleinkaliberHinweis).toBe(false)
   })
 })

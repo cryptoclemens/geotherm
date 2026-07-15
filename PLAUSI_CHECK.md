@@ -418,6 +418,44 @@ keine Berechnung ändert sich, die Lukawski-Tests in `kosten.test.ts` bleiben un
 Der Zahlenwert **1.34 bleibt unverändert** — verifiziert, dass `npm test` ohne Anpassung eines
 einzigen Erwartungswerts grün bleibt.
 
+### Nachtrag 14.07.2026 — Bohrplatz-Profil: warum Lukawski nicht schichtweise gerechnet wird
+
+Mit dem optionalen Schichtenprofil (`docs/requirements/bohrplatz-profil.md`) stellte sich die
+Frage, wie über Schichten integriert wird. Ergebnis: **je Zweig verschieden**, weil es zwei
+verschiedene Arten von Modell sind.
+
+**Linearer Zweig — echte Integration.** `LINEAR_PREIS_PRO_M` ist eine EUR/m-Rate und summiert
+sich schichtweise. Mobilisierung nach dem **härtesten** durchbohrten Gestein: Das Bohrgerät muss
+die härteste Schicht schaffen, nicht die durchschnittliche.
+
+**Lukawski-Zweig — tiefengewichtetes Mittel von `f_gestein`** auf die unveränderte
+Ganzbohrungs-Formel. **Nicht** schichtweise zerlegt, aus drei Gründen:
+
+1. `C(d)` ist eine Regression über **146 ganze Bohrungen**, keine EUR/m-Rate. Sie liefert
+   unterhalb **264,3 m negative Kosten** (bei 100 m: −388.000 USD₂₀₀₉) — genau deshalb existiert
+   der lineare Zweig überhaupt.
+2. Zerlegbar wäre sie nur über die Grenzkosten `dC/dd = (2 × 1.72e-7 · d + 2.3e-3) × 10⁶`. Das
+   reproduziert `C(d)` exakt (numerisch geprüft bei 600/1000/2000 m). Aber der Term **−0,62 Mio.**
+   ist ein **Fit-Artefakt ohne physikalische Bedeutung**. Ihn einer Schicht zuzuordnen verschiebt
+   das Ergebnis um rund **829 T€** (Lockergestein 0,70 vs. Kristallin 1,30, bei f_währung ×
+   f_region × f_durchmesser × f_markt = 2,228) — eine Zahl aus einer Willkür.
+3. Der Realismusgewinn (eine Hartschicht bei 2000 m ist teurer als dieselbe bei 100 m) liegt
+   **unter der AACE-Class-5-Bandbreite von ±35–50 %**, die der Rechner ohnehin ausweist.
+
+Lukawski et al. (2014) kalibrieren auf ganzen Bohrungen; die Formel schichtweise anzuwenden wäre
+eine Extrapolation, die die Quelle nicht hergibt.
+
+**Rückwärtskompatibilität ist Teil der Aussage:** Eine Schicht über die volle Tiefe reproduziert
+den Pauschalfall auf 6 Nachkommastellen exakt — belegt für 8 Tiefen × 3 Gesteinstypen. Ungültige
+Profile (Lücke, Überlappung, zu kurz) rechnen nicht teilweise mit, sondern fallen ganz auf den
+Pauschaltyp zurück; das UI benennt den Grund, statt still zurückzufallen.
+
+**Sonderausbau > 13 3/8" (340 mm):** eingebbar, aber **ohne erfundenen Faktor**. `DURCHMESSER_FAKTOR`
+endet bei 340 mm, jenseits davon gibt es keine Stützstelle. Gerechnet wird mit dem letzten
+kalibrierten Wert (1,25), `ausserhalbKalibrierung` markiert das Ergebnis als **Wert für 13 3/8" —
+keine Schätzung für den realen Ausbau**. Der eingegebene mm-Wert ist reine Dokumentation und geht
+nicht in die Rechnung ein (ein Test hält genau das fest).
+
 ### Ergänzende Beobachtung (kein Befund)
 
 Der COP-Cross-Check ist **konsistent**: Die DeltaT-Formel `COP = (T_VL/(T_VL − T_R)) × Gütegrad`

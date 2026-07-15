@@ -601,6 +601,36 @@ Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen re
 - [ ] 📦 Blend-Zone 400–600 m überdenken: linearer Zweig (255 T€) und Lukawski (1.079 T€) liegen bei
       600 m um Faktor 4,2 auseinander — der Blend mittelt zwei Modelle, von denen dort höchstens eines stimmt.
 
+### M8.1d – Bohrplatz-Profil ⭐ (neu 14.07.2026)
+
+Siehe `docs/requirements/bohrplatz-profil.md` und PLAUSI_CHECK.md → Nachtrag 14.07.2026.
+
+**Warum manuell und nicht aus dem Atlas:** Dessen feinste Geologie-Ebene ist GÜK250 (BGR,
+1:250.000) — 1 mm entspricht 250 m, ein Bohrplatz ist darauf ein Punkt ohne Fläche. Vor allem
+zeigt GÜK250 **Oberflächengeologie**, während der Rechner die **durchbohrte Schichtenfolge**
+braucht: Ein Standort kann oben Lockergestein führen und bei 150 m Festgestein. Verschiedene
+Fragen, nicht dieselbe in verschiedener Auflösung. Quellen sind Schichtenverzeichnisse der
+Landesämter, Nachbarbohrungen oder das Bohrunternehmen.
+
+- [x] [verify] 🔥 **Rechenkern:** `profil: BohrplatzProfil | null` in `BohrkostInputs`, Liste aus
+      `{ von_m, bis_m, gesteinstyp }` + `quelle`. Hybrid-Integration: linearer Zweig echt
+      schichtweise (EUR/m ist eine Rate), Mobilisierung nach dem härtesten Gestein; Lukawski über
+      das tiefengewichtete Mittel von `f_gestein` auf die unveränderte Ganzbohrungs-Formel.
+      Lukawski bewusst **nicht** zerlegt — Ganzbohrungs-Regression, unter 264,3 m negativ, und der
+      −0,62-Mio-Offset ist ein Fit-Artefakt, dessen Schichtzuordnung 829 T€ verschiebt.
+      Rückwärtskompatibilität auf 6 Nachkommastellen belegt (8 Tiefen × 3 Gesteine).
+- [x] [verify] 🔥 **Gültigkeitsregel an einer Stelle:** `pruefeProfil()` in `calc/kosten.ts` gibt
+      ein strukturiertes `ProfilProblem` zurück; das UI formuliert es nur. Ungültige Profile
+      (Lücke/Überlappung/zu kurz/leer) fallen ganz auf den Pauschaltyp zurück — der Editor benennt
+      den Grund, statt still zurückzufallen.
+- [x] [verify] 🔥 **Sonderausbau > 13 3/8"** eingebbar, ohne erfundenen Faktor: rechnet mit dem
+      letzten kalibrierten Wert und setzt `ausserhalbKalibrierung` (amber-Stufe). Das Ergebnis ist
+      der Wert für 13 3/8", keine Schätzung für den realen Ausbau; der mm-Wert ist Dokumentation.
+- [x] [verify] 📦 **Persistenz über `/projects`** ohne Schema-Change — `bohrkost_input` liegt als
+      JSONB vor, das Profil ist Teil davon. Kein `version`-Bump nötig (Store normalisiert in
+      `merge` gegen die Defaults; verifiziert).
+- [ ] 📦 Profil aus einem hochgeladenen Schichtenverzeichnis vorbelegen (PDF/CSV) — heute Handarbeit.
+
 ### M8.2 – Portierung
 
 - [ ] 🔥 Rechenkern → `src/apps/lcoh/calc/lcoh.ts` (pure, DOM-frei — liegt im Prototyp bereits so vor)
