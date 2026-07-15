@@ -89,7 +89,7 @@ ESLint-Regel ist strict. Nutze `unknown` + Type Guards wenn Type nicht bekannt i
 
 - **Vitest** für Unit-Tests
 - **Jede neue Berechnungslogik** in `src/apps/*/calc/` braucht mindestens 3 Test-Cases + Edge Cases
-- **Coverage-Ziel** 80 % für `src/apps/*/calc/` und `src/core/`
+- **Coverage-Schwelle** 80 % (lines/functions/branches) für `src/apps/*/calc/` — in der CI erzwungen, ein PR darunter wird rot. `src/core/` ist ausgenommen (überwiegend shadcn-Generat, s. `vitest.config.ts`)
 - **E2E-Tests** (Playwright) erst ab M7, vorher nicht
 - **`npm test`** muss vor jedem Commit grün sein
 - **Keine Snapshot-Tests** für Komponenten (zu fragil)
