@@ -456,6 +456,47 @@ kalibrierten Wert (1,25), `ausserhalbKalibrierung` markiert das Ergebnis als **W
 keine Schätzung für den realen Ausbau**. Der eingegebene mm-Wert ist reine Dokumentation und geht
 nicht in die Rechnung ein (ein Test hält genau das fest).
 
+### Nachtrag 15.07.2026 — Annuitätenmethode (M8.1c): die Konvention ist kein Detail
+
+`src/apps/lcoh/calc/annuitaet.ts`, Quelle **VDI 2067 Bl. 1**:
+
+```
+CRF = i · (1 + i)^n / ((1 + i)^n − 1)        Annuität = CAPEX × CRF
+```
+
+Nachgerechnet und als Test festgehalten:
+
+| Konvention | CRF |
+|---|---|
+| Versorger — 6 % WACC / 30 a (**Default**) | 0,07265 |
+| Investor — 10 % Hurdle Rate / 20 a | 0,11746 |
+| **Verhältnis** | **1,617** |
+
+**Die Konvention allein verschiebt jeden kapitalgetriebenen LCOH um Faktor 1,617** — ohne dass sich
+am Projekt etwas ändert. Zerlegt man den Faktor, kommen **1,46 vom Zinssatz** und nur 1,20 von der
+Laufzeit: Der Zins ist der dominante Hebel, nicht die Nutzungsdauer.
+
+**Konsequenz für den Technologievergleich:** Der CRF verschiebt nicht nur das Niveau, sondern die
+**Rangfolge**. Geothermie ist kapitalintensiv, ein Gaskessel opex-lastig — ein hoher CRF trifft die
+Geothermie härter. Innerhalb eines Vergleichs muss die Methodik daher über alle Technologien
+identisch sein; gemischt erzeugt sie eine Reihenfolge, die es in keiner Welt gibt.
+
+**Grenzfall `zins = 0`:** Die Formel ist dort 0/0 und liefert still `NaN`. Der Grenzwert für i → 0
+ist `1/n` (ohne Zins wird das Kapital linear verteilt) — im Code abgefangen, sonst zeigte eine
+0-%-Annahme „NaN €/MWh".
+
+**Offengelegte Befangenheit:** Der Default (6 %/30 a) begünstigt die Geothermie. Fachlich ist er
+begründet — 30 a bilden die Brunnen-Lebensdauer realistischer ab als 20 a —, aber Geotherm ist eine
+Geothermie-Suite, und ein Default, der die eigene Technologie besserstellt, ist angreifbar. Deshalb
+ist die Prämisse Teil des Datentyps (`Methodik { zins, jahre, label, quelle }`) statt einer
+Konstante: Eine Zahl ohne ihre Prämisse ist im Modell nicht darstellbar. Die Auflage, dass das
+Label im UI an der Zahl klebt und nicht nur im FormelTab steht, ist in Tasks.md M8.1c als offener
+Punkt für M8.2 vermerkt.
+
+**Keine Methodenbereinigung ohne Komponenten:** `LCOH = (CAPEX × CRF + OPEX) / Wärmemenge` — nur der
+CAPEX-Teil skaliert mit dem CRF. Eine nackte LCOH-Zahl lässt sich deshalb **nicht** in eine andere
+Konvention umrechnen; das setzt die CAPEX/OPEX-Aufteilung aus der Registry (M8.2) voraus.
+
 ### Ergänzende Beobachtung (kein Befund)
 
 Der COP-Cross-Check ist **konsistent**: Die DeltaT-Formel `COP = (T_VL/(T_VL − T_R)) × Gütegrad`
