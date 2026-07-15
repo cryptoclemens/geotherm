@@ -69,12 +69,21 @@ export function InputColumn({ inputs, outputs, onChange, onReset }: InputColumnP
           onChange={v => onChange('tiefe', v)}
           info={'Tiefe der Bohrung [m].\nBestimmt maßgeblich die Bohrkosten (Lukawski-Kurve).\nFaustformel: T_GW ≈ 10 °C + tiefe × 0,03 °C/m\n(Lukawski et al. 2014, J. Pet. Sci. Eng. 118)'}
         />
-        {outputs.kleinkaliberWarnung && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1 leading-snug rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-1.5">
-            ⚠ Bis 400 m rechnet der lineare GtV-/DVGW-Zweig — er bildet klein-kalibrige Brunnen ab
-            (Ausbau bis 13 3/8&quot;). Für Geothermie-Produktionsbrunnen mit größerem Ausbau liegen reale
-            Angebote um ein Mehrfaches höher. Details im Formelwerk.
-          </p>
+        {/* Gültigkeitshinweis, keine Fehlermeldung: Der Rechner rechnet über die volle Spanne
+            100–3000 m. Unterhalb 400 m stammt der Preis aus GtV/DVGW und ist dort für
+            klein-kalibrige Brunnen kalibriert. Bewusst das blaue Hinweis-Muster (wie der
+            Optimierungshinweis in DeltaT), nicht das amber-Muster für „Formel nicht anwendbar"
+            (kluftaquiferWarnung) — siehe PLAUSI_CHECK.md, Befund A. */}
+        {outputs.kleinkaliberHinweis && (
+          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-3 py-2 text-xs -mt-1 leading-snug">
+            <span className="text-blue-700 dark:text-blue-300 font-medium">Kalibrierung:</span>
+            <span className="text-blue-600 dark:text-blue-400">
+              {' '}Bis 400 m rechnet der Rechner mit GtV-/DVGW-Preisen. Die sind für klein-kalibrige
+              Brunnen bis 13 3/8&quot; Ausbau kalibriert — dafür ist das Ergebnis belastbar. Bei
+              größerem Ausbau liegt es zu niedrig; dort ist ein Bohrangebot die bessere Quelle.
+              Details im Formelwerk.
+            </span>
+          </div>
         )}
         <SelectField<Gesteinstyp>
           label="Gesteinstyp"

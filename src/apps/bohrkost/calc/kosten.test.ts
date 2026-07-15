@@ -283,17 +283,17 @@ describe('berechneBohrkosten — Stetigkeit an den Blend-Rändern (400 / 600 m)'
 // Angebote für Geothermie-Produktionsbrunnen < 400 m mit großem Ausbau liegen Faktor
 // 3,4–5,0 darüber. Ohne Kostenaufschlüsselung wird nicht kalibriert, sondern der
 // Gültigkeitsbereich deklariert — Muster wie kluftaquiferWarnung in DeltaT.
-describe('berechneBohrkosten — kleinkaliberWarnung (Gültigkeitsbereich)', () => {
+describe('berechneBohrkosten — kleinkaliberHinweis (Gültigkeitsbereich)', () => {
   it('true bei 280 m — reiner linearer Zweig', () => {
-    expect(berechneBohrkosten(inp({ tiefe: 280 })).kleinkaliberWarnung).toBe(true)
+    expect(berechneBohrkosten(inp({ tiefe: 280 })).kleinkaliberHinweis).toBe(true)
   })
   it('true bei 400 m — obere Grenze des linearen Zweigs', () => {
-    expect(berechneBohrkosten(inp({ tiefe: 400 })).kleinkaliberWarnung).toBe(true)
+    expect(berechneBohrkosten(inp({ tiefe: 400 })).kleinkaliberHinweis).toBe(true)
   })
   it('false bei 401 m — Blend-Zone, Lukawski wirkt mit', () => {
-    expect(berechneBohrkosten(inp({ tiefe: 401 })).kleinkaliberWarnung).toBe(false)
+    expect(berechneBohrkosten(inp({ tiefe: 401 })).kleinkaliberHinweis).toBe(false)
   })
   it('false bei Default-Tiefe 700 m', () => {
-    expect(berechneBohrkosten(inp({})).kleinkaliberWarnung).toBe(false)
+    expect(berechneBohrkosten(inp({})).kleinkaliberHinweis).toBe(false)
   })
 })

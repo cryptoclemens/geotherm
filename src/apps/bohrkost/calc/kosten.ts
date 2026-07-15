@@ -98,10 +98,13 @@ export interface BohrkostOutputs {
   ampel_tiefe: 'green' | 'yellow' | 'red'
   // Anzahl Bohrungen (für Anzeige)
   anzahl_bohrungen: number
-  /** true wenn tiefe ≤ 400 m → linearer GtV-/DVGW-Zweig → nur klein-kalibrige
-   *  Brunnenbohrungen abgebildet, nicht Geothermie-Produktionsbrunnen mit großem Ausbau.
-   *  Gültigkeitsgrenze, keine Kalibrierung — siehe PLAUSI_CHECK.md, Befund A (Juli 2026). */
-  kleinkaliberWarnung: boolean
+  /** true wenn tiefe ≤ 400 m → linearer GtV-/DVGW-Zweig aktiv.
+   *  KEIN Fehler und keine Rechenlücke: Der Rechner liefert über die volle Spanne 100–3000 m
+   *  ein Ergebnis. Das Flag sagt nur, dass der Preis hier aus GtV/DVGW stammt und dort für
+   *  klein-kalibrige Brunnen (Ausbau bis 13 3/8") kalibriert ist — für die ist er belastbar.
+   *  Bei größerem Ausbau liegt er zu niedrig. Im UI deshalb als Hinweis darstellen, nicht als
+   *  Warnung — siehe PLAUSI_CHECK.md, Befund A (Juli 2026). */
+  kleinkaliberHinweis: boolean
 }
 
 export const DEFAULT_INPUTS: BohrkostInputs = {
@@ -356,7 +359,7 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     : 'red'
 
   // Gültigkeitsgrenze linearer Zweig — PLAUSI_CHECK.md, Befund A (Juli 2026)
-  const kleinkaliberWarnung = inputs.tiefe <= 400
+  const kleinkaliberHinweis = inputs.tiefe <= 400
 
   return {
     bohrkosten_min,
@@ -380,6 +383,6 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     ampel_risiko,
     ampel_tiefe,
     anzahl_bohrungen,
-    kleinkaliberWarnung,
+    kleinkaliberHinweis,
   }
 }
