@@ -721,13 +721,39 @@ Die Kostentabelle des Betreibers rechnet den LCOH **je Produktlayer** — der An
 - [ ] 📦 Benennung schärfen: Bei Layern ohne Wärmelieferung (L1a/L2a) wird trotzdem durch die
       Jahreswärmemenge geteilt. Als Kostenumlage lesbar, aber kein LCOH im üblichen Sinn.
 
-### M8.1c – Methodik-Konvention ⭐ (Blocker, neu 16.07.2026)
+### M8.1c – Methodik-Konvention ✅ entschieden (15.07.2026)
 
-- [ ] ⭐ Die beiden Fachmodelle annualisieren **unterschiedlich**: 6 % WACC / 30 a (CRF 0,0726) vs.
-      10 % Hurdle Rate / 20 a (CRF 0,1175) — **Faktor 1,62**. Am Referenzprojekt sind das 24,7 €/MWh
-      Unterschied, allein aus der Konvention. Solange die nicht vereinbart ist, sind die Modelle nie
-      vergleichbar und `/lcoh` kann keine belastbare Zahl zeigen.
-      → Konvention festlegen, in der Registry als Szenario-Prämisse hinterlegen, im FormelTab offenlegen.
+Die beiden Fachmodelle annualisieren **unterschiedlich**: 6 % WACC / 30 a (CRF 0,0726) vs.
+10 % Hurdle Rate / 20 a (CRF 0,1175) — **Faktor 1,617**, allein aus der Konvention, ohne dass sich
+am Projekt etwas ändert. Zerlegt: rund **1,46 kommen vom Zins**, nur 1,20 von der Laufzeit — die
+Diskussion gehört an den Zinssatz, nicht an „20 vs. 30 Jahre".
+
+**Entscheidung — Szenario-Prämisse mit Default, keine globale Einheitskonvention.**
+„Eine Konvention gewinnt" wäre der falsche Rahmen gewesen: M8.0b nennt zwei Adressaten (Bank-
+Risikokalkulation vs. interner Gate-Prozess), und M8.2b etabliert bereits „Spanne statt
+Scheingenauigkeit". Beide Sichten sind legitim — sie beantworten verschiedene Fragen.
+
+**Nicht verhandelbar dagegen:** Innerhalb *eines* Vergleichs ist die Methodik über alle sechs
+Technologien identisch. Der CRF verschiebt nicht nur das Niveau, sondern die **Rangfolge** —
+Geothermie ist kapitalintensiv, ein Gaskessel opex-lastig. Gemischte Methodik erzeugt eine
+Reihenfolge, die es in keiner Welt gibt.
+
+- [x] [verify] ⭐ **Rechenkern:** `src/apps/lcoh/calc/annuitaet.ts` — `crf(m: Methodik)` nach
+      **VDI 2067 Bl. 1**, mit `METHODIK_VERSORGER` (Default) und `METHODIK_INVESTOR` als Presets.
+      Grenzfall `zins = 0` abgefangen (Formel ist dort 0/0 → NaN; Grenzwert ist 1/n). 13 Tests.
+- [x] [verify] ⭐ **Prämisse als Daten, nicht als Enum** — `Methodik { zins, jahre, label, quelle }`
+      folgt der Grenze aus M8.2 („Parameterwerte/Prämissen/Quellen = Daten, Fachplaner autonom").
+      `label` und `quelle` sind Teil des Typs: Eine Zahl ohne ihre Prämisse ist nicht darstellbar.
+      Wandert mit M8.2 in die Registry, dann ohne Code-Änderung erweiterbar.
+- [ ] 🔥 **Default ist bewusst der schmeichelhaftere** — 6 %/30 a begünstigt die Geothermie, weil
+      sie kapitalintensiv ist. Fachlich richtig (30 a bilden die Brunnen-Lebensdauer besser ab als
+      20 a), aber angreifbar, sobald jemand die Prämisse prüft. **Auflage:** Die Konvention muss im
+      UI an der Zahl kleben, nicht nur im FormelTab stehen — sonst verschwindet der Vorteil in einer
+      Voreinstellung. Umzusetzen mit der `ResultColumn` in M8.2.
+- [ ] 📦 **Methodenbereinigung** (einen Fremdwert in die eigene Konvention umrechnen) braucht
+      zwingend die CAPEX/OPEX-Aufteilung: `LCOH = (CAPEX × CRF + OPEX) / Wärmemenge` — nur der
+      CAPEX-Teil skaliert mit dem CRF. Eine nackte LCOH-Zahl lässt sich **nicht** methodenbereinigen.
+      Setzt die Registry aus M8.2 voraus → siehe „Spanne statt Scheingenauigkeit" in M8.2b.
 
 ### M8.3 – Verkettung mit bestehenden In-Apps
 
