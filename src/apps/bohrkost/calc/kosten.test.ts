@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { berechneBohrkosten, DEFAULT_INPUTS, type BohrkostInputs, type Gesteinstyp } from './kosten'
+import { berechneBohrkosten, pruefeProfil, DEFAULT_INPUTS, type BohrkostInputs, type Gesteinstyp } from './kosten'
 
 // Hilfsfunktion: Default-Inputs mit Überschreibungen
 function inp(overrides: Partial<BohrkostInputs>): BohrkostInputs {
@@ -447,6 +447,63 @@ describe('berechneBohrkosten — Profil ändert die Blend-Stetigkeit nicht', () 
   })
   it('Naht 400 m stetig (400 → 400,1 unter 0,3 %)', () => {
     expect(Math.abs(mid(400.1) - mid(400)) / mid(400)).toBeLessThan(0.003)
+  })
+})
+
+// pruefeProfil ist die EINZIGE Quelle der Gültigkeitsregel — der Rechenkern entscheidet damit
+// über den Rückfall, das UI formuliert dasselbe Ergebnis als Text. Zwei Implementierungen
+// würden driften: UI meldet „gültig", Kern fällt still zurück (Fehlerklasse Befund B).
+describe('pruefeProfil — Gültigkeitsregel', () => {
+  const q = 'Schätzung' as const
+
+  it('null → leer', () => {
+    expect(pruefeProfil(null, 300)).toEqual({ art: 'leer' })
+  })
+  it('undefined → leer (alter State ohne Feld)', () => {
+    expect(pruefeProfil(undefined, 300)).toEqual({ art: 'leer' })
+  })
+  it('leere Schichtenliste → leer', () => {
+    expect(pruefeProfil({ schichten: [], quelle: q }, 300)).toEqual({ art: 'leer' })
+  })
+  it('startet nicht bei 0 → startet_nicht_bei_null', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 10, bis_m: 300, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toEqual({ art: 'startet_nicht_bei_null', von: 10 })
+  })
+  it('bis <= von → leere_schicht mit Index', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 0, bis_m: 0, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toEqual({ art: 'leere_schicht', index: 0 })
+  })
+  it('Lücke → luecke mit Grenzen', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+      { von_m: 150, bis_m: 300, gesteinstyp: 'Lockergestein' },
+    ], quelle: q }, 300)).toEqual({ art: 'luecke', von: 100, bis: 150 })
+  })
+  it('Überlappung → ueberlappung mit Grenzen', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' },
+      { von_m: 150, bis_m: 300, gesteinstyp: 'Lockergestein' },
+    ], quelle: q }, 300)).toEqual({ art: 'ueberlappung', von: 150, bis: 200 })
+  })
+  it('zu kurz → zu_kurz mit Ende und Tiefe', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 0, bis_m: 200, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toEqual({ art: 'zu_kurz', ende: 200, tiefe: 300 })
+  })
+  it('lückenlos bis zur Tiefe → null', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+      { von_m: 100, bis_m: 300, gesteinstyp: 'Festgestein_sed' },
+    ], quelle: q }, 300)).toBeNull()
+  })
+  it('Profil tiefer als die Bohrung → null (nur der durchbohrte Teil zählt)', () => {
+    expect(pruefeProfil({ schichten: [{ von_m: 0, bis_m: 3000, gesteinstyp: 'Lockergestein' }], quelle: q }, 300))
+      .toBeNull()
+  })
+  it('unsortierte Eingabe wird sortiert bewertet', () => {
+    expect(pruefeProfil({ schichten: [
+      { von_m: 100, bis_m: 300, gesteinstyp: 'Festgestein_sed' },
+      { von_m: 0, bis_m: 100, gesteinstyp: 'Lockergestein' },
+    ], quelle: q }, 300)).toBeNull()
   })
 })
 

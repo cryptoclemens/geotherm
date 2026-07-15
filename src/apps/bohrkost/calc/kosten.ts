@@ -211,20 +211,43 @@ function schichtenBis(profil: BohrplatzProfil, tiefe: number): Schicht[] {
     .sort((a, b) => a.von_m - b.von_m)
 }
 
+/** Warum ein Profil nicht rechnet. Strukturiert statt als Text, damit die Formulierung
+ *  im UI liegt und der Rechenkern textfrei bleibt. */
+export type ProfilProblem =
+  | { art: 'leer' }
+  | { art: 'startet_nicht_bei_null'; von: number }
+  | { art: 'leere_schicht'; index: number }
+  | { art: 'luecke'; von: number; bis: number }
+  | { art: 'ueberlappung'; von: number; bis: number }
+  | { art: 'zu_kurz'; ende: number; tiefe: number }
+
 /**
- * Ein Profil ist nur gültig, wenn es 0…tiefe lückenlos und überlappungsfrei abdeckt.
- * Ungültige Profile rechnen NICHT teilweise mit — sie fallen ganz auf den Pauschaltyp
- * zurück. Ein halb angewandtes Profil wäre eine stille Falschaussage.
+ * Prüft, ob ein Profil 0…tiefe lückenlos und überlappungsfrei abdeckt.
+ * Gibt das erste Problem zurück oder null, wenn das Profil rechnet.
+ *
+ * EINZIGE Quelle dieser Regel: Der Rechenkern fällt bei ungültigen Profilen auf den
+ * Pauschaltyp zurück, und das UI erklärt dem Nutzer warum. Eine zweite Implementierung im
+ * UI würde driften — dann meldet das UI „gültig", während der Kern still zurückfällt.
+ * Genau die Fehlerklasse von Befund B (stille No-Ops).
+ *
+ * Ungültige Profile rechnen NICHT teilweise mit, sondern fallen ganz zurück — ein halb
+ * angewandtes Profil wäre eine stille Falschaussage.
  */
-function profilIstGueltig(profil: BohrplatzProfil | null, tiefe: number): boolean {
-  if (!profil || profil.schichten.length === 0) return false
+export function pruefeProfil(profil: BohrplatzProfil | null | undefined, tiefe: number): ProfilProblem | null {
+  if (!profil || profil.schichten.length === 0) return { art: 'leer' }
   const s = [...profil.schichten].sort((a, b) => a.von_m - b.von_m)
-  if (s[0].von_m !== 0) return false
+  if (s[0].von_m !== 0) return { art: 'startet_nicht_bei_null', von: s[0].von_m }
   for (let i = 0; i < s.length; i++) {
-    if (!(s[i].bis_m > s[i].von_m)) return false            // leere/negative Schicht
-    if (i > 0 && s[i].von_m !== s[i - 1].bis_m) return false // Lücke oder Überlappung
+    if (!(s[i].bis_m > s[i].von_m)) return { art: 'leere_schicht', index: i }
+    if (i > 0 && s[i].von_m > s[i - 1].bis_m) return { art: 'luecke', von: s[i - 1].bis_m, bis: s[i].von_m }
+    if (i > 0 && s[i].von_m < s[i - 1].bis_m) return { art: 'ueberlappung', von: s[i].von_m, bis: s[i - 1].bis_m }
   }
-  return s[s.length - 1].bis_m >= tiefe
+  const ende = s[s.length - 1].bis_m
+  return ende >= tiefe ? null : { art: 'zu_kurz', ende, tiefe }
+}
+
+function profilIstGueltig(profil: BohrplatzProfil | null | undefined, tiefe: number): boolean {
+  return pruefeProfil(profil, tiefe) === null
 }
 
 // Linearer Fallback für d < 500 m — GtV Bohrpreise (2024); DVGW W 115

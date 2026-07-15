@@ -1,6 +1,7 @@
 'use client'
 
 import { ParamSlider } from '@/core/ui/ParamSlider'
+import { ProfilEditor } from './ProfilEditor'
 import type { BohrkostInputs, BohrkostOutputs, Gesteinstyp, Bohrungszweck, Produktionsdurchmesser, Region, OverheadInputs } from '../calc/kosten'
 
 interface InputColumnProps {
@@ -85,15 +86,23 @@ export function InputColumn({ inputs, outputs, onChange, onReset }: InputColumnP
             </span>
           </div>
         )}
-        <SelectField<Gesteinstyp>
-          label="Gesteinstyp"
-          value={inputs.gesteinstyp}
-          options={[
-            { value: 'Lockergestein',           label: 'Lockergestein' },
-            { value: 'Festgestein_sed',          label: 'Festgestein (sedimentär)' },
-            { value: 'Festgestein_kristallin',   label: 'Festgestein (kristallin)' },
-          ]}
-          onChange={v => onChange('gesteinstyp', v)}
+        <div className={outputs.profilAktiv ? 'opacity-50' : undefined}>
+          <SelectField<Gesteinstyp>
+            label={outputs.profilAktiv ? 'Gesteinstyp (vom Profil überschrieben)' : 'Gesteinstyp'}
+            value={inputs.gesteinstyp}
+            options={[
+              { value: 'Lockergestein',           label: 'Lockergestein' },
+              { value: 'Festgestein_sed',          label: 'Festgestein (sedimentär)' },
+              { value: 'Festgestein_kristallin',   label: 'Festgestein (kristallin)' },
+            ]}
+            onChange={v => onChange('gesteinstyp', v)}
+          />
+        </div>
+        <ProfilEditor
+          profil={inputs.profil}
+          tiefe={inputs.tiefe}
+          aktiv={outputs.profilAktiv}
+          onChange={p => onChange('profil', p)}
         />
         <SelectField<Bohrungszweck>
           label="Bohrungszweck"
@@ -133,12 +142,45 @@ export function InputColumn({ inputs, outputs, onChange, onReset }: InputColumnP
           label="Produktionsdurchmesser"
           value={inputs.durchmesser}
           options={[
-            { value: '7"',      label: '7" (klein)' },
-            { value: '9 5/8"',  label: '9 5/8" (Standard)' },
-            { value: '13 3/8"', label: '13 3/8" (groß)' },
+            { value: '7"',           label: '7" (klein)' },
+            { value: '9 5/8"',       label: '9 5/8" (Standard)' },
+            { value: '13 3/8"',      label: '13 3/8" (groß)' },
+            { value: 'Sonderausbau', label: 'Sonderausbau > 13 3/8" (nicht kalibriert)' },
           ]}
           onChange={v => onChange('durchmesser', v)}
         />
+        {inputs.durchmesser === 'Sonderausbau' && (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-0.5">
+              <label htmlFor="sonderausbau-mm" className="text-xs text-muted-foreground">
+                Ausbaudurchmesser [mm]
+              </label>
+              <input
+                id="sonderausbau-mm"
+                type="number"
+                min={340}
+                max={1500}
+                step={10}
+                value={inputs.sonderausbauMm ?? ''}
+                placeholder="z. B. 500"
+                onChange={e => onChange('sonderausbauMm', e.target.value === '' ? undefined : Number(e.target.value))}
+                className="text-xs bg-background border border-input rounded-md px-2 py-1.5 text-foreground outline-none focus:border-primary/50"
+              />
+            </div>
+            {/* Amber-Stufe, bewusst anders als der blaue Kalibrierungshinweis oben:
+                Dort ist der Rechner INNERHALB seiner Kalibrierung, hier verlässt er sie.
+                Siehe docs/requirements/bohrplatz-profil.md */}
+            {outputs.ausserhalbKalibrierung && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 leading-snug rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-1.5">
+                ⚠ Außerhalb der Kalibrierung. Der Durchmesserfaktor endet bei 13 3/8&quot; (340 mm) —
+                für größere Ausbauten gibt es keine belastbare Stützstelle. Das Ergebnis ist der Wert
+                für 13 3/8&quot;, <strong>keine Schätzung für {inputs.sonderausbauMm ? `${inputs.sonderausbauMm} mm` : 'diesen Ausbau'}</strong>:
+                Die Mehrkosten für Verrohrung, Filterrohr und Kiesschüttung fehlen. Für eine
+                belastbare Zahl ein Bohrangebot einholen.
+              </p>
+            )}
+          </div>
+        )}
       </fieldset>
 
       {/* ── Sektion: Standort ────────────────────────────────────────────── */}
