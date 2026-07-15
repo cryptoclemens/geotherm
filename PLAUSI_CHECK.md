@@ -149,7 +149,7 @@ liegt jedoch innerhalb der ±35–50 %-Bandbreite der AACE-Class-5-Schätzung).
 
 | Faktor | Wert | Quelle / Herleitung |
 |---|---|---|
-| Währung USD₂₀₀₉ → EUR₂₀₂₆ | **1.34** | US CPI 2009–2026: ×1.54 (BLS); EUR/USD: 1.39→1.15 (ECB) → 1.54/(1.15/1.39) ≈ 1.34. Nächste Prüfung: April 2027 |
+| Währung USD₂₀₀₉ → EUR₂₀₂₆ | **1.34** | US CPI 2009–2026: ×1.54 (BLS) → USD₂₀₂₆; Konversion zum Kurs 2026 EUR/USD 1.15 (ECB) → 1.54/1.15 ≈ 1.34. Nächste Prüfung: April 2027. Herleitung korrigiert 07/2026, Wert unverändert — siehe Befund C |
 | Gestein Lockergestein | 0.70 | Baujard et al. (2017), Stanford SGW |
 | Gestein Festgestein_sed | 1.00 | Referenz |
 | Gestein Festgestein_kristallin | 1.30 | Baujard et al. (2017), Stanford SGW |
@@ -251,3 +251,216 @@ Quelle: **BEG / MAP-Programm KfW (2024)**. Gilt für Förderbohrung (eine Bohrun
 
 1. **Speicherkoeffizient S=1e-4** (gespannter Aquifer, fest) — für ungespannte Aquifere wäre S=0,05–0,20 realistisch. User-Input `speicherkoeffizient` oder ein "Aquifer-Typ"-Dropdown (gespannt/ungespannt) könnte Abhilfe schaffen.
 2. **Injektionsdruck-Default 10 bar** — für artesische oder stark unter Druck stehende Aquifere (Molasse >1000 m) kann der Gegendruck 0–5 bar betragen. Ggf. regionalen Default koppeln.
+
+---
+
+## Bohrkost ↔ LCOH-Modell — Cross-Check gegen reales Bohrangebot (Juli 2026)
+
+> **Geprüft durch:** Scientist-Agent (Claude Opus 4.8), im Rahmen der LCOH-Modul-Vorbereitung
+> **Datum:** 2026-07-16
+> **Module:** `src/apps/bohrkost/calc/kosten.ts` (bestehend) ↔ externes LCOH-Modell Referenzprojekt
+> **Status:** Befund B ✅ behoben (M8.1, 2026-07-14) · Befund A 🟡 Gültigkeitsbereich deklariert,
+> Kalibrierung bewusst offen bis die Kostenaufschlüsselung vorliegt
+> **Anlass:** Für das geplante LCOH-Modul (Tasks.md, Backlog M8+) liegt erstmals ein **reales
+> Bohrangebot** vor (Referenzprojekt eines Kunden; > Angebot des Bohrunternehmens, 03/2026). Damit lässt sich Bohrkost erstmals gegen einen echten
+> Marktpreis prüfen statt nur gegen Literatur.
+
+### Referenzfall
+
+| Größe | Wert | Quelle |
+|---|---|---|
+| Standort |  (NRW) | Machbarkeitsstudie das Referenzprojekt V2 |
+| Bohrtiefe | 280 m | LCOH-Modell v13, Blatt `10_LCOH_Vergleich` („280m Tiefe") |
+| Gestein | Lockergestein | LCOH-Modell v13, Blatt `02_Inputs`, Block D1 |
+| Konfiguration | Dublette (Entnahme + Infiltration) | ebd. |
+| **Angebotspreis** | **Faktor ~3,4 über dem Rechner (Dublette)** | Datenblatt V2 (Bohrunternehmen, 03/2026), mit dem Kunden abgestimmt |
+
+### Befund A — 🔴 HOCH: Linearer Zweig unterschätzt reales Angebot um Faktor 2,6–3,4
+
+`berechneBohrkosten({ tiefe: 280, gesteinstyp: 'Lockergestein', zweck: 'Dublette' })` liefert:
+
+| Vergleichsebene | Bohrkost | das Referenzprojekt-Angebot | Faktor |
+|---|---|---|---|
+| Nur Bohrung (Dublette) | Rechner | Angebot | **3,4×** |
+| Bohrung + Komplettierung vs. Bohrung + „Ausrüstung" (253 T€) | 518 T€ | 1.327 T€ | **2,6×** |
+
+Beide Abgrenzungen liegen deutlich außerhalb der dokumentierten AACE-Class-5-Bandbreite
+(`min = mid × 0.65`, `max = mid × 1.50`) — das Angebot ist rund **2,3× über `bohrkosten_max`**.
+
+**Mögliche Ursachen (zu prüfen):**
+1. `LINEAR_PREIS_PRO_M.Lockergestein = 300 EUR/m` + `LINEAR_MOBILISIERUNG = 75.000 EUR` stammen
+   aus GtV Bohrpreise (2024) / DVGW W 115 und beschreiben vermutlich **kleinkalibrige Brunnen-
+   bohrungen**, nicht eine Geothermie-Produktionsbohrung mit Verrohrung, Filterstrecke und
+   Kiesschüttung.
+2. Der Angebotspreis könnte Verrohrung/Komplettierung enthalten, die Bohrkost separat führt
+   (die Excel führt „Ausrüstung" mit 253 T€ allerdings **zusätzlich** — spricht dagegen).
+3. Realpreise DE 2026 > Listenpreise GtV 2024 (Bohrmarkt angespannt).
+4. Der deutsche Marktaufschlag `f_markt = 1.40` wird auf den linearen Zweig **nicht** angewendet
+   (siehe Befund B) — erklärt aber selbst dann nur rund 40 % der Lücke, nicht die ganze.
+
+**Empfehlung:** Kostenaufschlüsselung beim Bohrunternehmen anfordern. Danach entweder
+`LINEAR_PREIS_PRO_M`/`LINEAR_MOBILISIERUNG` für Lockergestein neu kalibrieren, oder im
+Formelwerk-Tab explizit dokumentieren, dass der lineare Zweig nur kleinkalibrige Bohrungen
+abbildet und für Geothermie-Produktionsbohrungen < 400 m untauglich ist.
+
+**Umsetzung 2026-07-14 (M8.1) — 🟡 Gültigkeitsbereich deklariert, NICHT kalibriert.**
+Bewusst die zweite Option. Solange die Kostenaufschlüsselung der Angebote fehlt, ist unbekannt,
+welchen Umfang die Vergleichszahl überhaupt hat (Verrohrung? Filter? Kies? Pumpe?). Eine
+Kalibrierung von €/m gegen eine Zahl unbekannten Scopes wäre kein Fix, sondern eine Annahme mit
+Nachkommastellen — und sie landete in einem Produkt, das auch andere Kunden nutzen. Stattdessen:
+
+- `kleinkaliberWarnung: boolean` in `BohrkostOutputs` (true bei `tiefe ≤ 400 m`), gerendert als
+  Hinweis am Bohrtiefe-Slider — Muster wie `kluftaquiferWarnung` in DeltaT.
+- Neue Formelwerk-Zeile `linear-gueltigkeit` mit Grund, Faktorbereich und Nicht-Kalibrierungs-
+  Entscheidung; die Karte `linear-fallback` sagte zudem fälschlich „d < 500 m" statt ≤ 400 m
+  (+ Blend bis 600 m) — korrigiert.
+
+**Befund A bleibt offen.** Der Befund-B-Fix behebt ihn nicht und verschiebt die Vergleichsebene
+leicht: Die Dublette bei 280 m liegt mit dem Default NDB (0,95) nun bei **302 T€** statt 318 T€
+(Faktor 3,4 → **3,6**). Auch der größte wählbare Ausbau schließt die Lücke nicht — 13 3/8" ergibt
+378 T€ und damit immer noch Faktor **2,8**. Das stützt die Diagnose: Der reale Ausbau (also klar jenseits des größten Faktor-Eintrags)
+liegt außerhalb des Wertebereichs von `DURCHMESSER_FAKTOR`, die Lücke ist keine Faktor-Frage.
+**Nächster Schritt unverändert:** Kostenaufschlüsselung anfordern, dann kalibrieren.
+
+**Relevanz:** Blocker für `/lcoh`. Sobald LCOH-Modul und Bohrkost in derselben Suite laufen,
+sieht jeder Nutzer den Widerspruch — Bohrkost würde für das Referenzprojekt rund 750 T€ CAPEX „einsparen",
+was den LCOH der Geothermie um grob 8–10 EUR/MWh drückt und die Technologieentscheidung kippt.
+
+### Befund B — 🟡 MITTEL: `durchmesser` und `region` sind unterhalb 400 m wirkungslos
+
+In `berechneBohrkostenEine()` (kosten.ts:165–201) wird `f_gesamt` (Währung × Gestein × Region ×
+Durchmesser × Markt) ausschließlich auf den **Lukawski-Zweig** angewendet. Der lineare Zweig
+nutzt nur `LINEAR_PREIS_PRO_M[gesteinstyp]` — Durchmesser, Region und Marktaufschlag fallen
+ersatzlos weg.
+
+Nachgerechnet bei 280 m / Lockergestein:
+
+| Variation | Ergebnis |
+|---|---|
+| Durchmesser 7" / 9 5/8" / 13 3/8" | 159,0 T€ / 159,0 T€ / 159,0 T€ (identisch) |
+| Region NDB / Oberrheingraben | 159,0 T€ / 159,0 T€ (identisch) |
+| *Zum Vergleich bei 800 m:* 7" vs. 13 3/8" | 1.485 T€ vs. 2.183 T€ (Faktor wirkt) |
+
+Die UI bietet beide Eingaben an; unterhalb 400 m sind es **stille No-Ops**. Der Nutzer bekommt
+keinen Hinweis, dass seine Auswahl folgenlos bleibt. Im Blend-Bereich 400–600 m wirken die
+Faktoren zudem nur anteilig — bei 401 m praktisch gar nicht, bei 599 m fast voll.
+
+**Empfehlung:** Entweder `f_durchmesser` und `f_region` auch auf den linearen Zweig anwenden
+(Marktaufschlag bewusst **nicht** — die GtV-Preise sind bereits deutsche Marktpreise), oder
+die betroffenen Felder unterhalb 400 m im UI deaktivieren und den Grund anzeigen.
+
+**Umsetzung 2026-07-14 (M8.1) — ✅ behoben.** Erste Option: `f_region × f_durchmesser` wirken nun
+auch im linearen Zweig (`kosten.ts`, `f_linear`). Bewusst **nicht** angewendet: `f_markt` (GtV-/
+DVGW-Preise sind bereits deutsche Marktpreise), `f_waehrung` (Preise stehen in EUR) und
+`f_gestein` (steckt bereits in `LINEAR_PREIS_PRO_M`).
+
+Nachgerechnet bei flaches Lockergestein, eine Bohrung (vorher durchgängig 159,0 T€):
+
+| Variation | vorher | nachher |
+|---|---|---|
+| 7" / 9 5/8" / 13 3/8" (NDB) | 159,0 / 159,0 / 159,0 T€ | **128,4 / 151,1 / 188,8 T€** |
+| NDB / Molasse / Oberrheingraben (9 5/8") | 159,0 / 159,0 / 159,0 T€ | **151,1 / 159,0 / 166,9 T€** |
+
+Der Faktor greift an der `linear`-Variablen selbst, nicht nur am `≤ 400 m`-Ast — dadurch nimmt der
+Blend 400–600 m ihn anteilig mit und die Naht bleibt stetig. Verifiziert an den Rändern
+(Lockergestein, 13 3/8", Oberrheingraben): 399→401 m = 0,92 %, 599→601 m = 1,00 %, direkt an der
+Naht 400→400,1 m = 0,08 % und 599,9→600 m = 0,07 %. Das ist der bekannte Knick der Blend-Steigung,
+kein Sprung. Regressionstests in `kosten.test.ts` (Stetigkeit + Monotonie über die Blend-Zone).
+
+> **Hinweis:** Drei bestehende Tests (`kosten.test.ts`, Lineare-Fallback-Block) hatten den No-Op
+> als Erwartungswert fixiert (165.000 / 310.000 / 510.000 EUR bei 300 m). Da `DEFAULT_INPUTS.region
+> = 'NDB'` (0,95) ist, sind sie auf 156.750 / 294.500 / 484.500 EUR angepasst — die alten Werte
+> waren die Beschreibung des Bugs, nicht der Sollzustand.
+
+### Befund C — 🟡 MITTEL: Währungsfaktor — Doku/Code-Drift und zwei nicht nachrechenbare Herleitungen
+
+Der Währungsfaktor ist an drei Stellen dokumentiert, mit **zwei unterschiedlichen Herleitungen und
+zwei unterschiedlichen Werten**:
+
+| Stelle | Wert | genannte Herleitung |
+|---|---|---|
+| `kosten.ts:178` (gerechnet) + Header + PLAUSI-Tabelle | **1.34** | US CPI ×1.54 (BLS); EUR/USD 1.39 (2009) → 1.15 (2026, ECB); notiert als `1.54 / (1.15/1.39)` |
+| `BohrkostFormelTab.tsx`, Eintrag `waehrung` (nutzersichtbar) | **1,20** | EUR/USD-Langzeitdurchschnitt ≈ 1,10 + kumulierte Baupreisinflation 2009–2026 ≈ 45 % |
+
+Die Ergebnisdifferenz beträgt ~12 % und wirkt auf den gesamten Lukawski-Zweig, also auf alle
+Ergebnisse ≥ 400 m — die Mehrheit der Nutzungsfälle. Beim Nachrechnen ergibt sich: **keine der
+beiden notierten Herleitungen liefert den Wert, den sie behauptet.**
+
+| Herleitung wörtlich gerechnet | Ergebnis | behauptet |
+|---|---|---|
+| `1.54 / (1.15/1.39)` (Code-Kommentar, PLAUSI-Tabelle) | **1,86** | 1.34 |
+| `(1/1,10) × 1,45` (FormelTab) | **1,32** | 1,20 |
+
+**Der gerechnete Wert 1.34 ist dennoch korrekt** — er entspricht dem methodisch sauberen Weg
+`1.54 / 1.15 = 1,339`: US-CPI inflationiert USD₂₀₀₉ → USD₂₀₂₆, anschließend **eine** Konversion zum
+Kurs des Zieljahres. Ein Preisindex gilt nur in seiner eigenen Währung; der 2009er-Kurs 1.39 gehört
+in diesen Rechenweg nicht hinein. Die Notation `/(1.15/1.39)` zieht ihn zusätzlich ein und zählt den
+Wechselkurs damit doppelt — daher die 1,86. Es ist ein **Notationsfehler in der Doku, kein
+Rechenfehler im Code**: `kosten.ts` rechnet mit der Konstanten 1.34, nicht mit dem Kommentar.
+
+Der FormelTab-Wert **1,20 ist aus keiner Angabe rekonstruierbar** — auch nicht aus seinen eigenen
+Eingangswerten, die 1,32 ergäben. Bemerkenswert: Mit dem Kurs 1,15 statt des „Langzeitdurchschnitts"
+1,10 liefert der FormelTab-Ansatz `(1/1,15) × 1,45 = 1,26`, also dieselbe Größenordnung wie 1.34. Die
+Divergenz entsteht also nicht durch die Methode, sondern durch die nicht abgeleitete Zahl 1,20 und den
+veralteten Kurs.
+
+**Bewertung:** Code = ✅ korrekt, FormelTab = ❌ falsch. Damit ist es eine **reine Doku-Korrektur**;
+keine Berechnung ändert sich, die Lukawski-Tests in `kosten.test.ts` bleiben unverändert gültig.
+
+**Umsetzung 2026-07-14 (M8.1) — ✅ behoben.** Drei Stellen auf eine Herleitung vereinheitlicht:
+
+- `BohrkostFormelTab.tsx`, Eintrag `waehrung`: Formel `× 1,20` → `× 1,34`, Erläuterung auf den
+  CPI-Weg umgestellt, Quelle auf BLS + ECB präzisiert.
+- `kosten.ts:174–177` und Datei-Header: Notation `1.54 / (1.15/1.39)` → `1.54 / 1.15`; der Kurs 1.39
+  (2009) entfällt, da im Rechenweg nicht benötigt.
+- PLAUSI-Tabelle „Angewandte Korrekturfaktoren": dieselbe Korrektur.
+
+Der Zahlenwert **1.34 bleibt unverändert** — verifiziert, dass `npm test` ohne Anpassung eines
+einzigen Erwartungswerts grün bleibt.
+
+### Ergänzende Beobachtung (kein Befund)
+
+Der COP-Cross-Check ist **konsistent**: Die DeltaT-Formel `COP = (T_VL/(T_VL − T_R)) × Gütegrad`
+liefert für das Referenzprojekt (Vorlauf 65 °C, Reservoir 16,5 °C) bei einem Gütegrad von 0,43 exakt den
+COP 3,0 aus dem Datenblatt V2 — mitten im zulässigen Band 0,30–0,65. Die Modelle widersprechen
+sich also nur bei den Bohrkosten, nicht bei der Thermodynamik.
+
+### Offene Fragen für die nächste Runde
+
+1. Ist die Blend-Zone 400–600 m haltbar, wenn linearer Zweig (255 T€ bei 600 m) und Lukawski
+   (1.079 T€ bei 600 m) an der Nahtstelle um **Faktor 4,2** auseinanderliegen? Der Blend glättet
+   die Unstetigkeit, löst die Modelldivergenz aber nicht auf — er mittelt zwei Modelle, von denen
+   an dieser Stelle höchstens eines stimmt.
+2. Das Referenzprojekt (280 m) liegt genau im am schwächsten verankerten Bereich des Rechners. Gibt es weitere
+   reale Angebote < 500 m zur Kalibrierung?
+3. Ist **US-CPI** der richtige Index für `f_waehrung` (Befund C)? CPI misst Verbraucherpreise;
+   Bohrkosten folgen eher Bau-/Bohrmarktpreisen (BLS PPI „Drilling Oil and Gas Wells", IHS UCCI),
+   die im selben Zeitraum deutlich anders verlaufen sind. Der FormelTab nannte bis 07/2026 eine
+   „Baupreisinflation ≈ 45 %" — eine Zahl ohne belegte Quelle, deren Ansatz aber fachlich näher
+   liegt als CPI. Die Wahl ist materiell: CPI-Weg 1.34 vs. EUR-Baupreis-Weg (Kurs 2009 + 45 %) 1,04
+   — Spanne ~29 %. Vor einer Änderung Indexquelle belegen; `f_markt` (1.40) könnte einen Teil des
+   Effekts bereits verdeckt mit abdecken (Doppelzählungs-Risiko).
+
+### Nachtrag 16.07.2026 — zweite Projektquelle bestätigt Befund A und erklärt ihn
+
+Eine zweite, unabhängige Projektquelle (Wirtschaftlichkeitsmatrix des Betreibers, v4) nennt für
+denselben Fall einen nochmals höheren Wert (Quelle: dasselbe Bohrunternehmen). Damit sagen zwei
+Projektquellen Werte, die um Faktor 3,4 bzw. 5,0 über der Formel liegen, der Rechner 140–159 T€ — **Faktor 3,4 bis 5,0**.
+
+**Die wahrscheinliche Ursache steht in derselben Quelle:** ein Ausbau-Durchmesser **oberhalb 400 mm**
+(also klar jenseits des größten Faktor-Eintrags), Filterrohr Wickeldraht, dazu Kiesschüttung. `DURCHMESSER_FAKTOR` kennt als größten Wert
+13 3/8" (340 mm) — und im linearen Zweig wirkt der Durchmesser ohnehin nicht (Befund B). Der lineare
+GtV-/DVGW-Zweig (300 EUR/m Lockergestein) bildet damit **flache Brunnen kleinen Kalibers** ab, nicht
+groß-kalibrige Förderbrunnen. Das erklärt beide Befunde in einem.
+
+Ebenfalls neu: Die Referenzquelle nennt eine nochmals geringere Bohrtiefe — dort läge der
+Rechner bei 140 T€, also Faktor 5,0.
+
+**Konkrete Korrekturoptionen (Priorität):**
+1. `DURCHMESSER_FAKTOR` um groß-kalibrige Ausbauten (> 400 mm) erweitern **und** die Faktoren auch
+   auf den linearen Zweig anwenden (Marktaufschlag weiterhin nicht — GtV-Preise sind deutsche Preise).
+2. `LINEAR_PREIS_PRO_M` / `LINEAR_MOBILISIERUNG` für Lockergestein an den beiden realen Stützstellen
+   (zwei reale Angebote im Bereich ~200–300 m) kalibrieren — **vorher die Kostenaufschlüsselung anfordern**, damit
+   klar ist, was in den Angeboten enthalten ist (Verrohrung? Filter? Kies? Pumpe?).
+3. Bis dahin im `BohrkostFormelTab` offenlegen, dass der lineare Zweig für Geothermie-Produktions-
+   brunnen < 400 m nicht belastbar ist.

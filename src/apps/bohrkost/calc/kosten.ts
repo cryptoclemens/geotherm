@@ -7,7 +7,7 @@
  *                    Injektionsbohrungen — NICHT für Erdwärmesonden/BHE)
  *   - Linearer Fallback: GtV Bohrpreise (2024); DVGW W 115
  *   - Gestein-Faktoren: Baujard et al. (2017), Stanford SGW
- *   - Währungsfaktor: BLS CPI 2009–2026 (×1.54) + ECB EUR/USD → f_waehrung=1.34
+ *   - Währungsfaktor: BLS CPI 2009–2026 (×1.54) ÷ ECB-Kurs 2026 (1.15) → f_waehrung=1.34
  *   - Marktaufschlag: GtV Bundesverband Geothermie; LIAG Broschüre Tiefe Geothermie
  *   - Komplettierung: DVGW W 115; Stober & Bucher (2012) Kap. 7
  *   - Förderung:     BEG / MAP-Programm KfW 2024
@@ -98,6 +98,10 @@ export interface BohrkostOutputs {
   ampel_tiefe: 'green' | 'yellow' | 'red'
   // Anzahl Bohrungen (für Anzeige)
   anzahl_bohrungen: number
+  /** true wenn tiefe ≤ 400 m → linearer GtV-/DVGW-Zweig → nur klein-kalibrige
+   *  Brunnenbohrungen abgebildet, nicht Geothermie-Produktionsbrunnen mit großem Ausbau.
+   *  Gültigkeitsgrenze, keine Kalibrierung — siehe PLAUSI_CHECK.md, Befund A (Juli 2026). */
+  kleinkaliberWarnung: boolean
 }
 
 export const DEFAULT_INPUTS: BohrkostInputs = {
@@ -166,11 +170,14 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const { tiefe, gesteinstyp, durchmesser, region } = inp
 
   // Korrekturfaktoren (für beide Formeln benötigt)
-  // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆
-  //   US CPI 2009–2026: ×1.54 (BLS, in2013dollars.com)
-  //   EUR/USD: 1.39 (2009) → 1.15 (2026, ECB)
-  //   Faktor: 1.54 / (1.15/1.39) ≈ 1.34
+  // f_waehrung: USD₂₀₀₉ → EUR₂₀₂₆ — zwei Schritte, ein Wechselkurs:
+  //   1. Inflation in USD:  US CPI 2009–2026 ×1.54 (BLS) → USD₂₀₂₆
+  //   2. Konversion:        Kurs 2026 EUR/USD 1.15 (ECB) → EUR₂₀₂₆
+  //   Faktor: 1.54 / 1.15 ≈ 1.34
+  //   Der Kurs 2009 (1.39) geht bewusst NICHT ein — CPI gilt in USD, daher wird erst
+  //   innerhalb USD inflationiert und nur einmal konvertiert (sonst Kurs doppelt gezählt).
   //   Nächste Prüfung: April 2027 (f_markt deckt deutschen Marktaufschlag separat ab)
+  //   Offene Frage: CPI misst Verbraucher-, nicht Bohrmarktpreise — PLAUSI_CHECK.md, Befund C
   const f_waehrung     = 1.34
   const f_gestein      = GESTEINS_FAKTOR[gesteinstyp]
   const f_region       = REGION_FAKTOR[region]
@@ -184,7 +191,17 @@ function berechneBohrkostenEine(inp: BohrkostInputs): number {
   const lukawski = c_usd_2009 * f_gesamt
 
   // Linearer Fallback — GtV Bohrpreise (2024); DVGW W 115
-  const linear = LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]
+  // f_region und f_durchmesser wirken hier ebenfalls (Befund B, PLAUSI_CHECK.md Juli 2026):
+  // zuvor galt f_gesamt nur im Lukawski-Zweig, wodurch beide UI-Felder unterhalb 400 m
+  // stille No-Ops waren (7" = 9 5/8" = 13 3/8" = 159,0 T€ bei 280 m).
+  // Bewusst NICHT angewendet:
+  //   f_markt    — GtV-/DVGW-Preise sind bereits deutsche Marktpreise (doppelter Aufschlag)
+  //   f_waehrung — die Preise stehen bereits in EUR
+  //   f_gestein  — steckt bereits in LINEAR_PREIS_PRO_M / LINEAR_MOBILISIERUNG
+  // Der Faktor greift an der linear-Variablen selbst, damit der Blend 400–600 m ihn
+  // anteilig mitnimmt und an der Naht bei 400 m keine Unstetigkeit entsteht.
+  const f_linear = f_region * f_durchmesser
+  const linear = (LINEAR_PREIS_PRO_M[gesteinstyp] * tiefe + LINEAR_MOBILISIERUNG[gesteinstyp]) * f_linear
 
   let basiskosten: number
   if (tiefe <= 400) {
@@ -338,6 +355,9 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     : inputs.tiefe <= 1500 ? 'yellow'
     : 'red'
 
+  // Gültigkeitsgrenze linearer Zweig — PLAUSI_CHECK.md, Befund A (Juli 2026)
+  const kleinkaliberWarnung = inputs.tiefe <= 400
+
   return {
     bohrkosten_min,
     bohrkosten_mid,
@@ -360,5 +380,6 @@ export function berechneBohrkosten(inputs: BohrkostInputs): BohrkostOutputs {
     ampel_risiko,
     ampel_tiefe,
     anzahl_bohrungen,
+    kleinkaliberWarnung,
   }
 }
