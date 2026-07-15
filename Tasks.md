@@ -581,10 +581,11 @@ Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen re
       **Blocker bleibt:** `/lcoh` und `/bohrkost` dürfen nicht mit widersprüchlichen Bohrkosten
       nebeneinander live gehen. Der Befund-B-Fix löst das nicht — er verschiebt die Vergleichsebene
       nur auf 302 T€ (Faktor 3,6); selbst 13 3/8" ergibt erst 378 T€ (Faktor 2,8).
-- [x] [verify] 🔥 🟡 **Befund B erledigt (14.07.2026):** `f_region × f_durchmesser` wirken nun auch im
-      linearen Zweig (`kosten.ts`, `f_linear`) — Marktaufschlag, Währung und Gestein bewusst nicht
-      (doppelt bzw. bereits enthalten). Bei 280 m: 7"/9 5/8"/13 3/8" = 128,4/151,1/188,8 T€ statt
-      durchgängig 159,0 T€. Faktor greift an der `linear`-Variablen → Blend 400–600 m bleibt stetig
+- [x] [done] 🔥 🟡 **Befund B erledigt (14.07.2026) — gemergt als `aceb386` (PR #53), live deployed:**
+      `f_region × f_durchmesser` wirken nun auch im linearen Zweig (`kosten.ts`, `f_linear`) —
+      Marktaufschlag, Währung und Gestein bewusst nicht (doppelt bzw. bereits enthalten).
+      Bei 280 m: 7"/9 5/8"/13 3/8" = 128,4/151,1/188,8 T€ statt durchgängig 159,0 T€.
+      Faktor greift an der `linear`-Variablen → Blend 400–600 m bleibt stetig
       (Regressionstests an den Rändern + Monotonie). 136 Tests grün.
 - [ ] 📦 Blend-Zone 400–600 m überdenken: linearer Zweig (255 T€) und Lukawski (1.079 T€) liegen bei
       600 m um Faktor 4,2 auseinander — der Blend mittelt zwei Modelle, von denen dort höchstens eines stimmt.
