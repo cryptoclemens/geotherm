@@ -560,6 +560,12 @@ Aus dem Scope-Termin 14.07.2026 — laut Fachplaner die eigentliche Leitfrage, u
 - [ ] ⭐ **Klären: Welche Parameter betrachtet der interne Gate-Prozess des Auftraggebers?**
       Davon hängt ab, was `/lcoh` überhaupt ausgeben muss — die Ausgestaltung von `ResultColumn`
       und den KPI-Kacheln ist bis dahin geraten. Rückfrage läuft.
+- [ ] ⭐ **Drei Zielgruppen, drei Ausgaben** — im Termin 15.07. explizit benannt:
+      1. **Endkunde:** Vergleichbarkeit — „Was ist der Vorteil der Geothermie gegenüber den Alternativen?"
+      2. **Bank / Projektfinanzierung:** Risikoanalyse → das ist die Monte-Carlo-Rechnung aus M8.6.
+         Damit ist sie **kein Nice-to-have**, sondern eines von drei Kernzielen — nur zeitlich nachgelagert.
+      3. **Auftraggeber intern:** Gate-Prozess (siehe oben).
+      Die drei brauchen dieselbe Rechnung, aber verschiedene Sichten darauf. Beim UI-Entwurf mitdenken.
 - [ ] 📦 Konsequenz mitdenken: Dem **Endkunden** ist das Preisrisiko egal — das liegt beim
       Projektentwickler. Die Sensitivitätsanalyse ist damit primär ein **internes** Instrument für
       Preisfindung und Gate, kein Kundenargument. Für den Endkunden zählt: „Was ist der Vorteil
@@ -587,6 +593,11 @@ Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen re
       Bei 280 m: 7"/9 5/8"/13 3/8" = 128,4/151,1/188,8 T€ statt durchgängig 159,0 T€.
       Faktor greift an der `linear`-Variablen → Blend 400–600 m bleibt stetig
       (Regressionstests an den Rändern + Monotonie). 136 Tests grün.
+- [ ] 🔥 **Die Kostentabelle ist die fehlende Stützstelle für `/bohrkost`.** Sie enthält für einen
+      konkreten Bohrplatz Tiefe, Gesteinsart, Ausbaudurchmesser, Filtervariante, Förderrate **und**
+      den zugehörigen Angebotspreis. Genau das, was dem linearen Zweig fehlt (Befund A). Der
+      Datenfluss läuft hier also **rückwärts**: nicht Rechner → Projekt, sondern Projekt → Rechner.
+      Jede künftige Kostentabelle ist ein weiterer Kalibrierpunkt. → siehe „Rückkopplung" in M8.3.
 - [ ] 📦 Blend-Zone 400–600 m überdenken: linearer Zweig (255 T€) und Lukawski (1.079 T€) liegen bei
       600 m um Faktor 4,2 auseinander — der Blend mittelt zwei Modelle, von denen dort höchstens eines stimmt.
 
@@ -596,6 +607,12 @@ Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen re
 - [ ] 🔥 `src/apps/lcoh/calc/lcoh.test.ts` in bestehende Vitest-Suite; **synthetischer** Referenzfall
       (siehe M8.4 — der das Referenzprojekt-Golden-Master gehört nicht in dieses Repo)
 - [ ] 🔥 Store `src/apps/lcoh/store/useLcohStore.ts` (Parameter-Registry aus dem Prototyp)
+- [ ] ⭐ **`bohrtiefe` und `gesteinstyp` als Parameter ergänzen — fehlen im Prototyp komplett.**
+      Im Termin 15.07. gefordert: „müssten wir hier noch das Gestein und die Bohrtiefe haben, dann
+      hat man die Vergleichbarkeit [mit Literaturwerten]". Der Nutzen ist aber größer als der
+      Literatur-Abgleich: **Es sind die Join-Keys zu `/bohrkost` und zur GPA-Karte.** Ohne die zwei
+      Felder lässt sich die Verkettung aus M8.3 gar nicht bauen — der LCOH-Rechner wüsste nicht,
+      *welche* Bohrung er bepreisen lässt. Kleinste Änderung mit dem größten Hebel auf die Suite.
 - [ ] ⭐ **Parameter-Registry als Daten, nicht als Code.** Zielbild ist, dass Fachplaner direkt in der
       Suite arbeiten und Excel perspektivisch entfällt. Excel ist für sie aber nicht nur Datenhaltung,
       sondern **Autorenumgebung**: Zeile einfügen, Annahme ändern, Quelle danebenschreiben,
@@ -666,6 +683,11 @@ Die Kostentabelle des Betreibers rechnet den LCOH **je Produktlayer** — der An
       eine Funktion des verkauften Scopes (30–135 €/MWh — Faktor 4,5). Ohne Layer-Dimension ist die
       Kostenziel-Logik („welchen LCOH muss Geothermie erreichen?") nicht beantwortbar.
       Technisch: Scope-Matrix (Kostenblock × Layer) als Daten — passt zur DB-gestützten Registry aus M8.2.
+- [ ] ⭐ **Lücke: Der Spitzenlastkessel fehlt in der Kostentabelle** — und er ist die *bevorzugte*
+      Variante („Versorgungssicherheit… von jedem Kunden", Termin 15.07.). Im Kostendashboard
+      existiert die Zeile „Optional: Backup-Heizkessel", steht aber auf **0** und ist **keinem
+      einzigen Produktlayer** zugeordnet. Die Vorzugsvariante hat damit in der maßgeblichen Tabelle
+      keine Kostenbasis. Rückfrage an den Fachplaner nötig, bevor die Layer-Dimension trägt.
 - [ ] 📦 Benennung schärfen: Bei Layern ohne Wärmelieferung (L1a/L2a) wird trotzdem durch die
       Jahreswärmemenge geteilt. Als Kostenumlage lesbar, aber kein LCOH im üblichen Sinn.
 
@@ -678,6 +700,20 @@ Die Kostentabelle des Betreibers rechnet den LCOH **je Produktlayer** — der An
       → Konvention festlegen, in der Registry als Szenario-Prämisse hinterlegen, im FormelTab offenlegen.
 
 ### M8.3 – Verkettung mit bestehenden In-Apps
+
+**Die Zuordnung ist spezifiziert** (Termin 15.07., Durchgang durch das Eingabeblatt des Fachmodells).
+Zeilennummern beziehen sich auf dessen Inputs-Blatt:
+
+| Zeilen | Inhalt | Quelle |
+|---|---|---|
+| 36–43 | Bohrungen, Ausrüstung, Wärmezentrale, Leitungsbau, Planung, Unvorhergesehenes, CAPEX gesamt | **Kostentabelle** |
+| 44 | Lebensdauer | eigene Festlegung |
+| 45–47 | fixer OPEX, Strom Pumpen, Strom WP | **Kostentabelle** |
+| 48–49 | COP, Reservoirtemperatur | **DeltaT** |
+| 50 | Wärmeerzeugung WP | **Kundenanforderung** |
+
+- [ ] 📦 Unschärfe bei Zeile 44 klären: erst „geben wir selber an", dann „44, 45, 46 kommen alle aus
+      der Kostentabelle". Vermutlich gemeint: 44 eigen, 45–47 Kostentabelle. Vor der Umsetzung bestätigen lassen.
 
 Damit wird die Modelllandschaft geschlossen: `/deltat` → `/bohrkost` → `/lcoh` → `/projects`.
 
@@ -771,6 +807,14 @@ Aus dem Scope-Termin 14.07.2026 — hier dokumentiert, damit es nicht als Lücke
       (jahresscharfe Preispfade, Steuern, Förderung, Finanzierungsstruktur → NPV/IRR). Aufwand laut
       Fachplaner **5–6 PT je Technologie** plus Abstimmungsrunden. Sinnvoll erst, wenn die
       Technologie eingegrenzt ist — und nach M8.0 ohnehin nur für die Geothermie relevant.
+- [ ] ⏸ **Monatliches Lastprofil statt Jahreswert.** Termin 15.07.: „Es müsste eigentlich kunden- und
+      monatsspezifisch sein, um damit korrekt zu rechnen — ähnlich wie im Lastprofil." Vom Fachplaner
+      selbst zurückgestellt: „im Nebenschritt noch nicht sinnvoll; erst DeltaT und Kostentabelle
+      verrechnen, das muss stimmen, dann können wir weitermachen."
+- [ ] ⏸ **Technoökonomischer statt rein ökonomischer Vergleich.** Termin 15.07.: „Das müssten wir
+      auch irgendwann mal einen richtigen Technologievergleich machen — der ist gerade nur die
+      ökonomische Betrachtung." Versorgungssicherheit und Redundanz sind im LCOH nicht abgebildet,
+      sind aber genau das Argument für die Spitzenlast-Variante.
 - [ ] ⏸ **Obertageanlagen-Kalkulation** (nach Kostentabelle + DeltaT)
 - [ ] 💡 **PV/Batterie-Dimensionierung koppeln** — bekannter Modellfehler des Fachmodells, vom
       Fachplaner selbst gefunden: Wird die PV-Anlage kleiner dimensioniert, die Batterie aber gleich
