@@ -560,12 +560,23 @@ Aus dem Scope-Termin 14.07.2026 — laut Fachplaner die eigentliche Leitfrage, u
 - [ ] ⭐ **Klären: Welche Parameter betrachtet der interne Gate-Prozess des Auftraggebers?**
       Davon hängt ab, was `/lcoh` überhaupt ausgeben muss — die Ausgestaltung von `ResultColumn`
       und den KPI-Kacheln ist bis dahin geraten. Rückfrage läuft.
-- [ ] ⭐ **Drei Zielgruppen, drei Ausgaben** — im Termin 15.07. explizit benannt:
-      1. **Endkunde:** Vergleichbarkeit — „Was ist der Vorteil der Geothermie gegenüber den Alternativen?"
-      2. **Bank / Projektfinanzierung:** Risikoanalyse → das ist die Monte-Carlo-Rechnung aus M8.6.
-         Damit ist sie **kein Nice-to-have**, sondern eines von drei Kernzielen — nur zeitlich nachgelagert.
-      3. **Auftraggeber intern:** Gate-Prozess (siehe oben).
-      Die drei brauchen dieselbe Rechnung, aber verschiedene Sichten darauf. Beim UI-Entwurf mitdenken.
+      **Konkretisiert (16.07.2026):** Fragenkatalog mit 7 Fragen in
+      `docs/requirements/lcoh-sichten.md`, Anhang A — versandfertig, namensfrei. Wertvollste
+      Frage: das bestehende Gate-Formblatt als Artefakt. Antworten fließen als **Daten** in die
+      Gate-Sicht, nicht als Code.
+- [x] [done] ⭐ **Drei Zielgruppen, drei Sichten — Design entschieden (16.07.2026):**
+      `docs/requirements/lcoh-sichten.md`. Kernpunkte:
+      1. **Sicht = Präsentationsmodus, keine Berechtigung** — Nutzer ist der Fachplaner, die
+         Endkunden-Sicht ist das, was er zeigt/exportiert → Umschalter statt Rollenmodell.
+      2. **Mapping auf M8.1c:** Vergleich (Endkunde) → Versorger-Preset; Gate + Bank →
+         Investor-Preset. Methodik je Sicht umschaltbar, Label klebt an der Zahl.
+      3. **Intern bleibt intern:** Tornado/Sensitivität und Break-even-Gaspreis nur in der
+         Gate-Sicht (bestätigt im Review 16.07.).
+      4. **Gate-KPIs = deklarierter Platzhalter** bis die Rückfrage beantwortet ist; Bank-Sicht
+         als sichtbarer Stub bis M8.6 (Monte-Carlo bleibt eines von drei Kernzielen, nur
+         zeitlich nachgelagert).
+      Umsetzung des Sicht-Typs bewusst erst mit M8.2 (`ResultColumn`) — vorher wäre `ausgaben`
+      geraten, genau das Problem, das M8.0b benennt.
 - [ ] 📦 Konsequenz mitdenken: Dem **Endkunden** ist das Preisrisiko egal — das liegt beim
       Projektentwickler. Die Sensitivitätsanalyse ist damit primär ein **internes** Instrument für
       Preisfindung und Gate, kein Kundenargument. Für den Endkunden zählt: „Was ist der Vorteil
@@ -582,8 +593,20 @@ Siehe **PLAUSI_CHECK.md → „Bohrkost ↔ LCOH-Modell — Cross-Check gegen re
       ohne Kostenaufschlüsselung ist der Scope der Vergleichszahl unbekannt, ein €/m-Fit dagegen wäre
       eine Annahme mit Nachkommastellen — in einem Mehrkunden-Produkt schädlicher als eine
       offengelegte Grenze.
-      **Teil 2 offen:** Kostenaufschlüsselung beim Bohrunternehmen anfordern → dann
-      `LINEAR_PREIS_PRO_M` / `LINEAR_MOBILISIERUNG` für Lockergestein kalibrieren.
+      **Teil 2 offen — Workshop terminiert (Stand 16.07.2026: in 2–3 Wochen, Reminder gesetzt).**
+      Bis dahin wird mit den vorhandenen Angaben gearbeitet. Checkliste für den Workshop mit dem
+      Bohrunternehmen (Ziel: kalibrieren ohne stille Doppelzählung):
+      1. **Positionsaufschlüsselung** je Angebot: Bohrarbeiten (Meterpreis — gestaffelt?),
+         Mobilisierung/Baustelleneinrichtung, Verrohrung/Ausbau, Filterstrecke, Kiesschüttung,
+         Spülung/Entsorgung, Pumpe + Steigleitung (enthalten?), Pumpversuch, Doku/Gutachten.
+      2. **Scope-Abgrenzung** zur Bohrkost-Trennung „Bohrkosten" vs. „Komplettierung".
+      3. **Durchmesser-Abhängigkeit** — mindestens eine Stützstelle > 340 mm (13 3/8") erfragen.
+      4. **Gesteinsabhängigkeit** beim selben Ausbau. 5. **Tiefenstaffelung** des Meterpreises.
+      6. **Skaleneffekt** zweite Bohrung (Pad-Drilling). 7. **Kaufmännisches** (Netto, Preisstand,
+      Gültigkeit, Marktlage).
+      Danach: `LINEAR_PREIS_PRO_M` / `LINEAR_MOBILISIERUNG` für Lockergestein kalibrieren,
+      `DURCHMESSER_FAKTOR` um groß-kalibrige Stützstellen erweitern, Angebotswerte als Kostenblöcke
+      für die Quellen-Hierarchie (M8.2b) erfassen — **im privaten Projektordner, nicht im Repo.**
       **Blocker bleibt:** `/lcoh` und `/bohrkost` dürfen nicht mit widersprüchlichen Bohrkosten
       nebeneinander live gehen. Der Befund-B-Fix löst das nicht — er verschiebt die Vergleichsebene
       nur auf 302 T€ (Faktor 3,6); selbst 13 3/8" ergibt erst 378 T€ (Faktor 2,8).
